@@ -28,6 +28,13 @@ public class Book {
     @Column(nullable = false)
     private String title;
 
+    @Column(nullable = false)
+    private String fileName;
+
+    @Column(nullable = false)
+    private long size;
+    private String fileId;
+
     public Book() {
     }
 
@@ -62,5 +69,29 @@ public class Book {
 
     public void setAuthors(List<Author> authors) {
         this.authors = authors;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
+    public long getSize() {
+        return size;
+    }
+
+    public void setSize(long size) {
+        this.size = size;
+    }
+
+    public String getFileId() {
+        return fileId;
+    }
+
+    public void setFileId(String fileId) {
+        this.fileId = fileId;
     }
 }
