@@ -13,5 +13,4 @@ import org.springframework.stereotype.Repository;
 public interface BookRepository extends CrudRepository<Book, Long> {
 
     Page<Book> findAll(Pageable pageable);
-
 }

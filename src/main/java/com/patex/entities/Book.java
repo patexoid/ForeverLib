@@ -33,7 +33,9 @@ public class Book {
 
     @Column(nullable = false)
     private long size;
-    private String fileId;
+
+    @OneToOne
+    private FileResource fileResource;
 
     public Book() {
     }
@@ -87,11 +89,11 @@ public class Book {
         this.size = size;
     }
 
-    public String getFileId() {
-        return fileId;
+    public FileResource getFileResource() {
+        return fileResource;
     }
 
-    public void setFileId(String fileId) {
-        this.fileId = fileId;
+    public void setFileResource(FileResource fileResource) {
+        this.fileResource = fileResource;
     }
 }

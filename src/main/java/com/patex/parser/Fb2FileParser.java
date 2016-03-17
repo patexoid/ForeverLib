@@ -13,9 +13,6 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.io.InputStream;
 
-/**
- 
- */
 @Service
 public class Fb2FileParser implements FileParser {
 
