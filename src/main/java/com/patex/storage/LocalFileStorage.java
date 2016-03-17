@@ -19,19 +19,11 @@ public class LocalFileStorage {
         return "local";
     }
 
-    public String save(String fileName, InputStream is) throws LibException{
-        byte[] buffer = new byte[32768];
+
+    public String save(String fileName, byte[] fileContent) throws LibException{
         String filePath = storageFolder + File.separator + fileName;
         try(FileOutputStream fos = new FileOutputStream(filePath)){
-            while (true) {
-                int readBytesCount = is.read(buffer);
-                if (readBytesCount == -1) {
-                    break;
-                }
-                if (readBytesCount > 0) {
-                    fos.write(buffer, 0, readBytesCount);
-                }
-            }
+            fos.write(fileContent);
             fos.flush();
         } catch (IOException e) {
             throw new LibException(e);
@@ -39,7 +31,11 @@ public class LocalFileStorage {
         return filePath;
     }
 
-    public InputStream load(String fileId) {
-        return null;
+    public InputStream load(String fileId) throws LibException{
+        try {
+            return new FileInputStream(fileId);
+        } catch (FileNotFoundException e) {
+            throw new LibException(e);
+        }
     }
 }

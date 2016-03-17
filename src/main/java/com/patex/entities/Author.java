@@ -20,6 +20,9 @@ public class Author {
     @JsonIgnore
     private List<Book> books = new ArrayList<Book>();
 
+    public Author() {
+    }
+
     public Author(String name) {
         this.name = name;
     }
@@ -38,5 +41,13 @@ public class Author {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public List<Book> getBooks() {
+        return books;
+    }
+
+    public void setBooks(List<Book> books) {
+        this.books = books;
     }
 }

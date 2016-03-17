@@ -62,17 +62,13 @@ public class Fb2FileParser implements FileParser {
 
     @Override
     public synchronized Book parseFile(String fileName, InputStream file) throws LibException{
-        Document document = null;
+        Document document;
         try {
             document = builder.parse(file);
         } catch (IOException | SAXException e) {
             throw new LibException(e.getMessage(),e);//TODO exception handling
         }
 
-        String firstName = null;
-        String middleName = null;
-        String lastName = null;
-        String title = null;
         try {
             Node description = (Node) xpath.evaluate("/FictionBook/description/title-info", document, XPathConstants.NODE);
             NodeList genreNodeList = (NodeList) xpath.evaluate("genre", description, XPathConstants.NODESET);
@@ -82,24 +78,25 @@ public class Fb2FileParser implements FileParser {
             }
 
             Node authorNode = (Node) xpath.evaluate("author", description, XPathConstants.NODE);
-            firstName = (String) xpath.evaluate("first-name", authorNode, XPathConstants.STRING);
-            middleName = (String) xpath.evaluate("middle-name", authorNode, XPathConstants.STRING);
-            lastName = (String) xpath.evaluate("last-name", authorNode, XPathConstants.STRING);
+            String firstName = (String) xpath.evaluate("first-name", authorNode, XPathConstants.STRING);
+            String middleName = (String) xpath.evaluate("middle-name", authorNode, XPathConstants.STRING);
+            String lastName = (String) xpath.evaluate("last-name", authorNode, XPathConstants.STRING);
             String homePage = (String) xpath.evaluate("home-page", authorNode, XPathConstants.STRING);
             String email = (String) xpath.evaluate("email", authorNode, XPathConstants.STRING);
 
-            title = (String) xpath.evaluate("book-title", description, XPathConstants.STRING);
+            String title = (String) xpath.evaluate("book-title", description, XPathConstants.STRING);
             String annotation = (String) xpath.evaluate("annotation", description, XPathConstants.STRING);
             String dateString = (String) xpath.evaluate("date/@value", description, XPathConstants.STRING);
+            Book book = new Book();
+            book.setTitle(title);
+            Author author = new Author(lastName + " " + firstName + " " + middleName);
+            book.addAuthor(author);
+            return book;
+
         } catch (XPathExpressionException e) {
             throw new LibException(e.getMessage(),e);
         }
 
 
-        Book book = new Book();
-        book.setTitle(title);
-        Author author = new Author(lastName + " " + firstName + " " + middleName);
-        book.addAuthor(author);
-        return book;
     }
 }

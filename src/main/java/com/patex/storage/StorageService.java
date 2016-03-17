@@ -15,11 +15,11 @@ public class StorageService {
     @Autowired
     private LocalFileStorage localFileStorage;
 
-    public String saveFile(String fileName, InputStream inputStream) throws LibException{
-        return localFileStorage.save(fileName, inputStream);
+    public String saveFile(String fileName, byte[] file) throws LibException{
+        return localFileStorage.save(fileName, file);
     }
 
-    public InputStream getFile(String fileId){
+    public InputStream getFile(String fileId) throws LibException{
         return localFileStorage.load(fileId);
     }
 
