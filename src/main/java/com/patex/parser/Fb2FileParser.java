@@ -5,46 +5,25 @@ import com.patex.entities.Author;
 import com.patex.entities.Book;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 import javax.annotation.PostConstruct;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-import java.io.IOException;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 import java.io.InputStream;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 /**
- * Created by alex on 15.03.2015.
+ 
  */
 @Service
 public class Fb2FileParser implements FileParser {
 
 
-    public static final XPathFactory X_PATH_FACTORY = XPathFactory.newInstance();
-    private DocumentBuilder builder;
-    private XPath xpath;
-    private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("YYYY-MM-DD");
+    private final XMLInputFactory factory;
 
     public Fb2FileParser() {
-        try {
-            builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            xpath = X_PATH_FACTORY.newXPath();
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
-        }
+        factory = XMLInputFactory.newInstance();
     }
 
     @Autowired
@@ -60,43 +39,62 @@ public class Fb2FileParser implements FileParser {
         return "fb2";
     }
 
+
     @Override
-    public synchronized Book parseFile(String fileName, InputStream file) throws LibException{
-        Document document;
+    public Book parseFile(String fileName, InputStream file) throws LibException {
         try {
-            document = builder.parse(file);
-        } catch (IOException | SAXException e) {
-            throw new LibException(e.getMessage(),e);//TODO exception handling
-        }
-
-        try {
-            Node description = (Node) xpath.evaluate("/FictionBook/description/title-info", document, XPathConstants.NODE);
-            NodeList genreNodeList = (NodeList) xpath.evaluate("genre", description, XPathConstants.NODESET);
-            List<String> genres = new ArrayList<String>();
-            for (int i = 0; i < genreNodeList.getLength(); i++) {
-                genres.add(genreNodeList.item(i).getTextContent());
+            XMLStreamReader reader = factory.createXMLStreamReader(file);
+            while (reader.hasNext()) {
+                int event = reader.next();
+                if (event == XMLStreamConstants.START_ELEMENT && "title-info".equals(reader.getLocalName())) {
+                    return parseTitleInfo(reader);
+                }
             }
-
-            Node authorNode = (Node) xpath.evaluate("author", description, XPathConstants.NODE);
-            String firstName = (String) xpath.evaluate("first-name", authorNode, XPathConstants.STRING);
-            String middleName = (String) xpath.evaluate("middle-name", authorNode, XPathConstants.STRING);
-            String lastName = (String) xpath.evaluate("last-name", authorNode, XPathConstants.STRING);
-            String homePage = (String) xpath.evaluate("home-page", authorNode, XPathConstants.STRING);
-            String email = (String) xpath.evaluate("email", authorNode, XPathConstants.STRING);
-
-            String title = (String) xpath.evaluate("book-title", description, XPathConstants.STRING);
-            String annotation = (String) xpath.evaluate("annotation", description, XPathConstants.STRING);
-            String dateString = (String) xpath.evaluate("date/@value", description, XPathConstants.STRING);
-            Book book = new Book();
-            book.setTitle(title);
-            Author author = new Author(lastName + " " + firstName + " " + middleName);
-            book.addAuthor(author);
-            return book;
-
-        } catch (XPathExpressionException e) {
-            throw new LibException(e.getMessage(),e);
+        } catch (XMLStreamException e) {
+            throw new LibException(e.getMessage(), e);
         }
+        throw new LibException("unable to parse fb2 file");
+    }
 
+    private Book parseTitleInfo(XMLStreamReader reader) throws XMLStreamException {
+        Book book = new Book();
+        while (reader.hasNext()) {
+            int event = reader.next();
+            if (event == XMLStreamConstants.END_ELEMENT && "title-info".equals(reader.getLocalName())) {
+                return book;
+            } else if (event == XMLStreamConstants.START_ELEMENT) {
+                if ("author".equals(reader.getLocalName())) {
+                    Author author = parseAuthor(reader);
+                    book.addAuthor(author);
+                } else if ("book-title".equals(reader.getLocalName())) {
+                    book.setTitle(reader.getElementText());
+                }
+            }
+        }
+        return null;
+    }
 
+    private Author parseAuthor(XMLStreamReader reader) throws XMLStreamException {
+        String lastName = "";
+        String firstName = "";
+        String middleName = "";
+        Author author = new Author();
+        while (reader.hasNext()) {
+            int event = reader.next();
+            if (event == XMLStreamConstants.START_ELEMENT) {
+                if ("first-name".equals(reader.getLocalName())) {
+                    firstName = reader.getElementText();
+                } else if ("middle-name".equals(reader.getLocalName())) {
+                    middleName = reader.getElementText();
+                } else if ("last-name".equals(reader.getLocalName())) {
+                    lastName = reader.getElementText();
+                }
+            }
+            if (event == XMLStreamConstants.END_ELEMENT && "author".equals(reader.getLocalName())) {
+                author.setName(lastName + " " + firstName + " " + middleName);
+                return author;
+            }
+        }
+        return null;
     }
 }
