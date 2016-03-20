@@ -15,4 +15,6 @@ public interface  AuthorRepository  extends CrudRepository<Author, Long> {
     Page<Author> findAll(Pageable pageable);
 
     Page<Author> findByNameStartingWithIgnoreCase(String name, Pageable pageable);
+
+    Author findByName(String name);
 }
