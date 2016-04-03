@@ -37,7 +37,7 @@ public class BookService {
         book.setFileResource(fileResource);
         book.setFileName(fileName);
         book.setSize(byteArray.length);
-//        book = bookRepository.save(book);
+        book = bookRepository.save(book);
         return book;
     }
 
