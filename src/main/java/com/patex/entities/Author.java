@@ -11,7 +11,7 @@ public class Author {
 
     @Id
     @GeneratedValue
-    long id;
+    Long id;
 
     @Column(nullable = false)
     String name;

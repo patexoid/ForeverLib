@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
 
 import javax.persistence.QueryHint;
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.Map;
 /**
  * Created by Alexey on 12.03.2016.
  */
+@Repository
 public interface AuthorRepository extends CrudRepository<Author, Long> {
 
     Page<Author> findAll(Pageable pageable);
