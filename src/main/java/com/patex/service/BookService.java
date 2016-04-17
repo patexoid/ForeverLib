@@ -6,8 +6,12 @@ import com.patex.parser.ParserService;
 import com.patex.storage.LocalFileStorage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.io.*;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Created by Alexey on 12.03.2016.
@@ -16,35 +20,51 @@ import java.io.*;
 public class BookService {
 
     @Autowired
-    BookRepository bookRepository;
+    private BookRepository bookRepository;
 
     @Autowired
-    FileResourceRepository fileResourceRepository;
+    private AuthorService authorService;
 
     @Autowired
-    ParserService parserService;
+    private FileResourceRepository fileResourceRepository;
 
     @Autowired
-    LocalFileStorage fileStorage;
+    private ParserService parserService;
+
+    @Autowired
+    private LocalFileStorage fileStorage;
 
     public Book uploadBook(String fileName, InputStream is) throws LibException {
 
         byte[] byteArray = loadFromStream(is);
         Book book = parserService.getBookInfo(fileName, new ByteArrayInputStream(byteArray));
+
+        List<Book> books = bookRepository.findByTitleIgnoreCase(book.getTitle()).
+                stream().filter(loaded -> hasTheSameAuthors(book, loaded)).collect(Collectors.toList());
+
+
+        if(books.size()>0){ //TODO if author or book has the same name
+            return books.get(0);
+        }
+       List<Author> authors=book.getAuthors().stream().map(author -> {
+            List<Author> saved = authorService.findByName(author.getName());
+            return saved.size()>0?saved.get(0):author;
+        }).collect(Collectors.toList());
+        book.setAuthors(authors);
+
         String fileId = fileStorage.save(fileName, byteArray);
         FileResource fileResource = new FileResource(fileId);
         fileResource = fileResourceRepository.save(fileResource);
         book.setFileResource(fileResource);
         book.setFileName(fileName);
         book.setSize(byteArray.length);
-        book = bookRepository.save(book);
-        return book;
+        return  bookRepository.save(book);
     }
 
-    public Book saveBook(Book book){
-        book.getFileResource().setDraft(false);
-        book = bookRepository.save(book);
-        return book;
+    private static boolean hasTheSameAuthors(Book primary, Book secondary){
+        Set<String> primaryAuthors=primary.getAuthors().stream().map(Author::getName).collect(Collectors.toSet());
+        Set<String> secondaryAuthors= secondary.getAuthors().stream().map(Author::getName).collect(Collectors.toSet());
+        return CollectionUtils.containsAny(primaryAuthors,secondaryAuthors);
     }
 
     private byte[] loadFromStream(InputStream is) throws LibException {
