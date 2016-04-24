@@ -1,10 +1,13 @@
 package com.patex.opds;
 
 import com.patex.entities.AggrResult;
+import com.patex.entities.Author;
 import com.patex.service.AuthorService;
 import com.patex.service.BookService;
+import com.rometools.rome.feed.atom.Content;
 import com.rometools.rome.feed.atom.Entry;
 import com.rometools.rome.feed.atom.Link;
+import com.rometools.rome.feed.synd.SyndPersonImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,13 +15,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 
 @Controller
 @RequestMapping("opds")
-public class OPDSController {
+public class OPDSController2 {
 
     public static final int EXPAND_FOR_AUTHORS_COUNT = 3;
 
@@ -26,7 +30,7 @@ public class OPDSController {
     AuthorService authorService;
 
     @Autowired
-    BookService book;
+    BookService bookService;
 
     @RequestMapping(produces = "application/atom+xml")
     public ModelAndView getMain() {
@@ -85,6 +89,64 @@ public class OPDSController {
                 collect(Collectors.toList());
         entries.addAll(serachEntries);
 
+        mav.addObject(OpdsView.ENTRIES, entries);
+        return mav;
+    }
+
+    @RequestMapping(value = "/author/{id}", produces = "application/atom+xml")
+    public ModelAndView getAuthor(@PathVariable(value = "id") long id) {
+        ModelAndView mav = new ModelAndView();
+        mav.setViewName(OpdsView.OPDS_VIEW);
+        List<Entry> entries = new ArrayList<>();
+        Author author = authorService.getAuthor(id);
+        if (author == null) {
+            return mav;
+        }
+        Entry entry = new Entry();
+        entry.setTitle("Книги автора " + author.getName());
+        Content content = new Content();
+        content.setType("text/html");
+        content.setValue(author.getDescr());
+        entry.setContents(Collections.singletonList(content));
+        entries.add(entry);
+        entries.add(createEntry("" + author.getId(), author.getName(),
+                "/opds/author/" + author.getId() + "/alphabet"));
+        mav.addObject(OpdsView.ENTRIES, entries);
+        return mav;
+    }
+
+
+    @RequestMapping(value = "/author/{id}/alphabet", produces = "application/atom+xml")
+    public ModelAndView getAuthorBookAlphabet(@PathVariable(value = "id") long id) {
+        ModelAndView mav = new ModelAndView();
+        mav.setViewName(OpdsView.OPDS_VIEW);
+        Author bookAuthor = authorService.getAuthor(id);
+        if (bookAuthor == null) {
+            return mav;
+        }
+        mav.addObject(OpdsView.TITLE, "Книги по алфавиту " + bookAuthor.getName());
+
+        List<Entry> entries=bookAuthor.getBooks().stream().map(book -> {
+            Entry entry = new Entry();
+            entry.setTitle(book.getTitle());
+            entry.setAuthors(book.getAuthors().stream().map(author -> {
+                SyndPersonImpl person = new SyndPersonImpl();
+                person.setName(author.getName());
+                person.setUri("/opds/author/" + author.getId());
+                return person;
+            }).collect(Collectors.toList()));
+            // TODO entry.setCategories();
+            Content content = new Content();
+            content.setType("text/html");
+            content.setValue(book.getDescr());
+            entry.setContents(Collections.singletonList(content));
+            Link link = new Link();
+            link.setHref("/b/"+book.getId()+"download");
+            link.setRel(null);
+            link.setType("fb2+zip");
+            entry.setOtherLinks(Collections.singletonList(link));
+            return entry;
+        }).collect(Collectors.toList());
         mav.addObject(OpdsView.ENTRIES, entries);
         return mav;
     }

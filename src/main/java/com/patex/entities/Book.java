@@ -37,6 +37,9 @@ public class Book {
     @OneToOne
     private FileResource fileResource;
 
+    @Lob
+    private String descr;
+
     public Book() {
     }
 
@@ -95,5 +98,13 @@ public class Book {
 
     public void setFileResource(FileResource fileResource) {
         this.fileResource = fileResource;
+    }
+
+    public String getDescr() {
+        return descr;
+    }
+
+    public void setDescr(String descr) {
+        this.descr = descr;
     }
 }
