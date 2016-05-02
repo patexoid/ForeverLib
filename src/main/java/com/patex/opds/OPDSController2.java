@@ -2,6 +2,7 @@ package com.patex.opds;
 
 import com.patex.entities.AggrResult;
 import com.patex.entities.Author;
+import com.patex.entities.Book;
 import com.patex.service.AuthorService;
 import com.patex.service.BookService;
 import com.rometools.rome.feed.atom.Content;
@@ -24,7 +25,7 @@ import java.util.stream.Collectors;
 @RequestMapping("opds")
 public class OPDSController2 {
 
-    public static final int EXPAND_FOR_AUTHORS_COUNT = 3;
+    private static final int EXPAND_FOR_AUTHORS_COUNT = 3;
 
     @Autowired
     AuthorService authorService;
@@ -72,7 +73,7 @@ public class OPDSController2 {
 
         List<Entry> entries = new ArrayList<>();
 
-        List<Entry> authors = authorsCount.parallelStream().
+        List<Entry> authors = authorsCount.stream().
                 filter(aggrResult -> aggrResult.getResult() > EXPAND_FOR_AUTHORS_COUNT || authorsCount.size() == 1).
                 flatMap(aggrResult -> authorService.findByName(aggrResult.getId()).stream()).
                 map(author ->
@@ -126,28 +127,31 @@ public class OPDSController2 {
         }
         mav.addObject(OpdsView.TITLE, "Книги по алфавиту " + bookAuthor.getName());
 
-        List<Entry> entries=bookAuthor.getBooks().stream().map(book -> {
-            Entry entry = new Entry();
-            entry.setTitle(book.getTitle());
-            entry.setAuthors(book.getAuthors().stream().map(author -> {
-                SyndPersonImpl person = new SyndPersonImpl();
-                person.setName(author.getName());
-                person.setUri("/opds/author/" + author.getId());
-                return person;
-            }).collect(Collectors.toList()));
-            // TODO entry.setCategories();
-            Content content = new Content();
-            content.setType("text/html");
-            content.setValue(book.getDescr());
-            entry.setContents(Collections.singletonList(content));
-            Link link = new Link();
-            link.setHref("/b/"+book.getId()+"download");
-            link.setRel(null);
-            link.setType("fb2+zip");
-            entry.setOtherLinks(Collections.singletonList(link));
-            return entry;
-        }).collect(Collectors.toList());
+        List<Entry> entries = bookAuthor.getBooks().stream().map(OPDSController2::mapBookToEntry).
+                collect(Collectors.toList());
         mav.addObject(OpdsView.ENTRIES, entries);
         return mav;
+    }
+
+    private static Entry mapBookToEntry(Book book) {
+        Entry entry = new Entry();
+        entry.setTitle(book.getTitle());
+        entry.setAuthors(book.getAuthors().stream().map(author -> {
+            SyndPersonImpl person = new SyndPersonImpl();
+            person.setName(author.getName());
+            person.setUri("/opds/author/" + author.getId());
+            return person;
+        }).collect(Collectors.toList()));
+        // TODO entry.setCategories();
+        Content content = new Content();
+        content.setType("text/html");
+        content.setValue(book.getDescr());
+        entry.setContents(Collections.singletonList(content));
+        Link link = new Link();
+        link.setHref("/b/" + book.getId() + "download");
+        link.setRel(null);
+        link.setType("fb2+zip");
+        entry.setOtherLinks(Collections.singletonList(link));
+        return entry;
     }
 }

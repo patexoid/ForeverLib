@@ -28,7 +28,7 @@ public class AuthorService {
   }
 
   public List<AggrResult> getAuthorsCount(String start) {
-    return authorRepository.getAuthorsCount(start);
+    return authorRepository.getAuthorsCount(start.length()+1,start);
   }
 
   public List<Author> findByName(String name) {
