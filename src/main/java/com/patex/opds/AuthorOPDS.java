@@ -18,7 +18,7 @@ public class AuthorOPDS {
   @Autowired
   AuthorService authorService;
 
-  @RequestMapping(value="/{id}", produces ="application/atom+xml")
+//  @RequestMapping(value="/{id}", produces ="application/atom+xml")
   public ModelAndView getAuthor(@PathVariable("id") long authorID) {
     ModelAndView mav = new ModelAndView();
     mav.setViewName(AuthorOpdsView.OPDS_AUTHOR_VIEW);
@@ -26,7 +26,7 @@ public class AuthorOPDS {
     return mav;
   }
 
-  @RequestMapping(value="search/{start}", produces ="application/atom+xml")
+//  @RequestMapping(value="search/{start}", produces ="application/atom+xml")
   public ModelAndView getAuthors(@PathVariable("start") String start) {
     ModelAndView mav = new ModelAndView();
     mav.setViewName(AuthorsOpdsView.OPDS_AUTHORS_VIEW);
