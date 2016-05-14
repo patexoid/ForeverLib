@@ -11,14 +11,23 @@ public class Author {
 
     @Id
     @GeneratedValue
-    Long id;
+    private Long id;
 
     @Column(nullable = false)
-    String name;
+    private String name;
 
     @ManyToMany(cascade = {CascadeType.ALL}, fetch = FetchType.LAZY, mappedBy = "authors")
     @JsonIgnore
     private List<Book> books = new ArrayList<Book>();
+
+    @JsonIgnore
+    @ManyToMany(cascade = {CascadeType.ALL},fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "SEQUENCE_AUTHOR",
+            joinColumns = @JoinColumn(name = "authorId"),
+            inverseJoinColumns = @JoinColumn(name = "sequenceId"))
+    private List<Sequence> sequences = new ArrayList<>();
+
 
     @Lob
     private String descr;
@@ -60,5 +69,13 @@ public class Author {
 
     public void setDescr(String descr) {
         this.descr = descr;
+    }
+
+    public List<Sequence> getSequences() {
+        return sequences;
+    }
+
+    public void setSequences(List<Sequence> sequences) {
+        this.sequences = sequences;
     }
 }

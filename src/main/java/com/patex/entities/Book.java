@@ -25,6 +25,14 @@ public class Book {
             inverseJoinColumns = @JoinColumn(name = "authorId"))
     private List<Author> authors = new ArrayList<Author>();
 
+    @JsonIgnore
+    @OneToMany(cascade = {CascadeType.ALL},fetch = FetchType.LAZY,mappedBy = "book")
+//    @JoinTable(
+//            name = "SEQUENCE_BOOK",
+//            joinColumns = @JoinColumn(name = "bookId"),
+//            inverseJoinColumns = @JoinColumn(name = "sequenceId"))
+    private List<BookSequence> sequences = new ArrayList<>();
+
     @Column(nullable = false)
     private String title;
 
@@ -106,5 +114,13 @@ public class Book {
 
     public void setDescr(String descr) {
         this.descr = descr;
+    }
+
+    public List<BookSequence> getSequences() {
+        return sequences;
+    }
+
+    public void setSequences(List<BookSequence> sequences) {
+        this.sequences = sequences;
     }
 }

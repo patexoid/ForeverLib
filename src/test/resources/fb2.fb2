@@ -37,6 +37,7 @@ H:\Work\FictionBook.lib\xsl\FictionBook.xsd">
                 <image l:href="#fish1.png"/>
             </coverpage>
             <lang>ru</lang>
+            <sequence name="Серия" number="1"/>
         </title-info>
         <document-info>
             <author>
