@@ -45,4 +45,12 @@ public class Sequence {
     public void setName(String name) {
         this.name = name;
     }
+
+    public List<BookSequence> getBookSequences() {
+        return bookSequences;
+    }
+
+    public void setBookSequences(List<BookSequence> bookSequences) {
+        this.bookSequences = bookSequences;
+    }
 }
