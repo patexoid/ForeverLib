@@ -17,7 +17,7 @@ public class BookSequence {
     private Long id;
 
     @Column(nullable = false)
-    private int order;
+    private int seqOrder;
 
     @ManyToOne(cascade = {CascadeType.ALL})
     @JsonIgnore
@@ -29,7 +29,7 @@ public class BookSequence {
 
 
     public BookSequence(int order, Sequence sequence) {
-        this.order = order;
+        this.seqOrder = order;
         this.sequence = sequence;
     }
 
@@ -45,12 +45,12 @@ public class BookSequence {
     }
 
 
-    public int getOrder() {
-        return order;
+    public int getSeqOrder() {
+        return seqOrder;
     }
 
-    public void setOrder(int order) {
-        this.order = order;
+    public void setSeqOrder(int order) {
+        this.seqOrder = order;
     }
 
     public Book getBook() {

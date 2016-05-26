@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Entity
 public class Author {
@@ -19,14 +21,6 @@ public class Author {
     @ManyToMany(cascade = {CascadeType.ALL}, fetch = FetchType.LAZY, mappedBy = "authors")
     @JsonIgnore
     private List<Book> books = new ArrayList<Book>();
-
-    @JsonIgnore
-    @ManyToMany(cascade = {CascadeType.ALL},fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "SEQUENCE_AUTHOR",
-            joinColumns = @JoinColumn(name = "authorId"),
-            inverseJoinColumns = @JoinColumn(name = "sequenceId"))
-    private List<Sequence> sequences = new ArrayList<>();
 
 
     @Lob
@@ -71,11 +65,13 @@ public class Author {
         this.descr = descr;
     }
 
-    public List<Sequence> getSequences() {
-        return sequences;
+
+    public Stream<Sequence> getSequences() {
+        return books.stream().
+                flatMap(book -> book.getSequences().stream()).
+                map(BookSequence::getSequence).
+                distinct();
+
     }
 
-    public void setSequences(List<Sequence> sequences) {
-        this.sequences = sequences;
-    }
 }
