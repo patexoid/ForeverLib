@@ -10,7 +10,9 @@ import org.springframework.util.CollectionUtils;
 
 import java.io.*;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
@@ -42,7 +44,6 @@ public class BookService {
         List<Book> books = bookRepository.findByTitleIgnoreCase(book.getTitle()).
                 stream().filter(loaded -> hasTheSameAuthors(book, loaded)).collect(Collectors.toList());
 
-
         if(books.size()>0){ //TODO if author or book has the same name
             return books.get(0);
         }
@@ -51,6 +52,16 @@ public class BookService {
             return saved.size()>0?saved.get(0):author;
         }).collect(Collectors.toList());
         book.setAuthors(authors);
+
+        Map<String,Sequence> sequencesMap=authors.stream().flatMap(Author::getSequences).
+                collect(Collectors.toMap(Sequence::getName,sequence -> sequence));
+
+        book.getSequences().stream().forEach(bookSequence -> {
+            Sequence sequence = sequencesMap.get(bookSequence.getSequence().getName());
+            bookSequence.setSequence(sequence==null?bookSequence.getSequence():sequence);
+            bookSequence.setBook(book);
+
+        });
 
         String fileId = fileStorage.save(fileName, byteArray);
         FileResource fileResource = new FileResource(fileId);

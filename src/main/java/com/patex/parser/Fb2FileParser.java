@@ -3,6 +3,8 @@ package com.patex.parser;
 import com.patex.LibException;
 import com.patex.entities.Author;
 import com.patex.entities.Book;
+import com.patex.entities.BookSequence;
+import com.patex.entities.Sequence;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -65,7 +67,12 @@ public class Fb2FileParser implements FileParser {
                     book.addAuthor(author);
                 } else if ("book-title".equals(reader.getLocalName())) {
                     book.setTitle(reader.getElementText());
+                 } else if ("sequence".equals(reader.getLocalName())) {
+                    book.getSequences().
+                            add(new BookSequence(Integer.valueOf(reader.getAttributeValue("","number")),
+                                new Sequence(reader.getAttributeValue("","name"))));
                 }
+
             }
         }
         return null;

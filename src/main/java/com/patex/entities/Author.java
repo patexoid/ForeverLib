@@ -5,20 +5,23 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Entity
 public class Author {
 
     @Id
     @GeneratedValue
-    Long id;
+    private Long id;
 
     @Column(nullable = false)
-    String name;
+    private String name;
 
     @ManyToMany(cascade = {CascadeType.ALL}, fetch = FetchType.LAZY, mappedBy = "authors")
     @JsonIgnore
     private List<Book> books = new ArrayList<Book>();
+
 
     @Lob
     private String descr;
@@ -61,4 +64,14 @@ public class Author {
     public void setDescr(String descr) {
         this.descr = descr;
     }
+
+
+    public Stream<Sequence> getSequences() {
+        return books.stream().
+                flatMap(book -> book.getSequences().stream()).
+                map(BookSequence::getSequence).
+                distinct();
+
+    }
+
 }
