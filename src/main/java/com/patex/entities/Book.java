@@ -33,6 +33,10 @@ public class Book {
 //            inverseJoinColumns = @JoinColumn(name = "sequenceId"))
     private List<BookSequence> sequences = new ArrayList<>();
 
+    @JsonIgnore
+    @OneToMany(cascade = {CascadeType.ALL},fetch = FetchType.LAZY,mappedBy = "book")
+    private List<BookGenre> genres = new ArrayList<>();
+
     @Column(nullable = false)
     private String title;
 
