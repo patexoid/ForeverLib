@@ -13,6 +13,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/book")
@@ -23,19 +27,25 @@ public class BookController {
 
 
     @RequestMapping(value = "/{id}" , method = RequestMethod.GET)
-    public
-    @ResponseBody
-    Book getAuthor(@PathVariable(value = "id") long id) {
+    public @ResponseBody  Book getAuthor(@PathVariable(value = "id") long id) {
         return bookService.getBook(id);
     }
 
 
     @RequestMapping(method = RequestMethod.POST, value = "/upload")
-    public String handleFileUpload(@RequestParam("file") MultipartFile[] files) throws LibException, IOException {
-        for (MultipartFile file : files) {
-            Book book = bookService.uploadBook(file.getOriginalFilename(), file.getInputStream());
+    public @ResponseBody List<BookUploadInfo> handleFileUpload(@RequestParam("file") MultipartFile[] files)
+            throws LibException, IOException {
+
+        return Arrays.stream(files).map( file->{
+                    try {
+                        bookService.uploadBook(file.getOriginalFilename(), file.getInputStream());
+                        return new BookUploadInfo(file.getOriginalFilename(), BookUploadInfo.Status.Success);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return new BookUploadInfo(file.getOriginalFilename(), BookUploadInfo.Status.Failed);
+                    }
         }
-        return "redirect:1";
+        ).collect(Collectors.toList());
     }
 
     @RequestMapping(value = "/loadFile/{id}", method = RequestMethod.GET)
@@ -44,7 +54,7 @@ public class BookController {
         Book book = bookService.getBook(bookId);
         InputStream inputStream= bookService.getBookInputStream(book);
         HttpHeaders respHeaders = new HttpHeaders();
-        respHeaders.setContentLength(bookId);
+        respHeaders.setContentLength(book.getSize() );
         respHeaders.setContentDispositionFormData("attachment", book.getFileName());
         InputStreamResource isr = new InputStreamResource(inputStream);
         return new ResponseEntity<>(isr, respHeaders, HttpStatus.OK);
