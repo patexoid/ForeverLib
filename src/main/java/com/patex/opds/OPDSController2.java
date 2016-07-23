@@ -205,7 +205,7 @@ public class OPDSController2 {
         content.setValue(book.getDescr());
         entry.setContents(Collections.singletonList(content));
         Link link = new Link();
-        link.setHref("/b/" + book.getId() + "download");
+        link.setHref("/book/loadFile/" + book.getId());
         link.setRel(null);
         link.setType("application/fb2+zip");
         entry.setOtherLinks(Collections.singletonList(link));
