@@ -68,9 +68,14 @@ public class Fb2FileParser implements FileParser {
                 } else if ("book-title".equals(reader.getLocalName())) {
                     book.setTitle(reader.getElementText());
                  } else if ("sequence".equals(reader.getLocalName())) {
-                    book.getSequences().
-                            add(new BookSequence(Integer.valueOf(reader.getAttributeValue("","number")),
-                                new Sequence(reader.getAttributeValue("","name"))));
+                    Integer order;
+                    try {
+                        order = Integer.valueOf(reader.getAttributeValue("", "number"));
+                    } catch (NumberFormatException e) {
+                        order=0;
+                        e.printStackTrace();
+                    }
+                    book.getSequences().add(new BookSequence(order,new Sequence(reader.getAttributeValue("","name"))));
                 }
 
             }
