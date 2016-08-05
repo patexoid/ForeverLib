@@ -6,8 +6,11 @@ import com.patex.parser.ParserService;
 import com.patex.storage.LocalFileStorage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import javax.persistence.EntityManager;
 import java.io.*;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +39,9 @@ public class BookService {
     @Autowired
     private LocalFileStorage fileStorage;
 
+    @Autowired
+    private EntityManager entityManager;
+
     public Book uploadBook(String fileName, InputStream is) throws LibException {
 
         byte[] byteArray = loadFromStream(is);
@@ -53,7 +59,7 @@ public class BookService {
         }).collect(Collectors.toList());
         book.setAuthors(authors);
 
-        Map<String,Sequence> sequencesMap=authors.stream().flatMap(Author::getSequences).
+        Map<String,Sequence> sequencesMap=authors.stream().flatMap(Author::getSequences).distinct().
                 collect(Collectors.toMap(Sequence::getName,sequence -> sequence));
 
         book.getSequences().stream().forEach(bookSequence -> {
@@ -69,7 +75,10 @@ public class BookService {
         book.setFileResource(fileResource);
         book.setFileName(fileName);
         book.setSize(byteArray.length);
-        return  bookRepository.save(book);
+        Book save = bookRepository.save(book);
+//        entityManager.detach(book);
+        book.getAuthors().forEach(author -> author.getBooks().add(book));
+        return save;
     }
 
     private static boolean hasTheSameAuthors(Book primary, Book secondary){

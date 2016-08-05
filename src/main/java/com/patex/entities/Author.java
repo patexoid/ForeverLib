@@ -67,7 +67,7 @@ public class Author {
 
 
     public Stream<Sequence> getSequences() {
-        return books.stream().
+        return getBooks().stream().
                 flatMap(book -> book.getSequences().stream()).
                 map(BookSequence::getSequence).
                 distinct();

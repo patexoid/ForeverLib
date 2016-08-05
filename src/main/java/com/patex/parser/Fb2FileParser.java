@@ -100,7 +100,8 @@ public class Fb2FileParser implements FileParser {
                 }
             }
             if (event == XMLStreamConstants.END_ELEMENT && "author".equals(reader.getLocalName())) {
-                author.setName(lastName + " " + firstName + " " + middleName);
+                String name = lastName + " " + firstName + " " + middleName;
+                author.setName(name.replaceAll("\\s+"," "));
                 return author;
             }
         }
