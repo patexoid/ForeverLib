@@ -7,9 +7,6 @@ import java.io.InputStream;
 
 import static org.junit.Assert.assertEquals;
 
-/**
- * Created by alex on 15.03.2015.
- */
 public class Fb2ParserTest {
 
     @Test
@@ -18,7 +15,7 @@ public class Fb2ParserTest {
         InputStream resourceAsStream = getClass().getResourceAsStream("/fb2.fb2");
         Book book = fb2FileParser.parseFile("fb2.fb2", resourceAsStream);
         assertEquals(book.getAuthors().get(0).getName(),"Грибов Дмитрий Петрович");
-        assertEquals(book.getSequences().get(0).getOrder(),1);
+        assertEquals(book.getSequences().get(0).getSeqOrder(),1);
         assertEquals(book.getSequences().get(0).getSequence().getName(),"Серия");
 
 //        assertEquals(book.getAuthor().getMiddleName(),"Петрович");
