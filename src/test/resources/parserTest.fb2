@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<?xml-stylesheet type="text/xsl" href="H:\Work\FictionBook.lib\xsl\FB2_2_fb2.xsl"?>
+<FictionBook  xmlns="http://www.gribuser.ru/xml/fictionbook/2.0" xmlns:l="http://www.w3.org/1999/xlink">
+    <description>
+        <title-info>
+            <genre>sf</genre>
+            <author>
+                <first-name>First</first-name>
+                <middle-name>Second</middle-name>
+                <last-name>Фамилия</last-name>
+                <home-page>http://example.com</home-page>
+                <email>author@example.com</email>
+            </author>
+            <book-title>Заголовок</book-title>
+            <sequence name="Серия" number="1"/>
+        </title-info>
+        <
+    </description>
+</FictionBook>

@@ -127,4 +127,12 @@ public class Book {
     public void setSequences(List<BookSequence> sequences) {
         this.sequences = sequences;
     }
+
+    public List<BookGenre> getGenres() {
+        return genres;
+    }
+
+    public void setGenres(List<BookGenre> genres) {
+        this.genres = genres;
+    }
 }

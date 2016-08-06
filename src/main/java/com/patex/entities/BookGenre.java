@@ -23,6 +23,11 @@ public class BookGenre {
     private Genre genre;
 
 
+    public BookGenre(Book book, Genre genre) {
+        this.book = book;
+        this.genre = genre;
+    }
+
     public BookGenre() {
     }
 
