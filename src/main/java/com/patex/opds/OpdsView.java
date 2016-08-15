@@ -20,6 +20,7 @@ public class OpdsView extends AbstractAtomFeedView {
     public static final String TITLE = "Title";
     public static final String ENTRIES = "Entries";
 
+    @SuppressWarnings("unchecked")
     @Override
     protected List<Entry> buildFeedEntries(Map<String, Object> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
 

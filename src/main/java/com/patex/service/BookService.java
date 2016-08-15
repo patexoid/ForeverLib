@@ -4,7 +4,10 @@ import com.patex.LibException;
 import com.patex.entities.*;
 import com.patex.parser.ParserService;
 import com.patex.storage.LocalFileStorage;
+import com.patex.storage.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +40,7 @@ public class BookService {
     private ParserService parserService;
 
     @Autowired
-    private LocalFileStorage fileStorage;
+    private StorageService fileStorage;
 
     @Autowired
     private EntityManager entityManager;
@@ -114,5 +117,9 @@ public class BookService {
 
     public InputStream getBookInputStream(Book book) throws LibException {
         return fileStorage.load(book.getFileResource().getFilePath());
+    }
+
+    public Page<Book> getBooks(Pageable pageable) {
+        return bookRepository.findAll(pageable);
     }
 }
