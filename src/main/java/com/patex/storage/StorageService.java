@@ -13,13 +13,13 @@ import java.io.InputStream;
 public class StorageService {
 
     @Autowired
-    private LocalFileStorage localFileStorage;
+    private FileStorage localFileStorage;
 
-    public String saveFile(String fileName, byte[] file) throws LibException{
+    public String save(String fileName, byte[] file) throws LibException{
         return localFileStorage.save(fileName, file);
     }
 
-    public InputStream getFile(String fileId) throws LibException{
+    public InputStream load(String fileId) throws LibException{
         return localFileStorage.load(fileId);
     }
 
