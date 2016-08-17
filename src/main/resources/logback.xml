@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" debug="true">
+
+    <appender name="lib" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <Pattern> %d{HH:mm:ss.SSS} %-5level [%thread] at %class.%method \(%file:%line\) - %msg%n</Pattern>
+        </encoder>
+    </appender>
+
+    <appender name="main" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <Pattern>%d %-5level [%thread] %logger{0}: %msg%n</Pattern>
+        </encoder>
+    </appender>
+
+
+    <logger name="lib" level="DEBUG" additivity="false">
+        <appender-ref ref="lib" />
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="main" />
+
+    </root>
+</configuration>

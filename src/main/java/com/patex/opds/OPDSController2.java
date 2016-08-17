@@ -8,6 +8,8 @@ import com.rometools.rome.feed.atom.Content;
 import com.rometools.rome.feed.atom.Entry;
 import com.rometools.rome.feed.atom.Link;
 import com.rometools.rome.feed.synd.SyndPersonImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +24,8 @@ import java.util.stream.Collectors;
 @Controller
 @RequestMapping("opds")
 public class OPDSController2 {
+
+    private static Logger log = LoggerFactory.getLogger(OPDSController2.class);
 
     private static final int EXPAND_FOR_AUTHORS_COUNT = 3;
 

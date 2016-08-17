@@ -2,6 +2,8 @@ package com.patex.parser;
 
 import com.patex.LibException;
 import com.patex.entities.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +17,7 @@ import java.io.InputStream;
 @Service
 public class Fb2FileParser implements FileParser {
 
+    private static Logger log = LoggerFactory.getLogger(Fb2FileParser.class);
 
     private final XMLInputFactory factory;
 
@@ -67,14 +70,15 @@ public class Fb2FileParser implements FileParser {
                 } else if ("genre".equals(reader.getLocalName())) {
                     book.getGenres().add(new BookGenre(book, new Genre(reader.getElementText())));
                  } else if ("sequence".equals(reader.getLocalName())) {
+                    String sequenceName = reader.getAttributeValue("", "name");
                     Integer order;
                     try {
                         order = Integer.valueOf(reader.getAttributeValue("", "number"));
                     } catch (NumberFormatException e) {
                         order=0;
-                        e.printStackTrace();
+                       log.warn("sequence {} without order, book: {}",sequenceName,book.getTitle());
                     }
-                    book.getSequences().add(new BookSequence(order,new Sequence(reader.getAttributeValue("","name"))));
+                    book.getSequences().add(new BookSequence(order,new Sequence(sequenceName)));
                 }
 
             }

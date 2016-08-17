@@ -39,8 +39,6 @@ public class BookService {
     @Autowired
     private LocalFileStorage fileStorage;
 
-    @Autowired
-    private EntityManager entityManager;
 
     public Book uploadBook(String fileName, InputStream is) throws LibException {
 
@@ -62,9 +60,9 @@ public class BookService {
         Map<String,Sequence> sequencesMap=authors.stream().flatMap(Author::getSequences).distinct().
                 collect(Collectors.toMap(Sequence::getName,sequence -> sequence));
 
-        book.getSequences().stream().forEach(bookSequence -> {
+        book.getSequences().forEach(bookSequence -> {
             Sequence sequence = sequencesMap.get(bookSequence.getSequence().getName());
-            bookSequence.setSequence(sequence==null?bookSequence.getSequence():sequence);
+            bookSequence.setSequence(sequence == null ? bookSequence.getSequence() : sequence);
             bookSequence.setBook(book);
 
         });
@@ -76,7 +74,6 @@ public class BookService {
         book.setFileName(fileName);
         book.setSize(byteArray.length);
         Book save = bookRepository.save(book);
-//        entityManager.detach(book);
         book.getAuthors().forEach(author -> author.getBooks().add(book));
         return save;
     }

@@ -1,7 +1,10 @@
 package com.patex;
 
 import com.patex.entities.Book;
+import com.patex.opds.OPDSController2;
 import com.patex.service.BookService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -22,6 +25,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/book")
 public class BookController {
 
+    private static Logger log = LoggerFactory.getLogger(BookController.class);
+
     @Autowired
     BookService bookService;
 
@@ -41,7 +46,8 @@ public class BookController {
                         bookService.uploadBook(file.getOriginalFilename(), file.getInputStream());
                         return new BookUploadInfo(file.getOriginalFilename(), BookUploadInfo.Status.Success);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.error("unable to parse {}",file.getOriginalFilename());
+                        log.warn(e.getMessage(),e);
                         return new BookUploadInfo(file.getOriginalFilename(), BookUploadInfo.Status.Failed);
                     }
         }
