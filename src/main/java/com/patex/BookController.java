@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,10 +34,15 @@ public class BookController {
 
 
     @RequestMapping(value = "/{id}" , method = RequestMethod.GET)
-    public @ResponseBody  Book getAuthor(@PathVariable(value = "id") long id) {
+    public @ResponseBody Book getBook(@PathVariable(value = "id") long id) {
         return bookService.getBook(id);
     }
 
+    @RequestMapping(method = RequestMethod.GET)
+    public @ResponseBody
+    Page<Book> getBookS(Pageable pageable) {
+        return bookService.getBooks(pageable);
+    }
 
     @RequestMapping(method = RequestMethod.POST, value = "/upload")
     public @ResponseBody List<BookUploadInfo> handleFileUpload(@RequestParam("file") MultipartFile[] files)
