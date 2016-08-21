@@ -1,15 +1,24 @@
 package com.patex.api;
 
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
+import com.patex.BookUploadInfo;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 
 
 public class UploadIT {
@@ -17,20 +26,25 @@ public class UploadIT {
     private HttpTestClient httpClient;
 
     @Before
-    public void setUo() {
+    public void setUp() {
         httpClient = new HttpTestClient("http://localhost:8080");
     }
 
     @Test
     public void uploadFile() throws IOException {
 
-        HttpEntity entity = MultipartEntityBuilder.create().addBinaryBody("parserTest.fb2",
-                getClass().getResourceAsStream("/parserTest.fb2")).
-                build();
-        HttpResponse response = httpClient.makePost("book/upload", entity);
+        Map<String, InputStream> files = new HashMap<>();
+        String bookFileName = "parserTest.fb2";
+        files.put(bookFileName,
+                getClass().getResourceAsStream("/parserTest.fb2"));
+        ResponseEntity<List<BookUploadInfo>> response = httpClient.uploadFiles("book/upload", "file",files, new ParameterizedTypeReference<List<BookUploadInfo>>() {
+        });
 
-        Assert.assertThat(response.getStatusLine().getStatusCode(), Matchers.equalTo(200));
-
+        assertThat(response.getStatusCode(), Matchers.equalTo(HttpStatus.OK));
+        assertThat(response.getBody(), hasSize(1));
+        BookUploadInfo bookInfo = response.getBody().get(0);
+        assertThat(bookInfo.getFileName(), Matchers.equalTo(bookFileName));
+        assertThat(bookInfo.getStatus(), Matchers.equalTo(BookUploadInfo.Status.Success));
     }
 }
 

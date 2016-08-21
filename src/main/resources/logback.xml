@@ -14,7 +14,7 @@
     </appender>
 
 
-    <logger name="lib" level="DEBUG" additivity="false">
+    <logger name="com.patex" level="TRACE" additivity="false">
         <appender-ref ref="lib" />
     </logger>
 

@@ -119,4 +119,8 @@ public class BookService {
     public Page<Book> getBooks(Pageable pageable) {
         return bookRepository.findAll(pageable);
     }
+
+    public Book updateBook(Book book) {
+        return bookRepository.save(book);
+    }
 }

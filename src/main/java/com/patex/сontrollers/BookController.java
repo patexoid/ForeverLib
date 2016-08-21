@@ -1,7 +1,8 @@
-package com.patex;
+package com.patex.сontrollers;
 
+import com.patex.BookUploadInfo;
+import com.patex.LibException;
 import com.patex.entities.Book;
-import com.patex.opds.OPDSController2;
 import com.patex.service.BookService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,8 +40,13 @@ public class BookController {
 
     @RequestMapping(method = RequestMethod.GET)
     public @ResponseBody
-    Page<Book> getBookS(Pageable pageable) {
+    Page<Book> getBooks(Pageable pageable) {
         return bookService.getBooks(pageable);
+    }
+
+    @RequestMapping(method = RequestMethod.POST)
+    public Book updateBook(Book book){
+        return bookService.updateBook(book);
     }
 
     @RequestMapping(method = RequestMethod.POST, value = "/upload")

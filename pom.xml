@@ -24,6 +24,7 @@
                     <!--<jvmArguments>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005</jvmArguments>-->
                 <profiles>
                     <profile>tempStorage</profile>
+                    <profile>test</profile>
                 </profiles>
                     <useTestClasspath>true</useTestClasspath>
                 </configuration>
