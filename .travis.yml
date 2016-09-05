@@ -1,1 +1,5 @@
 language: java
+script: cd core|mvn verify
+jdk:
+  - oraclejdk8
+  
