@@ -1,1 +1,5 @@
 language: java
+script: mvn -f ./core/pom.xml test
+jdk:
+  - oraclejdk8
+  
