@@ -1,5 +1,5 @@
 language: java
-script: mvn -f ./core/pom.xml test
+script: mvn -f ./core/pom.xml verify
 jdk:
   - oraclejdk8
   
