@@ -65,6 +65,7 @@ public class Author {
     }
 
 
+    @JsonIgnore
     public Stream<Sequence> getSequences() {
         return getBooks().stream().
                 flatMap(book -> book.getSequences().stream()).

@@ -3,6 +3,7 @@ package com.patex.service;
 import com.patex.entities.AggrResult;
 import com.patex.entities.Author;
 import com.patex.entities.AuthorRepository;
+import com.patex.entities.Book;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,5 +34,9 @@ public class AuthorService {
 
   public List<Author> findByName(String name) {
     return authorRepository.findByNameStartingWithIgnoreCase(name);
+  }
+
+  public List<Author> getAuthor(Pageable pageable) {
+      return authorRepository.findAll(pageable).getContent();
   }
 }
