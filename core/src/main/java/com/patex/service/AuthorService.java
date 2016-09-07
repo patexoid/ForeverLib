@@ -36,7 +36,7 @@ public class AuthorService {
     return authorRepository.findByNameStartingWithIgnoreCase(name);
   }
 
-  public List<Author> getAuthor(Pageable pageable) {
-      return authorRepository.findAll(pageable).getContent();
+  public Page<Author> getAuthor(Pageable pageable) {
+      return authorRepository.findAll(pageable);
   }
 }

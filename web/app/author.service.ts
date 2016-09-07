@@ -13,9 +13,8 @@ export class AuthorService {
 
     getAuthors(): Promise<Author[]> {
         var url = "http://localhost:8080/author";
-        this.http.get(url).forEach(aa=>console.log(aa.json().data));
         return this.http.get(url).toPromise()
-             .then(response => response.json().data as Author[])
+             .then(response => response.json().content as Author[])
              .catch(this.handleError);
     }
 

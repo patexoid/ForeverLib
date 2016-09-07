@@ -44,7 +44,7 @@ public class AuthorController {
     @CrossOrigin(origins = "*")
     @RequestMapping(method = RequestMethod.GET)
     public @ResponseBody
-    List<Author> getAuthors(Pageable pageable) {
+    Page<Author> getAuthors(Pageable pageable) {
         return authorService.getAuthor(pageable);
     }
 
