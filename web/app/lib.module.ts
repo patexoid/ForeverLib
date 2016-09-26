@@ -4,9 +4,9 @@ import { FormsModule }   from '@angular/forms';
 
 import { LibComponent }  from './lib.component';
 import {AuthorsComponent} from "./authors.component";
+import {AuthorComponent} from "./author.component";
 import { HttpModule }    from '@angular/http';
 import {AuthorService} from "./author.service";
-import {AuthorComponent} from "./author.component";
 @NgModule({
     imports:      [
         BrowserModule,

@@ -5,14 +5,14 @@
         <title-info>
             <genre>sf</genre>
             <author>
-                <first-name>Первый</first-name>
-                <middle-name>Вторович</middle-name>
-                <last-name>Третьевенко</last-name>
+                <first-name>Четвертый</first-name>
+                <middle-name>Пятывенко</middle-name>
+                <last-name>Шестович</last-name>
                 <home-page>http://example.com</home-page>
                 <email>author@example.com</email>
             </author>
-            <book-title>Первая книга из Мегасерии</book-title>
-            <sequence name="Мегасерия" number="1"/>
+            <book-title>Вторая книга из мегасерии</book-title>
+            <sequence name="Мегасерия" number="2"/>
         </title-info>
 
     </description>

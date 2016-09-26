@@ -1,10 +1,12 @@
 package com.patex.entities;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Entity
@@ -64,14 +66,23 @@ public class Author {
         this.descr = descr;
     }
 
-
     @JsonIgnore
-    public Stream<Sequence> getSequences() {
+    public Stream<Sequence> getSequencesStream() {
         return getBooks().stream().
                 flatMap(book -> book.getSequences().stream()).
                 map(BookSequence::getSequence).
                 distinct();
-
     }
+
+    @JsonGetter
+    public List<Sequence> getSequences() {
+        return getSequencesStream().collect(Collectors.toList());
+    }
+
+    @JsonGetter
+    public List<Book> getBooksNoSequence() {
+        return getBooks().stream().filter(book -> book.getSequences().isEmpty()).collect(Collectors.toList());
+    }
+
 
 }

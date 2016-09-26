@@ -16,12 +16,12 @@ public class Fb2ParserTest {
         Fb2FileParser fb2FileParser = new Fb2FileParser();
         InputStream resourceAsStream = getClass().getResourceAsStream("/parserTest.fb2");
         Book book = fb2FileParser.parseFile("parserTest.fb2", resourceAsStream);
-        assertEquals(book.getAuthors().get(0).getName(),"Фамилия First Second");
+        assertEquals(book.getAuthors().get(0).getName(),"Третьевенко Первый Вторович");
         assertEquals(book.getSequences().get(0).getSeqOrder(),1);
-        assertEquals(book.getSequences().get(0).getSequence().getName(),"Серия");
+        assertEquals(book.getSequences().get(0).getSequence().getName(),"Мегасерия");
         assertThat(book.getGenres(), hasSize(1));
         assertEquals(book.getGenres().get(0).getGenre().getName(), "sf");
-        assertEquals(book.getTitle(),"Заголовок");
+        assertEquals(book.getTitle(),"Первая книга из Мегасерии");
 
     }
 }

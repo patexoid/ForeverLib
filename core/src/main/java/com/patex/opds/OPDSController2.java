@@ -106,7 +106,7 @@ public class OPDSController2 {
         ModelAndView mav = new ModelAndView();
         mav.setViewName(OpdsView.OPDS_VIEW);
         List<Entry> entries = new ArrayList<>();
-        Author author = authorService.getAuthor(id);
+        Author author = authorService.getAuthors(id);
         if (author == null) {
             return mav;
         }
@@ -130,7 +130,7 @@ public class OPDSController2 {
     public ModelAndView getAuthorBookAlphabet(@PathVariable(value = "id") long id) {
         ModelAndView mav = new ModelAndView();
         mav.setViewName(OpdsView.OPDS_VIEW);
-        Author bookAuthor = authorService.getAuthor(id);
+        Author bookAuthor = authorService.getAuthors(id);
         if (bookAuthor == null) {
             return mav;
         }
@@ -165,12 +165,12 @@ public class OPDSController2 {
     public ModelAndView getAuthorSequences(@PathVariable(value = "id") long id) {
         ModelAndView mav = new ModelAndView();
         mav.setViewName(OpdsView.OPDS_VIEW);
-        Author author = authorService.getAuthor(id);
+        Author author = authorService.getAuthors(id);
         if (author == null) {
             return mav;
         }
         mav.addObject(OpdsView.TITLE, "Книжные сериии " + author.getName());
-        List<Entry> entries = author.getSequences().map(OPDSController2::mapSequenceToEntry).
+        List<Entry> entries = author.getSequencesStream().map(OPDSController2::mapSequenceToEntry).
                 collect(Collectors.toList());
         mav.addObject(OpdsView.ENTRIES, entries);
         return mav;

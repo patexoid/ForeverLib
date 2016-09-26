@@ -1,14 +1,14 @@
 /**
  * Created by Alexey on 9/5/2016.
  */
-import {Component, OnInit} from "@angular/core";
+import {Component, OnInit } from "@angular/core";
 import {Author} from "./Author";
 import {AuthorService} from "./author.service";
 
 @Component({
     selector: 'lib-authors-list',
     template: `
-<h1>AuthorList</h1>
+<h1>Author List</h1>
 <div class="lib">
     <div class="authors">
         <div *ngFor="let author of authors"  [class.selected]="author === selectedAuthor"
@@ -37,8 +37,7 @@ overflow:auo;
     
 }
 .author {
-    float:right;
-    
+     margin-left: 19%
 }
 `],
     providers: [AuthorService]

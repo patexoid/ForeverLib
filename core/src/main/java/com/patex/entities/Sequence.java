@@ -20,7 +20,6 @@ public class Sequence {
     private String name;
 
     @OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.LAZY, mappedBy = "sequence")
-    @JsonIgnore
     private List<BookSequence> bookSequences = new ArrayList<>();
 
     public Sequence(String name) {

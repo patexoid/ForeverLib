@@ -18,7 +18,6 @@ public class BookSequence {
     private int seqOrder;
 
     @ManyToOne(cascade = {CascadeType.ALL})
-    @JsonIgnore
     private Book book;
 
     @ManyToOne(cascade = {CascadeType.ALL})

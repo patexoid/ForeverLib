@@ -63,3 +63,4 @@ hs_err_pid*
 web/app/*.js
 /web/app/*.js.map
 /web/typings/
+/core/target/

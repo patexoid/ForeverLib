@@ -3,6 +3,7 @@ package com.patex.api;
 
 import com.patex.BookUploadInfo;
 import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.core.ParameterizedTypeReference;
@@ -30,19 +31,42 @@ public class UploadIT {
 
     @Test
     public void uploadFile() throws IOException {
-
         Map<String, InputStream> files = new HashMap<>();
-        String bookFileName = "parserTest.fb2";
-        files.put(bookFileName,
-                getClass().getResourceAsStream("/parserTest.fb2"));
-        ResponseEntity<List<BookUploadInfo>> response = httpClient.uploadFiles("book/upload", "file",files, new ParameterizedTypeReference<List<BookUploadInfo>>() {
+        String fileName = "parserTest.fb2";
+        putBook(files, fileName);
+
+        ResponseEntity<List<BookUploadInfo>> response = httpClient.uploadFiles("book/upload",
+                "file",files, new ParameterizedTypeReference<List<BookUploadInfo>>() {
         });
 
         assertThat(response.getStatusCode(), Matchers.equalTo(HttpStatus.OK));
         assertThat(response.getBody(), hasSize(1));
         BookUploadInfo bookInfo = response.getBody().get(0);
-        assertThat(bookInfo.getFileName(), Matchers.equalTo(bookFileName));
+        assertThat(bookInfo.getFileName(), Matchers.equalTo(fileName));
         assertThat(bookInfo.getStatus(), Matchers.equalTo(BookUploadInfo.Status.Success));
     }
+
+    private void putBook(Map<String, InputStream> files, String fileName) {
+        files.put(fileName,getClass().getResourceAsStream("/"+fileName));
+    }
+
+    @Test
+    public void uploadFiles() throws IOException {
+
+        Map<String, InputStream> files = new HashMap<>();
+        putBook(files, "parserTest.fb2");
+        putBook(files, "parserTest1.fb2");
+        putBook(files, "parserTest2.fb2");
+        putBook(files, "parserTest4.fb2");
+        ResponseEntity<List<BookUploadInfo>> response = httpClient.uploadFiles("book/upload",
+                "file",files, new ParameterizedTypeReference<List<BookUploadInfo>>() {
+                });
+
+        assertThat(response.getStatusCode(), Matchers.equalTo(HttpStatus.OK));
+        assertThat(response.getBody(), hasSize(4));
+        Assert.assertTrue(response.getBody().stream().
+                allMatch(info ->info.getStatus().equals(BookUploadInfo.Status.Success) ));
+            }
+
 }
 

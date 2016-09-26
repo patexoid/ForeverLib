@@ -20,7 +20,7 @@ public class AuthorService {
   @Autowired
   AuthorRepository authorRepository;
 
-  public Author getAuthor(long id){
+  public Author getAuthors(long id){
     return authorRepository.findOne(id);
   }
 
@@ -36,7 +36,7 @@ public class AuthorService {
     return authorRepository.findByNameStartingWithIgnoreCase(name);
   }
 
-  public Page<Author> getAuthor(Pageable pageable) {
+  public Page<Author> getAuthors(Pageable pageable) {
       return authorRepository.findAll(pageable);
   }
 }

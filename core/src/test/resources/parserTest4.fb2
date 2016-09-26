@@ -11,8 +11,8 @@
                 <home-page>http://example.com</home-page>
                 <email>author@example.com</email>
             </author>
-            <book-title>Первая книга из Мегасерии</book-title>
-            <sequence name="Мегасерия" number="1"/>
+            <book-title>Четвертая книга из Мегасерии</book-title>
+            <sequence name="Мегасерия" number="4"/>
         </title-info>
 
     </description>
