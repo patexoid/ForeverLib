@@ -47,6 +47,7 @@ public class Book {
     private long size;
 
     @OneToOne
+    @JsonIgnore
     private FileResource fileResource;
 
     @Lob

@@ -55,7 +55,7 @@ public class BookService {
         }).collect(Collectors.toList());
         book.setAuthors(authors);
 
-        Map<String,Sequence> sequencesMap=authors.stream().flatMap(Author::getSequences).distinct().
+        Map<String,Sequence> sequencesMap=authors.stream().flatMap(Author::getSequencesStream).distinct().
                 collect(Collectors.toMap(Sequence::getName,sequence -> sequence));
 
         book.getSequences().forEach(bookSequence -> {
