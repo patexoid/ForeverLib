@@ -3,7 +3,7 @@
  */
 import {Component, Input} from "@angular/core";
 import {Author} from "./Author";
-import {AuthorService} from "./author.service";
+import {Book} from "./Book";
 
 @Component({
     selector: 'lib-author',
@@ -14,16 +14,16 @@ import {AuthorService} from "./author.service";
         <div class="sequence">
             <div *ngFor="let sequence of author.sequences" >
                {{sequence.name}}
-                <div *ngFor="let bookSequence of sequence.bookSequences" >
+                <div *ngFor="let bookSequence of sequence.bookSequences" (click)="onSelect(bookSequence.book)">
                    {{bookSequence.seqOrder}} {{bookSequence.book.title}}
+                   
                 </div>
+            </div>
+            <div *ngFor="let book of author.booksNoSequence" >
+                {{book.title}}
+            </div>
         </div>
-        <div *ngFor="let book of author.booksNoSequence" >
-            {{book.title}}
-        </div>
-
-</div>
-
+<lib-book  *ngIf="selectedBook" [book] = "selectedBook"> </lib-book>
 </div>
 `,
     styles: [`
@@ -35,12 +35,17 @@ h1 {
 }
 
 
-`],
-    providers: [AuthorService]
+`]
 })
 export class AuthorComponent {
 
     @Input()
     author:Author;
 
+    selectedBook:Book;
+
+
+    onSelect(book: Book): void {
+        this.selectedBook = book;
+    }
 }

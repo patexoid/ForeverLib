@@ -7,6 +7,7 @@ import {AuthorsComponent} from "./authors.component";
 import {AuthorComponent} from "./author.component";
 import { HttpModule }    from '@angular/http';
 import {AuthorService} from "./author.service";
+import {BookComponent} from "./book.component";
 @NgModule({
     imports:      [
         BrowserModule,
@@ -15,7 +16,8 @@ import {AuthorService} from "./author.service";
     declarations: [
         LibComponent,
         AuthorsComponent,
-        AuthorComponent
+        AuthorComponent,
+        BookComponent
     ],
     providers: [
         AuthorService,

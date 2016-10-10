@@ -6,8 +6,7 @@ import org.junit.Test;
 import java.io.InputStream;
 
 import static org.hamcrest.collection.IsCollectionWithSize.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 public class Fb2ParserTest {
 
@@ -22,6 +21,8 @@ public class Fb2ParserTest {
         assertThat(book.getGenres(), hasSize(1));
         assertEquals(book.getGenres().get(0).getGenre().getName(), "sf");
         assertEquals(book.getTitle(),"Первая книга из Мегасерии");
+        assertNotNull(book.getDescr());
+        assertTrue(book.getDescr().contains("Подробное описание книги"));
 
     }
 }

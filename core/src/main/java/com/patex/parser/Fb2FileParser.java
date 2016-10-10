@@ -8,11 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
+import javax.xml.namespace.QName;
+import javax.xml.stream.*;
+import javax.xml.stream.events.StartElement;
+import javax.xml.stream.events.XMLEvent;
 import java.io.InputStream;
+import java.util.Iterator;
+import java.util.stream.StreamSupport;
 
 @Service
 public class Fb2FileParser implements FileParser {
@@ -42,10 +44,10 @@ public class Fb2FileParser implements FileParser {
     @Override
     public Book parseFile(String fileName, InputStream file) throws LibException {
         try {
-            XMLStreamReader reader = factory.createXMLStreamReader(file);
+            XMLEventReader reader = factory.createXMLEventReader(file);
             while (reader.hasNext()) {
-                int event = reader.next();
-                if (event == XMLStreamConstants.START_ELEMENT && "title-info".equals(reader.getLocalName())) {
+                XMLEvent event = reader.nextEvent();
+                if (event.isStartElement()&& "title-info".equals(event.asStartElement().getName().getLocalPart())) {
                     return parseTitleInfo(reader);
                 }
             }
@@ -55,30 +57,34 @@ public class Fb2FileParser implements FileParser {
         throw new LibException("unable to parse fb2 file");
     }
 
-    private Book parseTitleInfo(XMLStreamReader reader) throws XMLStreamException {
+    private Book parseTitleInfo(XMLEventReader reader) throws XMLStreamException {
         Book book = new Book();
         while (reader.hasNext()) {
-            int event = reader.next();
-            if (event == XMLStreamConstants.END_ELEMENT && "title-info".equals(reader.getLocalName())) {
+            XMLEvent event = reader.nextEvent();
+            if (event.isEndElement()&& "title-info".equals(event.asEndElement().getName().getLocalPart())) {
                 return book;
-            } else if (event == XMLStreamConstants.START_ELEMENT) {
-                if ("author".equals(reader.getLocalName())) {
+            } else if (event.isStartElement()) {
+                StartElement element = event.asStartElement();
+                String localPart = element.getName().getLocalPart();
+                if ("author".equals(localPart)) {
                     Author author = parseAuthor(reader);
                     book.addAuthor(author);
-                } else if ("book-title".equals(reader.getLocalName())) {
+                } else if ("book-title".equals(localPart)) {
                     book.setTitle(reader.getElementText());
-                } else if ("genre".equals(reader.getLocalName())) {
+                } else if ("annotation".equals(localPart)) {
+                    book.setDescr(getText(reader, "annotation"));
+                } else if ("genre".equals(localPart)) {
                     book.getGenres().add(new BookGenre(book, new Genre(reader.getElementText())));
-                 } else if ("sequence".equals(reader.getLocalName())) {
-                    String sequenceName = reader.getAttributeValue("", "name");
+                } else if ("sequence".equals(localPart)) {
+                    String sequenceName = element.getAttributeByName(new QName("","name")).getValue();
                     Integer order;
                     try {
-                        order = Integer.valueOf(reader.getAttributeValue("", "number"));
+                        order = Integer.valueOf(element.getAttributeByName(new QName("","number")).getValue());
                     } catch (NumberFormatException e) {
-                        order=0;
-                       log.warn("sequence {} without order, book: {}",sequenceName,book.getTitle());
+                        order = 0;
+                        log.warn("sequence {} without order, book: {}", sequenceName, book.getTitle());
                     }
-                    book.getSequences().add(new BookSequence(order,new Sequence(sequenceName)));
+                    book.getSequences().add(new BookSequence(order, new Sequence(sequenceName)));
                 }
 
             }
@@ -86,25 +92,45 @@ public class Fb2FileParser implements FileParser {
         return null;
     }
 
-    private Author parseAuthor(XMLStreamReader reader) throws XMLStreamException {
+    private String getText(XMLEventReader reader, String tag) throws XMLStreamException {
+        String text = "";
+        while (reader.hasNext()) {
+            XMLEvent event = reader.nextEvent();
+            if (event.isCharacters()) {
+                String data = event.asCharacters().getData().trim();
+                if(!data.isEmpty()) {
+                    text += data + "\n";
+                }
+            } else if (event.isEndElement() && tag.equals(event.asEndElement().getName().getLocalPart())) {
+                return text;
+
+            }
+        }
+
+        return text;
+    }
+
+    private Author parseAuthor(XMLEventReader reader) throws XMLStreamException {
         String lastName = "";
         String firstName = "";
         String middleName = "";
         Author author = new Author();
         while (reader.hasNext()) {
-            int event = reader.next();
-            if (event == XMLStreamConstants.START_ELEMENT) {
-                if ("first-name".equals(reader.getLocalName())) {
+            XMLEvent event = reader.nextEvent();
+            if (event.isStartElement()) {
+                StartElement element = event.asStartElement();
+                String localPart = element.getName().getLocalPart();
+                if ("first-name".equals(localPart)) {
                     firstName = reader.getElementText();
-                } else if ("middle-name".equals(reader.getLocalName())) {
+                } else if ("middle-name".equals(localPart)) {
                     middleName = reader.getElementText();
-                } else if ("last-name".equals(reader.getLocalName())) {
+                } else if ("last-name".equals(localPart)) {
                     lastName = reader.getElementText();
                 }
             }
-            if (event == XMLStreamConstants.END_ELEMENT && "author".equals(reader.getLocalName())) {
+            if (event.isEndElement() && "author".equals(event.asEndElement().getName().getLocalPart())) {
                 String name = lastName + " " + firstName + " " + middleName;
-                author.setName(name.replaceAll("\\s+"," "));
+                author.setName(name.replaceAll("\\s+", " "));
                 return author;
             }
         }
