@@ -8,6 +8,7 @@ import {AuthorService} from "./author.service";
 @Component({
     selector: 'lib-authors-list',
     template: `
+<lib-upload></lib-upload>
 <h1>Author List</h1>
 <div class="lib">
     <div class="authors">
@@ -29,7 +30,7 @@ import {AuthorService} from "./author.service";
 
 .lib {
 width: 100%;
-overflow:auo;
+overflow:auto;
 }
 .authors {
     width:18%;

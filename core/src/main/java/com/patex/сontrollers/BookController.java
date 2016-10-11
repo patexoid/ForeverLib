@@ -49,6 +49,7 @@ public class BookController {
         return bookService.updateBook(book);
     }
 
+    @CrossOrigin(origins = "*")
     @RequestMapping(method = RequestMethod.POST, value = "/upload")
     public @ResponseBody List<BookUploadInfo> handleFileUpload(@RequestParam("file") MultipartFile[] files)
             throws LibException, IOException {
