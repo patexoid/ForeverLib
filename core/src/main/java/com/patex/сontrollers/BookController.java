@@ -44,27 +44,26 @@ public class BookController {
         return bookService.getBooks(pageable);
     }
 
-    @RequestMapping(method = RequestMethod.POST)
-    public Book updateBook(Book book){
-        return bookService.updateBook(book);
-    }
-
-    @CrossOrigin(origins = "*")
     @RequestMapping(method = RequestMethod.POST, value = "/upload")
     public @ResponseBody List<BookUploadInfo> handleFileUpload(@RequestParam("file") MultipartFile[] files)
             throws LibException, IOException {
 
         return Arrays.stream(files).map( file->{
                     try {
-                        bookService.uploadBook(file.getOriginalFilename(), file.getInputStream());
-                        return new BookUploadInfo(file.getOriginalFilename(), BookUploadInfo.Status.Success);
+                        Book book = bookService.uploadBook(file.getOriginalFilename(), file.getInputStream());
+                        return new BookUploadInfo(book.getId(),file.getOriginalFilename(), BookUploadInfo.Status.Success);
                     } catch (Exception e) {
                         log.error("unable to parse {}",file.getOriginalFilename());
                         log.warn(e.getMessage(),e);
-                        return new BookUploadInfo(file.getOriginalFilename(), BookUploadInfo.Status.Failed);
+                        return new BookUploadInfo(-1,file.getOriginalFilename(), BookUploadInfo.Status.Failed);
                     }
-        }
+                }
         ).collect(Collectors.toList());
+    }
+
+    @RequestMapping(method = RequestMethod.POST)
+    public @ResponseBody Book updateBook(@RequestBody Book book) throws LibException {
+        return bookService.updateBook(book);
     }
 
     @RequestMapping(value = "/loadFile/{id}", method = RequestMethod.GET)

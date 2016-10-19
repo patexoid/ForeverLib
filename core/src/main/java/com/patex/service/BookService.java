@@ -10,7 +10,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -115,7 +118,10 @@ public class BookService {
         return bookRepository.findAll(pageable);
     }
 
-    public Book updateBook(Book book) {
-        return bookRepository.save(book);
+    public Book updateBook(Book book) throws LibException{
+        if(bookRepository.exists(book.getId())){
+            return bookRepository.save(book);
+        }
+        throw new LibException("Book not found");
     }
 }

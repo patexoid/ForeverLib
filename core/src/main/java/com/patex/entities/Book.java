@@ -1,6 +1,8 @@
 package com.patex.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -15,10 +17,11 @@ public class Book {
 
     @Id
     @GeneratedValue
+    @JsonProperty
     private long id;
 
-    @JsonIgnore
-    @ManyToMany(cascade = {CascadeType.ALL},fetch = FetchType.LAZY)
+    @JsonBackReference
+    @ManyToMany(cascade = {CascadeType.PERSIST},fetch = FetchType.LAZY)
     @JoinTable(
             name = "AUTHOR_BOOK",
             joinColumns = @JoinColumn(name = "bookId"),
@@ -26,7 +29,7 @@ public class Book {
     private List<Author> authors = new ArrayList<Author>();
 
     @JsonIgnore
-    @OneToMany(cascade = {CascadeType.ALL},fetch = FetchType.LAZY,mappedBy = "book")
+    @OneToMany(cascade = {CascadeType.PERSIST},fetch = FetchType.LAZY,mappedBy = "book")
 //    @JoinTable(
 //            name = "SEQUENCE_BOOK",
 //            joinColumns = @JoinColumn(name = "bookId"),
@@ -38,12 +41,15 @@ public class Book {
     private List<BookGenre> genres = new ArrayList<>();
 
     @Column(nullable = false)
+    @JsonProperty
     private String title;
 
     @Column(nullable = false)
+    @JsonProperty
     private String fileName;
 
     @Column(nullable = false)
+    @JsonProperty
     private long size;
 
     @OneToOne
@@ -51,6 +57,7 @@ public class Book {
     private FileResource fileResource;
 
     @Lob
+    @JsonProperty
     private String descr;
 
     public Book() {

@@ -2,6 +2,7 @@ package com.patex.entities;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -19,8 +20,8 @@ public class Author {
     @Column(nullable = false)
     private String name;
 
-    @ManyToMany(cascade = {CascadeType.ALL}, fetch = FetchType.LAZY, mappedBy = "authors")
-    @JsonIgnore
+    @ManyToMany(cascade = {CascadeType.PERSIST}, fetch = FetchType.LAZY, mappedBy = "authors")
+    @JsonManagedReference
     private List<Book> books = new ArrayList<Book>();
 
 

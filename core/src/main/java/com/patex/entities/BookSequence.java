@@ -17,10 +17,10 @@ public class BookSequence {
     @Column(nullable = false)
     private int seqOrder;
 
-    @ManyToOne(cascade = {CascadeType.ALL})
+    @ManyToOne(cascade = {CascadeType.PERSIST})
     private Book book;
 
-    @ManyToOne(cascade = {CascadeType.ALL})
+    @ManyToOne(cascade = {CascadeType.PERSIST})
     @JsonIgnore
     private Sequence sequence;
 
