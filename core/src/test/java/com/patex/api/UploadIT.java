@@ -2,12 +2,14 @@ package com.patex.api;
 
 
 import com.patex.BookUploadInfo;
+import com.patex.entities.Book;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
@@ -68,5 +70,40 @@ public class UploadIT {
                 allMatch(info ->info.getStatus().equals(BookUploadInfo.Status.Success) ));
             }
 
+    @Test
+    public void updateBookDescription() throws IOException {
+        Map<String, InputStream> files = new HashMap<>();
+        String fileName = "parserTest.fb2";
+        putBook(files, fileName);
+
+        ResponseEntity<List<BookUploadInfo>> response = httpClient.uploadFiles("book/upload",
+                "file",files, new ParameterizedTypeReference<List<BookUploadInfo>>() {
+                });
+
+        Book book = httpClient.get("book/"+response.getBody().get(0).getId(), Book.class);
+        String newDescr = book.getDescr()+"\n  new line";
+        book.setDescr(newDescr);
+        ResponseEntity<Book> responceBook = httpClient.post("book", book, MediaType.APPLICATION_JSON, Book.class);
+        Book updatedBook=responceBook.getBody();
+        assertThat(updatedBook.getDescr(), Matchers.equalTo(newDescr));
+    }
+
+    @Test
+    public void updateBookTitle() throws IOException {
+        Map<String, InputStream> files = new HashMap<>();
+        String fileName = "parserTest.fb2";
+        putBook(files, fileName);
+
+        ResponseEntity<List<BookUploadInfo>> response = httpClient.uploadFiles("book/upload",
+                "file",files, new ParameterizedTypeReference<List<BookUploadInfo>>() {
+                });
+
+        Book book = httpClient.get("book/"+response.getBody().get(0).getId(), Book.class);
+        String newTitle = book.getTitle()+". Few words";
+        book.setTitle(newTitle);
+        ResponseEntity<Book> responceBook = httpClient.post("book", book, MediaType.APPLICATION_JSON, Book.class);
+        Book updatedBook=responceBook.getBody();
+        assertThat(updatedBook.getTitle(), Matchers.equalTo(newTitle));
+    }
 }
 

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class BookUploadInfo {
 
+    private long id;
     private String fileName;
     private Status status;
 
@@ -16,11 +17,16 @@ public class BookUploadInfo {
     }
 
 
-
-
-    public BookUploadInfo(@JsonProperty("fileName")String fileName, @JsonProperty("status") Status status) {
+    public BookUploadInfo(@JsonProperty("id") long id,
+                          @JsonProperty("fileName") String fileName,
+                          @JsonProperty("status") Status status) {
+        this.id = id;
         this.fileName = fileName;
         this.status = status;
+    }
+
+    public long getId() {
+        return id;
     }
 
     public String getFileName() {

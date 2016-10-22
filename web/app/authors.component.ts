@@ -46,7 +46,6 @@ overflow:auto;
 export class AuthorsComponent implements OnInit {
 
     authors: Author[];
-    aa: string;
     selectedAuthor: Author;
 
     constructor(private authorsService: AuthorService) {
@@ -54,9 +53,7 @@ export class AuthorsComponent implements OnInit {
 
     getAuthors(): void {
         this.authorsService.getAuthors().then(authors => {
-            this.authors = authors;
-            this.aa = JSON.stringify(authors)
-        });
+            this.authors = authors;});
     }
 
     ngOnInit(): void {

@@ -4,22 +4,23 @@
 import {Component, Input} from "@angular/core";
 import {Author} from "./Author";
 import {Book} from "./Book";
+import {AuthorService} from "./author.service";
 
 @Component({
     selector: 'lib-author',
     template: `
-<div *ngIf="author" class="main">
-    <h1 >{{author.name}}</h1>
-        <div>{{author.descr}}</div>
+<div *ngIf="_author" class="main">
+    <h1 >{{_author.name}}</h1>
+        <div>{{_author.descr}}</div>
         <div class="sequence">
-            <div *ngFor="let sequence of author.sequences" >
+            <div *ngFor="let sequence of _author.sequences" >
                {{sequence.name}}
                 <div *ngFor="let bookSequence of sequence.bookSequences" (click)="onSelect(bookSequence.book)">
                    {{bookSequence.seqOrder}} {{bookSequence.book.title}}
                    
                 </div>
             </div>
-            <div *ngFor="let book of author.booksNoSequence" >
+            <div *ngFor="let book of _author.booksNoSequence" >
                 {{book.title}}
             </div>
         </div>
@@ -37,12 +38,23 @@ h1 {
 
 `]
 })
-export class AuthorComponent {
+export class AuthorComponent{
+
+
+    constructor(private authorsService: AuthorService) {
+    }
+
+    _author: Author;
+
+    selectedBook: Book;
 
     @Input()
-    author:Author;
-
-    selectedBook:Book;
+    set author(author: Author){
+        this._author=author;
+        this.authorsService.getAuthor(author.id).then(author=> {
+            this._author=author;
+        })
+    }
 
 
     onSelect(book: Book): void {

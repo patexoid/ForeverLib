@@ -136,7 +136,9 @@ public class OPDSController2 {
         }
         mav.addObject(OpdsView.TITLE, "Книги по алфавиту " + bookAuthor.getName());
 
-        List<Entry> entries = bookAuthor.getBooks().stream().map(OPDSController2::mapBookToEntry).
+        List<Entry> entries = bookAuthor.getBooks().stream().
+                map(AuthorBook::getBook).
+                map(OPDSController2::mapBookToEntry).
                 collect(Collectors.toList());
         mav.addObject(OpdsView.ENTRIES, entries);
         return mav;
@@ -197,7 +199,7 @@ public class OPDSController2 {
         entry.setId("book:" + book.getId());
         entry.setUpdated(Date.from(Instant.now()));
         entry.setTitle(book.getTitle());
-        entry.setAuthors(book.getAuthors().stream().map(author -> {
+        entry.setAuthors(book.getAuthorBooks().stream().map(AuthorBook::getAuthor).map(author -> {
             SyndPersonImpl person = new SyndPersonImpl();
             person.setName(author.getName());
             person.setUri("/opds/author/" + author.getId());

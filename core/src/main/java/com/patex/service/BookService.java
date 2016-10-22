@@ -10,7 +10,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,13 +52,14 @@ public class BookService {
         if(books.size()>0){ //TODO if author or book has the same name
             return books.get(0);
         }
-       List<Author> authors=book.getAuthors().stream().map(author -> {
-            List<Author> saved = authorService.findByName(author.getName());
-            return saved.size()>0?saved.get(0):author;
+       List<AuthorBook> authorsBooks=book.getAuthorBooks().stream().map(authorBook -> {
+            List<Author> saved = authorService.findByName(authorBook.getAuthor().getName());
+            return saved.size()>0?new AuthorBook(saved.get(0),book):authorBook;
         }).collect(Collectors.toList());
-        book.setAuthors(authors);
+        book.setAuthorBooks(authorsBooks);
 
-        Map<String,Sequence> sequencesMap=authors.stream().flatMap(Author::getSequencesStream).distinct().
+        Map<String,Sequence> sequencesMap=authorsBooks.stream().map(AuthorBook::getAuthor).
+                flatMap(Author::getSequencesStream).distinct().
                 collect(Collectors.toMap(Sequence::getName,sequence -> sequence));
 
         book.getSequences().forEach(bookSequence -> {
@@ -72,13 +76,13 @@ public class BookService {
         book.setFileName(fileName);
         book.setSize(byteArray.length);
         Book save = bookRepository.save(book);
-        book.getAuthors().forEach(author -> author.getBooks().add(book));
+//        book.getAuthorBooks().forEach(author -> author.getBooks().add(new AuthorBook(author, book)));
         return save;
     }
 
     private static boolean hasTheSameAuthors(Book primary, Book secondary){
-        Set<String> primaryAuthors=primary.getAuthors().stream().map(Author::getName).collect(Collectors.toSet());
-        Set<String> secondaryAuthors= secondary.getAuthors().stream().map(Author::getName).collect(Collectors.toSet());
+        Set<String> primaryAuthors=primary.getAuthorBooks().stream().map(AuthorBook::getAuthor).map(Author::getName).collect(Collectors.toSet());
+        Set<String> secondaryAuthors= secondary.getAuthorBooks().stream().map(AuthorBook::getAuthor).map(Author::getName).collect(Collectors.toSet());
         return CollectionUtils.containsAny(primaryAuthors,secondaryAuthors);
     }
 
@@ -115,7 +119,10 @@ public class BookService {
         return bookRepository.findAll(pageable);
     }
 
-    public Book updateBook(Book book) {
-        return bookRepository.save(book);
+    public Book updateBook(Book book) throws LibException{
+        if(bookRepository.exists(book.getId())){
+            return bookRepository.save(book);
+        }
+        throw new LibException("Book not found");
     }
 }
