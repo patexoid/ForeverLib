@@ -28,8 +28,8 @@ public class AuthorController {
 
     @RequestMapping(method = RequestMethod.GET)
     public @ResponseBody
-    Page<Author> getAuthors(Pageable pageable) {
-        return authorService.getAuthors(pageable);
+    Page<Author> getAuthors(Pageable pageable,@RequestParam(required = false) String prefix) {
+        return authorService.getAuthors(pageable,prefix);
     }
 
 }

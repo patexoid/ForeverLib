@@ -72,10 +72,9 @@ public class HttpTestClient {
         return template.getForObject(url+"/"+uri, clazz);
     }
 
-
-//    public <E> E getReguest(){
-//        RestTemplate restTemplate = new RestTemplate();
-//
-//    }
+    public <T> T get(String uri,ParameterizedTypeReference<T> responseType) throws IOException {
+        RestTemplate template = new RestTemplate();
+        return template.exchange(url+"/"+uri,HttpMethod.GET,null, responseType).getBody();
+    }
 
 }

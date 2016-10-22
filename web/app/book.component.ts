@@ -1,7 +1,7 @@
 /**
  * Created by Alexey on 9/5/2016.
  */
-import {Component, Input, OnChanges, SimpleChanges} from "@angular/core";
+import {Component, Input} from "@angular/core";
 import {Book} from "./Book";
 import {BookService} from "./book.service";
 
@@ -41,7 +41,7 @@ h1 {
     providers: [BookService]
 
 })
-export class BookComponent implements OnChanges {
+export class BookComponent {
 
     constructor(private bookService: BookService) {
     }
@@ -56,15 +56,16 @@ export class BookComponent implements OnChanges {
 
     @Input()
     set book(book: Book) {
+        this._book = book;
+        this.bookService.getBook(book.id).then(book=>{
+            this._book = book;
+            this.title=book.title;
+            this.descr=book.descr;
+            this.setEdited(false)
+        });
         this.title=book.title;
         this.descr=book.descr;
-        this._book = book
     }
-
-    ngOnChanges(changes: SimpleChanges): void {
-        this.setEdited(false)
-    }
-
 
     setEdited(edited: boolean) {
         this.changed = edited;

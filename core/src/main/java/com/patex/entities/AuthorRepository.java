@@ -29,4 +29,7 @@ public interface AuthorRepository extends CrudRepository<Author, Long> {
     Page<Author> findByNameStartingWithIgnoreCase(String name, Pageable pageable);
 
 
+    @Query("SELECT NEW com.patex.entities.Author(a.id, a.name)" +
+            " FROM Author a where name like :prefix% order by name")//TODO FIX THAT
+    Page<Author> getAuthorsByName(Pageable pageable,@Param("prefix") String prefix);
 }

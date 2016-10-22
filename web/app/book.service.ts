@@ -7,12 +7,21 @@ import {Book} from "./Book";
 @Injectable()
 export class BookService {
 
+    url = "http://localhost:8080/book";
+
     constructor(private http: Http) { }
 
+    getBook( id:number ): Promise<Book> {
+        return this.http.get(this.url+'/'+id).toPromise()
+            .then(response =>
+                response.json() as Book)
+            .catch(BookService.handleError);
+    }
+
+
     saveBook(book:Book): Promise<Book> {
-        var url = "http://localhost:8080/book";
         var headers = new Headers({ 'content-type': 'application/json' });
-        return this.http.post(url,JSON.stringify(book),{ headers: headers }).toPromise()
+        return this.http.post(this.url,JSON.stringify(book),{ headers: headers }).toPromise()
              .then(response => response.json().content as Book)
              .catch(BookService.handleError);
     }

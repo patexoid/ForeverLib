@@ -15,7 +15,7 @@ public class Fb2ParserTest {
         Fb2FileParser fb2FileParser = new Fb2FileParser();
         InputStream resourceAsStream = getClass().getResourceAsStream("/parserTest.fb2");
         Book book = fb2FileParser.parseFile("parserTest.fb2", resourceAsStream);
-        assertEquals(book.getAuthors().get(0).getName(),"Третьевенко Первый Вторович");
+        assertEquals(book.getAuthorBooks().get(0).getAuthor().getName(),"Третьевенко Первый Вторович");
         assertEquals(book.getSequences().get(0).getSeqOrder(),1);
         assertEquals(book.getSequences().get(0).getSequence().getName(),"Мегасерия");
         assertThat(book.getGenres(), hasSize(1));

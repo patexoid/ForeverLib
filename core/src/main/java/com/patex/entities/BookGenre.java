@@ -14,12 +14,11 @@ public class BookGenre {
     @GeneratedValue
     private Long id;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST})
+    @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST},optional = false)
     @JsonIgnore
     private Book book;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST})
-    @JsonIgnore
+    @ManyToOne(fetch = FetchType.EAGER,cascade = {CascadeType.PERSIST}, optional = false)
     private Genre genre;
 
 

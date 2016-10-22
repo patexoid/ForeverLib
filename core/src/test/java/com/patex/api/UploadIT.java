@@ -88,5 +88,22 @@ public class UploadIT {
         assertThat(updatedBook.getDescr(), Matchers.equalTo(newDescr));
     }
 
+    @Test
+    public void updateBookTitle() throws IOException {
+        Map<String, InputStream> files = new HashMap<>();
+        String fileName = "parserTest.fb2";
+        putBook(files, fileName);
+
+        ResponseEntity<List<BookUploadInfo>> response = httpClient.uploadFiles("book/upload",
+                "file",files, new ParameterizedTypeReference<List<BookUploadInfo>>() {
+                });
+
+        Book book = httpClient.get("book/"+response.getBody().get(0).getId(), Book.class);
+        String newTitle = book.getTitle()+". Few words";
+        book.setTitle(newTitle);
+        ResponseEntity<Book> responceBook = httpClient.post("book", book, MediaType.APPLICATION_JSON, Book.class);
+        Book updatedBook=responceBook.getBody();
+        assertThat(updatedBook.getTitle(), Matchers.equalTo(newTitle));
+    }
 }
 

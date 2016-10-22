@@ -3,7 +3,6 @@ package com.patex.service;
 import com.patex.entities.AggrResult;
 import com.patex.entities.Author;
 import com.patex.entities.AuthorRepository;
-import com.patex.entities.Book;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,26 +16,27 @@ import java.util.List;
 @Service
 public class AuthorService {
 
-  @Autowired
-  AuthorRepository authorRepository;
+    @Autowired
+    AuthorRepository authorRepository;
 
-  public Author getAuthors(long id){
-    return authorRepository.findOne(id);
-  }
+    public Author getAuthors(long id) {
+        return authorRepository.findOne(id);
+    }
 
-  public Page<Author> findByName(String name, Pageable pageable) {
-    return authorRepository.findByNameStartingWithIgnoreCase(name, pageable);
-  }
+    public Page<Author> findByName(String name, Pageable pageable) {
+        return authorRepository.findByNameStartingWithIgnoreCase(name, pageable);
+    }
 
-  public List<AggrResult> getAuthorsCount(String start) {
-    return authorRepository.getAuthorsCount(start.length()+1,start);
-  }
+    public List<AggrResult> getAuthorsCount(String start) {
+        return authorRepository.getAuthorsCount(start.length() + 1, start);
+    }
 
-  public List<Author> findByName(String name) {
-    return authorRepository.findByNameStartingWithIgnoreCase(name);
-  }
+    public List<Author> findByName(String name) {
+        return authorRepository.findByNameStartingWithIgnoreCase(name);
+    }
 
-  public Page<Author> getAuthors(Pageable pageable) {
-      return authorRepository.findAll(pageable);
-  }
+    public Page<Author> getAuthors(Pageable pageable, String prefix) {
+        prefix=prefix==null?"":prefix;
+        return authorRepository.getAuthorsByName(pageable, prefix);
+    }
 }

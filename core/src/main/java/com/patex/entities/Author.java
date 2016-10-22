@@ -2,7 +2,6 @@ package com.patex.entities;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -20,16 +19,20 @@ public class Author {
     @Column(nullable = false)
     private String name;
 
-    @ManyToMany(cascade = {CascadeType.PERSIST}, fetch = FetchType.LAZY, mappedBy = "authors")
-    @JsonManagedReference
-    private List<Book> books = new ArrayList<Book>();
-
+    @OneToMany(cascade = {CascadeType.PERSIST}, fetch = FetchType.LAZY, mappedBy = "author")
+    private List<AuthorBook> books = new ArrayList<>();
 
     @Lob
     private String descr;
 
     public Author() {
     }
+
+    public Author(Long id,String name) {
+this.id=id;
+        this.name = name;
+    }
+
 
     public Author(String name) {
         this.name = name;
@@ -51,11 +54,11 @@ public class Author {
         this.name = name;
     }
 
-    public List<Book> getBooks() {
+    public List<AuthorBook> getBooks() {
         return books;
     }
 
-    public void setBooks(List<Book> books) {
+    public void setBooks(List<AuthorBook> books) {
         this.books = books;
     }
 
@@ -70,7 +73,7 @@ public class Author {
     @JsonIgnore
     public Stream<Sequence> getSequencesStream() {
         return getBooks().stream().
-                flatMap(book -> book.getSequences().stream()).
+                flatMap(book -> book.getBook().getSequences().stream()).
                 map(BookSequence::getSequence).
                 distinct();
     }
@@ -81,8 +84,8 @@ public class Author {
     }
 
     @JsonGetter
-    public List<Book> getBooksNoSequence() {
-        return getBooks().stream().filter(book -> book.getSequences().isEmpty()).collect(Collectors.toList());
+    public List<AuthorBook> getBooksNoSequence() {
+        return getBooks().stream().filter(book -> book.getBook().getSequences().isEmpty()).collect(Collectors.toList());
     }
 
 

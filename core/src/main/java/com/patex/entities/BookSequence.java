@@ -18,6 +18,7 @@ public class BookSequence {
     private int seqOrder;
 
     @ManyToOne(cascade = {CascadeType.PERSIST})
+    @JsonIgnore
     private Book book;
 
     @ManyToOne(cascade = {CascadeType.PERSIST})

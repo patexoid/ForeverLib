@@ -20,24 +20,13 @@ public class Book {
     @JsonProperty
     private long id;
 
-    @JsonBackReference
-    @ManyToMany(cascade = {CascadeType.PERSIST},fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "AUTHOR_BOOK",
-            joinColumns = @JoinColumn(name = "bookId"),
-            inverseJoinColumns = @JoinColumn(name = "authorId"))
-    private List<Author> authors = new ArrayList<Author>();
+    @ManyToMany(cascade = {CascadeType.PERSIST},fetch = FetchType.LAZY,mappedBy = "book")
+    private List<AuthorBook> authors = new ArrayList<>();
 
-    @JsonIgnore
     @OneToMany(cascade = {CascadeType.PERSIST},fetch = FetchType.LAZY,mappedBy = "book")
-//    @JoinTable(
-//            name = "SEQUENCE_BOOK",
-//            joinColumns = @JoinColumn(name = "bookId"),
-//            inverseJoinColumns = @JoinColumn(name = "sequenceId"))
     private List<BookSequence> sequences = new ArrayList<>();
 
-    @JsonIgnore
-    @OneToMany(cascade = {CascadeType.ALL},fetch = FetchType.LAZY,mappedBy = "book")
+    @OneToMany(cascade = {CascadeType.PERSIST,},fetch = FetchType.LAZY,mappedBy = "book")
     private List<BookGenre> genres = new ArrayList<>();
 
     @Column(nullable = false)
@@ -52,7 +41,7 @@ public class Book {
     @JsonProperty
     private long size;
 
-    @OneToOne
+    @OneToOne(cascade = {CascadeType.PERSIST},fetch = FetchType.LAZY, orphanRemoval = true)
     @JsonIgnore
     private FileResource fileResource;
 
@@ -64,7 +53,7 @@ public class Book {
     }
 
     public Book(Author author, String name) {
-        this.authors.add(author);
+        this.authors.add(new AuthorBook(author, this));
         this.title = name;
     }
 
@@ -85,14 +74,14 @@ public class Book {
     }
 
     public void addAuthor(Author author) {
-        authors.add(author);
+        authors.add(new AuthorBook(author, this));
     }
 
-    public List<Author> getAuthors() {
+    public List<AuthorBook> getAuthorBooks() {
         return authors;
     }
 
-    public void setAuthors(List<Author> authors) {
+    public void setAuthorBooks(List<AuthorBook> authors) {
         this.authors = authors;
     }
 
