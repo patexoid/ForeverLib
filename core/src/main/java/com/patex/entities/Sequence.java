@@ -22,6 +22,12 @@ public class Sequence {
     @OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.LAZY, mappedBy = "sequence")
     private List<BookSequence> bookSequences = new ArrayList<>();
 
+
+    protected Sequence(Long id, String name) {
+        this.id=id;
+        this.name = name;
+    }
+
     public Sequence(String name) {
         this.name = name;
     }

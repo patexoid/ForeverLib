@@ -1,5 +1,6 @@
 package com.patex.entities;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
@@ -17,11 +18,11 @@ public class BookSequence {
     @Column(nullable = false)
     private int seqOrder;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST})
+    @ManyToOne(fetch =  FetchType.EAGER, optional = false, cascade = {CascadeType.PERSIST} )
     @JsonIgnore
     private Book book;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST})
+    @ManyToOne(fetch =  FetchType.EAGER, optional = false, cascade = {CascadeType.PERSIST})
     @JsonIgnore
     private Sequence sequence;
 
@@ -42,6 +43,10 @@ public class BookSequence {
         this.id = id;
     }
 
+    @JsonGetter
+    public String getTitle() {
+        return book.getTitle();
+    }
 
     public int getSeqOrder() {
         return seqOrder;

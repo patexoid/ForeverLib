@@ -16,8 +16,7 @@ import {AuthorService} from "./author.service";
             <div *ngFor="let sequence of _author.sequences" >
                {{sequence.name}}
                 <div *ngFor="let bookSequence of sequence.bookSequences" (click)="onSelect(bookSequence.book)">
-                   {{bookSequence.seqOrder}} {{bookSequence.book.title}}
-                   
+                   {{bookSequence.seqOrder}} {{bookSequence.title}}
                 </div>
             </div>
             <div *ngFor="let book of _author.booksNoSequence" >
@@ -38,7 +37,7 @@ h1 {
 
 `]
 })
-export class AuthorComponent{
+export class AuthorComponent {
 
 
     constructor(private authorsService: AuthorService) {
@@ -49,10 +48,10 @@ export class AuthorComponent{
     selectedBook: Book;
 
     @Input()
-    set author(author: Author){
-        this._author=author;
+    set author(author: Author) {
+        this._author = author;
         this.authorsService.getAuthor(author.id).then(author=> {
-            this._author=author;
+            this._author = author;
         })
     }
 
