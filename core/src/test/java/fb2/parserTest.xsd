@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="annotation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="p" maxOccurs="unbounded" minOccurs="0"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="home-page" type="xs:anyURI"/>
+  <xs:element name="title-info">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="genre" maxOccurs="unbounded" minOccurs="0"/>
+        <xs:element ref="author" maxOccurs="unbounded" minOccurs="0"/>
+        <xs:element ref="book-title"/>
+        <xs:element ref="sequence" maxOccurs="unbounded" minOccurs="0"/>
+        <xs:element ref="annotation"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="author">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="first-name"/>
+        <xs:element ref="middle-name"/>
+        <xs:element ref="last-name"/>
+        <xs:element ref="home-page"/>
+        <xs:element ref="email"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="description">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="title-info"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="first-name" type="xs:string"/>
+  <xs:element name="p">
+    <xs:simpleType>
+      <xs:restriction base="xs:string">
+        <xs:enumeration value="
+                    Подробное описание книги со всеми комментариями сносками и прочим и прочим
+                "/>
+        <xs:enumeration value="
+                    Следующий абзац описания книги со всеми комментариями сносками и прочим и прочим
+                "/>
+        <xs:enumeration value="
+
+                "/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  <xs:element name="book-title" type="xs:string"/>
+  <xs:element name="FictionBook">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="description"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="sequence">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute type="xs:string" name="name" use="optional"/>
+          <xs:attribute type="xs:byte" name="number" use="optional"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="genre">
+    <xs:simpleType>
+      <xs:restriction base="xs:string">
+        <xs:enumeration value="sf"/>
+        <xs:enumeration value="sf2"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  <xs:element name="middle-name" type="xs:string"/>
+  <xs:element name="email" type="xs:string"/>
+  <xs:element name="last-name" type="xs:string"/>
+</xs:schema>

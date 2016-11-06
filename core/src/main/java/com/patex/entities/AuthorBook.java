@@ -1,7 +1,9 @@
 package com.patex.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import org.hibernate.annotations.Formula;
 
 import javax.persistence.*;
@@ -16,12 +18,10 @@ public class AuthorBook {
     @GeneratedValue
     private Long id;
 
-    @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST}, optional = false)
     @JoinColumn(name = "author_ID")
     private Author author;
 
-    @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER,cascade = {CascadeType.PERSIST}, optional = false)
     @JoinColumn(name = "book_ID")
     private Book book;

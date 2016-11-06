@@ -1,6 +1,8 @@
 package com.patex.entities;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -10,6 +12,9 @@ import java.util.List;
  * Created by Alexey on 11.05.2016.
  */
 @Entity
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id", scope = Sequence.class)
 public class Sequence {
 
     @Id
@@ -19,7 +24,7 @@ public class Sequence {
     @Column(nullable = false)
     private String name;
 
-    @OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.LAZY, mappedBy = "sequence")
+    @OneToMany(cascade = {CascadeType.PERSIST}, fetch = FetchType.LAZY, mappedBy = "sequence")
     private List<BookSequence> bookSequences = new ArrayList<>();
 
 

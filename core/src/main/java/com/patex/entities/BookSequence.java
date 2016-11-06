@@ -19,11 +19,9 @@ public class BookSequence {
     private int seqOrder;
 
     @ManyToOne(fetch =  FetchType.EAGER, optional = false, cascade = {CascadeType.PERSIST} )
-    @JsonIgnore
     private Book book;
 
     @ManyToOne(fetch =  FetchType.EAGER, optional = false, cascade = {CascadeType.PERSIST})
-    @JsonIgnore
     private Sequence sequence;
 
 
