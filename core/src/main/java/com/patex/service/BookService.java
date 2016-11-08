@@ -4,10 +4,13 @@ import com.patex.LibException;
 import com.patex.entities.*;
 import com.patex.parser.ParserService;
 import com.patex.storage.StorageService;
+import com.patex.utils.StreamU;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.io.ByteArrayInputStream;
@@ -41,6 +44,7 @@ public class BookService {
     private StorageService fileStorage;
 
 
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public Book uploadBook(String fileName, InputStream is) throws LibException {
 
         byte[] byteArray = loadFromStream(is);
@@ -58,8 +62,13 @@ public class BookService {
         }).collect(Collectors.toList());
         book.setAuthorBooks(authorsBooks);
 
-        Map<String,Sequence> sequencesMap=authorsBooks.stream().map(AuthorBook::getAuthor).
-                flatMap(Author::getSequencesStream).distinct().
+
+
+        Map<String,Sequence> sequencesMap=authorsBooks.stream().
+                map(AuthorBook::getAuthor).
+                flatMap(Author::getSequencesStream).
+                filter(sequence -> sequence.getId()!=null). //already saved
+                filter(StreamU.distinctByKey(Sequence::getId)).
                 collect(Collectors.toMap(Sequence::getName,sequence -> sequence));
 
         book.getSequences().forEach(bookSequence -> {
@@ -71,12 +80,14 @@ public class BookService {
 
         String fileId = fileStorage.save(fileName, byteArray);
         FileResource fileResource = new FileResource(fileId);
-        fileResource = fileResourceRepository.save(fileResource);
+//        fileResource = fileResourceRepository.save(fileResource);
         book.setFileResource(fileResource);
         book.setFileName(fileName);
         book.setSize(byteArray.length);
         Book save = bookRepository.save(book);
-//        book.getAuthorBooks().forEach(author -> author.getBooks().add(new AuthorBook(author, book)));
+        book.getAuthorBooks().stream().
+                filter(authorBook -> !authorBook.getAuthor().getBooks().contains(authorBook)).
+                forEach(authorBook -> authorBook.getAuthor().getBooks().add(authorBook));
         return save;
     }
 

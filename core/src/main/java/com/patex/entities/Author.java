@@ -1,7 +1,7 @@
 package com.patex.entities;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.*;
+import com.patex.utils.StreamU;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -10,6 +10,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Entity
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id", scope = Author.class)
 public class Author {
 
     @Id
@@ -28,8 +31,8 @@ public class Author {
     public Author() {
     }
 
-    public Author(Long id,String name) {
-this.id=id;
+    public Author(Long id, String name) {
+        this.id = id;
         this.name = name;
     }
 
@@ -75,7 +78,7 @@ this.id=id;
         return getBooks().stream().
                 flatMap(book -> book.getBook().getSequences().stream()).
                 map(BookSequence::getSequence).
-                distinct();
+                filter(StreamU.distinctByKey(Sequence::getId));
     }
 
     @JsonGetter

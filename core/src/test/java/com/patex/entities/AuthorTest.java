@@ -20,19 +20,17 @@ public class AuthorTest {
         Book book2 = new Book(author, "book2");
         author.getBooks().add(new AuthorBook(author, book2));
         assertThat(author.getSequencesStream().collect(Collectors.toList()), is((empty())));
-        Sequence sequence1 = new Sequence("sequence1");
+        Sequence sequence1 = new Sequence(1L,"sequence1");
         book1.getSequences().add(new BookSequence(0, sequence1));
         assertThat(author.getSequencesStream().collect(Collectors.toList()), hasSize(1));
         book1.getSequences().add(new BookSequence(0, sequence1));
         assertThat(author.getSequencesStream().collect(Collectors.toList()), hasSize(1));
-        Sequence sequence2 = new Sequence("sequence2");
+        Sequence sequence2 = new Sequence(2L,"sequence2");
         Book book3 = new Book(author, "book3");
         author.getBooks().add(new AuthorBook(author, book3));
         book3.getSequences().add(new BookSequence(0, sequence2));
         assertThat(author.getSequencesStream().collect(Collectors.toList()), hasSize(2));
         book2.getSequences().add(new BookSequence(0, sequence2));
         assertThat(author.getSequencesStream().collect(Collectors.toList()), hasSize(2));
-
     }
-
 }

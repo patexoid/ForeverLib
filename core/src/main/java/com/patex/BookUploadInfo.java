@@ -1,6 +1,7 @@
 package com.patex;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.patex.entities.Book;
 
 /**
  * Created by Alexey on 7/23/2016.
