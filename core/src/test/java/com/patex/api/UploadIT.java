@@ -53,6 +53,7 @@ public class UploadIT {
         BookUploadInfo bookInfo = response.getBody().get(0);
         assertThat(bookInfo.getFileName(), equalTo(fileName));
         assertThat(bookInfo.getStatus(), equalTo(BookUploadInfo.Status.Success));
+
     }
 
 
