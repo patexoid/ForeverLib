@@ -1,6 +1,9 @@
 package com.patex.entities;
 
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -21,13 +24,13 @@ public class Book {
     @JsonProperty
     private long id;
 
-    @OneToMany(cascade = {CascadeType.PERSIST},fetch = FetchType.LAZY,mappedBy = "book")
+    @OneToMany(cascade = {CascadeType.PERSIST}, fetch = FetchType.LAZY, mappedBy = "book")
     private List<AuthorBook> authors = new ArrayList<>();
 
-    @OneToMany(cascade = {CascadeType.PERSIST},fetch = FetchType.LAZY,mappedBy = "book")
+    @OneToMany(cascade = {CascadeType.PERSIST}, fetch = FetchType.LAZY, mappedBy = "book")
     private List<BookSequence> sequences = new ArrayList<>();
 
-    @OneToMany(cascade = {CascadeType.PERSIST,},fetch = FetchType.LAZY,mappedBy = "book")
+    @OneToMany(cascade = {CascadeType.PERSIST,}, fetch = FetchType.LAZY, mappedBy = "book")
     private List<BookGenre> genres = new ArrayList<>();
 
     @Column(nullable = false)
@@ -42,7 +45,11 @@ public class Book {
     @JsonProperty
     private long size;
 
-    @OneToOne(cascade = {CascadeType.PERSIST},fetch = FetchType.LAZY, orphanRemoval = true)
+    @Column(nullable = false, updatable = false)
+    @JsonIgnore
+    private byte[] checksum;
+
+    @OneToOne(cascade = {CascadeType.PERSIST}, fetch = FetchType.LAZY, orphanRemoval = true)
     @JsonIgnore
     private FileResource fileResource;
 
@@ -132,5 +139,13 @@ public class Book {
 
     public void setGenres(List<BookGenre> genres) {
         this.genres = genres;
+    }
+
+    public byte[] getChecksum() {
+        return checksum;
+    }
+
+    public void setChecksum(byte[] checksum) {
+        this.checksum = checksum;
     }
 }
