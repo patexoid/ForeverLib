@@ -1,9 +1,6 @@
 package com.patex.entities;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.*;
 import org.hibernate.annotations.Formula;
 
 import javax.persistence.*;
@@ -19,11 +16,11 @@ public class AuthorBook {
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST}, optional = false)
-    @JoinColumn(name = "author_ID")
+    @JsonIgnoreProperties({Author.SEQUENCES,Author.BOOKS_NO_SEQUENCE})
     private Author author;
 
     @ManyToOne(fetch = FetchType.EAGER,cascade = {CascadeType.PERSIST}, optional = false)
-    @JoinColumn(name = "book_ID")
+    @JsonIgnoreProperties({Book.AUTHORS_BOOKS,Book.SEQUENCES,Book.GENRES, Book.DESCR})
     private Book book;
 
     public AuthorBook() {
@@ -41,16 +38,6 @@ public class AuthorBook {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    @JsonGetter
-    public String getTitle() {
-        return book==null?null:book.getTitle();
-    }
-
-    @JsonGetter
-    public String getName() {
-        return author==null?null:author.getName();
     }
 
     public Author getAuthor() {

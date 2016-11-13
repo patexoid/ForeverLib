@@ -1,12 +1,24 @@
 package com.patex.entities;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import javax.persistence.*;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
- * Created by Alexey on 11.05.2016.
+ *
+ *
  */
 @Entity
 public class BookSequence {
@@ -18,11 +30,14 @@ public class BookSequence {
     @Column(nullable = false)
     private int seqOrder;
 
-    @ManyToOne(fetch =  FetchType.EAGER, optional = false, cascade = {CascadeType.PERSIST} )
-    private Book book;
-
-    @ManyToOne(fetch =  FetchType.EAGER, optional = false, cascade = {CascadeType.PERSIST})
+    @ManyToOne(fetch = FetchType.EAGER, optional = false, cascade = {CascadeType.PERSIST})
+    @JsonIgnoreProperties({Sequence.BOOK_SEQUENCES})
     private Sequence sequence;
+
+    @ManyToOne(fetch = FetchType.EAGER, optional = false, cascade = {CascadeType.PERSIST})
+    @JsonIgnoreProperties(value = {Book.AUTHORS_BOOKS, Book.SEQUENCES, Book.GENRES, Book.DESCR})
+    @JsonDeserialize(using = MyDeserializer.class)//TODO workaround for Could not read document: No _valueDeserializer assigned
+    private Book book;
 
 
     public BookSequence(int order, Sequence sequence) {
@@ -39,11 +54,6 @@ public class BookSequence {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    @JsonGetter
-    public String getTitle() {
-        return book.getTitle();
     }
 
     public int getSeqOrder() {
@@ -68,5 +78,46 @@ public class BookSequence {
 
     public void setSequence(Sequence sequence) {
         this.sequence = sequence;
+    }
+
+    public static class MyDeserializer extends JsonDeserializer<Book> {
+        private static Map<String,Method> fieldsM= new HashMap<>();
+        static{
+            try {
+                for (String field : Arrays.asList("id", "title")) {
+                    Method getMethod = Book.class.getMethod("get" + field.substring(0, 1).toUpperCase() + field.substring(1));
+                    Class<?> typeCLass = getMethod.getReturnType();
+                    Method method = Book.class.getMethod("set" + field.substring(0, 1).toUpperCase() + field.substring(1),typeCLass);
+                fieldsM.put(field, method);
+                }
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public Book deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+            try {
+                Book value = new Book();
+                while (!p.currentToken().isStructEnd()) {
+                    p.nextToken();
+                    String field = p.getCurrentName();
+                    if (field != null && fieldsM.containsKey(field)) {
+                        p.nextToken();
+                        Method method=fieldsM.get(field);
+                        if(method.getParameterTypes()[0]==Long.class){
+                            method.invoke(value, p.getLongValue());
+                        } else if(method.getParameterTypes()[0]==String.class){
+                            method.invoke(value,p.getValueAsString());
+                        }
+
+                    }
+                }
+                return value;
+
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw new IOException(e);
+            }
+        }
     }
 }

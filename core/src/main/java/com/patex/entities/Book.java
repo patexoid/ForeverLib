@@ -13,24 +13,28 @@ import java.util.List;
  * Created by Alexey on 11.03.2016.
  */
 @Entity
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id", scope = Book.class)
 public class Book {
 
 
+    static final String AUTHORS_BOOKS = "authorBooks";
+    static final String SEQUENCES = "sequences";
+    static final String GENRES = "genres";
+    static final String DESCR = "descr";
+
     @Id
     @GeneratedValue
-    @JsonProperty
-    private long id;
+    private Long id;
 
     @OneToMany(cascade = {CascadeType.PERSIST}, fetch = FetchType.LAZY, mappedBy = "book")
-    private List<AuthorBook> authors = new ArrayList<>();
+    @JsonProperty(AUTHORS_BOOKS)
+    private List<AuthorBook> authorBooks = new ArrayList<>();
 
     @OneToMany(cascade = {CascadeType.PERSIST}, fetch = FetchType.LAZY, mappedBy = "book")
+    @JsonProperty(SEQUENCES)
     private List<BookSequence> sequences = new ArrayList<>();
 
     @OneToMany(cascade = {CascadeType.PERSIST,}, fetch = FetchType.LAZY, mappedBy = "book")
+    @JsonProperty(GENRES)
     private List<BookGenre> genres = new ArrayList<>();
 
     @Column(nullable = false)
@@ -43,7 +47,7 @@ public class Book {
 
     @Column(nullable = false)
     @JsonProperty
-    private long size;
+    private Integer size;
 
     @Column(nullable = false, updatable = false)
     @JsonIgnore
@@ -54,22 +58,22 @@ public class Book {
     private FileResource fileResource;
 
     @Lob
-    @JsonProperty
+    @JsonProperty(DESCR)
     private String descr;
 
     public Book() {
     }
 
     public Book(Author author, String name) {
-        this.authors.add(new AuthorBook(author, this));
+        this.authorBooks.add(new AuthorBook(author, this));
         this.title = name;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -82,15 +86,15 @@ public class Book {
     }
 
     public void addAuthor(Author author) {
-        authors.add(new AuthorBook(author, this));
+        authorBooks.add(new AuthorBook(author, this));
     }
 
     public List<AuthorBook> getAuthorBooks() {
-        return authors;
+        return authorBooks;
     }
 
     public void setAuthorBooks(List<AuthorBook> authors) {
-        this.authors = authors;
+        this.authorBooks = authors;
     }
 
     public String getFileName() {
@@ -101,11 +105,11 @@ public class Book {
         this.fileName = fileName;
     }
 
-    public long getSize() {
+    public Integer getSize() {
         return size;
     }
 
-    public void setSize(long size) {
+    public void setSize(Integer size) {
         this.size = size;
     }
 
