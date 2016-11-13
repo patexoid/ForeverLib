@@ -9,12 +9,13 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.xml.namespace.QName;
-import javax.xml.stream.*;
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import java.io.InputStream;
-import java.util.Iterator;
-import java.util.stream.StreamSupport;
 
 @Service
 public class Fb2FileParser implements FileParser {
@@ -47,7 +48,7 @@ public class Fb2FileParser implements FileParser {
             XMLEventReader reader = factory.createXMLEventReader(file);
             while (reader.hasNext()) {
                 XMLEvent event = reader.nextEvent();
-                if (event.isStartElement()&& "title-info".equals(event.asStartElement().getName().getLocalPart())) {
+                if (event.isStartElement() && "title-info".equals(event.asStartElement().getName().getLocalPart())) {
                     return parseTitleInfo(reader);
                 }
             }
@@ -76,10 +77,11 @@ public class Fb2FileParser implements FileParser {
                 } else if ("genre".equals(localPart)) {
                     book.getGenres().add(new BookGenre(book, new Genre(reader.getElementText())));
                 } else if ("sequence".equals(localPart)) {
-                    String sequenceName = element.getAttributeByName(new QName("","name")).getValue();
+                    String sequenceName = element.getAttributeByName(new QName("", "name")).getValue();
                     Integer order;
                     try {
-                        order = Integer.valueOf(element.getAttributeByName(new QName("","number")).getValue());
+                        Attribute numberAttr = element.getAttributeByName(new QName("", "number"));
+                        order = numberAttr == null ? 0 : Integer.valueOf(numberAttr.getValue());
                     } catch (NumberFormatException e) {
                         order = 0;
                         log.warn("sequence {} without order, book: {}", sequenceName, book.getTitle());
@@ -98,7 +100,7 @@ public class Fb2FileParser implements FileParser {
             XMLEvent event = reader.nextEvent();
             if (event.isCharacters()) {
                 String data = event.asCharacters().getData().trim();
-                if(!data.isEmpty()) {
+                if (!data.isEmpty()) {
                     text += data + "\n";
                 }
             } else if (event.isEndElement() && tag.equals(event.asEndElement().getName().getLocalPart())) {

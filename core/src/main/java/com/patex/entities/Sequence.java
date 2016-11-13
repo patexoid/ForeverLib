@@ -2,6 +2,7 @@ package com.patex.entities;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import javax.persistence.*;
@@ -17,14 +18,18 @@ import java.util.List;
         property = "id", scope = Sequence.class)
 public class Sequence {
 
+    static final String BOOK_SEQUENCES = "bookSequences";
+
     @Id
     @GeneratedValue
     private Long id;
 
     @Column(nullable = false)
+    @JsonProperty
     private String name;
 
-    @OneToMany(cascade = {CascadeType.PERSIST}, fetch = FetchType.LAZY, mappedBy = "sequence")
+    @OneToMany(cascade = {CascadeType.PERSIST}, fetch = FetchType.EAGER, mappedBy = "sequence")
+    @JsonProperty(BOOK_SEQUENCES)
     private List<BookSequence> bookSequences = new ArrayList<>();
 
 

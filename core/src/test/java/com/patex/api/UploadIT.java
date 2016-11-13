@@ -108,7 +108,6 @@ public class UploadIT {
         assertThat(book.getDescr().trim(), equalTo(annotationLine));
         assertThat(book.getAuthorBooks(), hasSize(1));
         Author author = book.getAuthorBooks().get(0).getAuthor();
-        assertThat(author.getBooks(),hasSize(1));
         assertThat(author.getName(), equalTo(lastName + " " + firstName + " " + middleName));
 
     }

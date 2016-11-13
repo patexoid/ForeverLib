@@ -10,10 +10,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Entity
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id", scope = Author.class)
 public class Author {
+
+    static final String BOOKS_NO_SEQUENCE = "booksNoSequence";
+    static final String SEQUENCES = "sequences";
 
     @Id
     @GeneratedValue
@@ -23,6 +23,7 @@ public class Author {
     private String name;
 
     @OneToMany(cascade = {CascadeType.PERSIST}, fetch = FetchType.LAZY, mappedBy = "author")
+    @JsonIgnore
     private List<AuthorBook> books = new ArrayList<>();
 
     @Lob
@@ -41,11 +42,11 @@ public class Author {
         this.name = name;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -81,12 +82,12 @@ public class Author {
                 filter(StreamU.distinctByKey(Sequence::getId));
     }
 
-    @JsonGetter
+    @JsonGetter(SEQUENCES)
     public List<Sequence> getSequences() {
         return getSequencesStream().collect(Collectors.toList());
     }
 
-    @JsonGetter
+    @JsonGetter(BOOKS_NO_SEQUENCE)
     public List<AuthorBook> getBooksNoSequence() {
         return getBooks().stream().filter(book -> book.getBook().getSequences().isEmpty()).collect(Collectors.toList());
     }

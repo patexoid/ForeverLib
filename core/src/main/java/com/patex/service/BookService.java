@@ -54,7 +54,7 @@ public class BookService {
 
         List<Book> books = bookRepository.findByTitleIgnoreCase(book.getTitle()).
                 stream().filter(loaded -> hasTheSameAuthors(book, loaded)).
-                filter(loaded -> !Arrays.equals(checksum,loaded.getChecksum())).
+                filter(loaded -> Arrays.equals(checksum,loaded.getChecksum())).
                 collect(Collectors.toList());
 
         if (books.size() > 0) { //TODO if author or book has the same name
