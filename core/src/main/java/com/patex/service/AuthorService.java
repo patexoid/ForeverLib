@@ -32,7 +32,7 @@ public class AuthorService {
     }
 
     public List<Author> findByName(String name) {
-        return authorRepository.findByNameStartingWithIgnoreCase(name);
+        return authorRepository.findByNameStartingWithIgnoreCaseOrderByName(name);
     }
 
     public Page<Author> getAuthors(Pageable pageable, String prefix) {

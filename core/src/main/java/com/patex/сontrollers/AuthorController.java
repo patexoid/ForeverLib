@@ -20,16 +20,18 @@ public class AuthorController {
     AuthorService authorService;
 
 
-    @RequestMapping(value = "/{id}" , method = RequestMethod.GET)
-    public @ResponseBody
+    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
+    public
+    @ResponseBody
     Author getAuthor(@PathVariable(value = "id") long id) {
         return authorService.getAuthors(id);
     }
 
     @RequestMapping(method = RequestMethod.GET)
-    public @ResponseBody
-    Page<Author> getAuthors(Pageable pageable,@RequestParam(required = false) String prefix) {
-        return authorService.getAuthors(pageable,prefix);
+    public
+    @ResponseBody
+    Page<Author> getAuthors(Pageable pageable, @RequestParam(required = false) String prefix) {
+        return authorService.getAuthors(pageable, prefix);
     }
 
 }
