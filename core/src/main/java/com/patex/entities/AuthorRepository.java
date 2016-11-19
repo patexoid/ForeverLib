@@ -16,11 +16,10 @@ import java.util.List;
 @Repository
 public interface AuthorRepository extends CrudRepository<Author, Long> {
 
-    Page<Author> findAll(Pageable pageable);
+    Page<Author> findAllOrderByName(Pageable pageable);
 
-    List<Author> findByNameStartingWithIgnoreCase(String name);
+    List<Author> findByNameStartingWithIgnoreCaseOrderByName(String name);
 
-    List<Author> findByName(String name);
 
     @Query("SELECT NEW com.patex.entities.AggrResult(substring(a.name,0, :prefixLenth) as  id, count(*) as result)" +
             " FROM Author a where name like :prefix% group by col_0_0_")//TODO FIX THAT
@@ -30,6 +29,6 @@ public interface AuthorRepository extends CrudRepository<Author, Long> {
 
 
     @Query("SELECT NEW com.patex.entities.Author(a.id, a.name)" +
-            " FROM Author a where name like :prefix% order by name")//TODO FIX THAT
-    Page<Author> getAuthorsByName(Pageable pageable,@Param("prefix") String prefix);
+            " FROM Author a where name like :prefix% order by name")
+    Page<Author> getAuthorsByName(Pageable pageable, @Param("prefix") String prefix);
 }

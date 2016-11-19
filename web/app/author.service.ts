@@ -1,23 +1,25 @@
-import { Injectable } from '@angular/core';
-import { Http } from '@angular/http';
-
-import 'rxjs/add/operator/toPromise';
+import {Injectable} from "@angular/core";
+import {Http} from "@angular/http";
+import "rxjs/add/operator/toPromise";
 import {Author} from "./Author";
+import {Page} from "./Page";
 
 @Injectable()
 export class AuthorService {
 
     url = "http://localhost:8080/author";
-    constructor(private http: Http) { }
 
-    getAuthors(): Promise<Author[]> {
-        return this.http.get(this.url).toPromise()
-             .then(response => response.json().content as Author[])
-             .catch(AuthorService.handleError);
+    constructor(private http: Http) {
     }
 
-    getAuthor( id:number ): Promise<Author> {
-        return this.http.get(this.url+'/'+id).toPromise()
+    getAuthors(filter: string, page: number, size: number): Promise<Page> {
+        return this.http.get(this.url + '?prefix=' + filter + '&page=' + page + '&size=' + size).toPromise()
+            .then(response => response.json() as Page)
+            .catch(AuthorService.handleError);
+    }
+
+    getAuthor(id: number): Promise<Author> {
+        return this.http.get(this.url + '/' + id).toPromise()
             .then(response =>
                 response.json() as Author)
             .catch(AuthorService.handleError);
