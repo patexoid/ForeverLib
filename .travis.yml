@@ -1,8 +1,11 @@
 language: java
-script: mvn -f ./core/pom.xml verify
+script: mvn -f /pom.xml verify -P web
 jdk:
   - oraclejdk8
 cache:
   directories:
     - .autoconf
     - $HOME/.m2
+    - $TRAVIS_BUILD_DIR/web/node_modules
+    - $TRAVIS_BUILD_DIR/web/typings
+    - $TRAVIS_BUILD_DIR/web/node

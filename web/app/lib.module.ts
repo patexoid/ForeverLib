@@ -10,6 +10,7 @@ import {AuthorService} from "./author.service";
 import {BookComponent} from "./book.component";
 import {BookUpload} from "./bookUpload";
 import {BookService} from "./book.service";
+import {HttpService} from "./HttpService";
 @NgModule({
     imports:      [
         BrowserModule,
@@ -24,7 +25,8 @@ import {BookService} from "./book.service";
     ],
     providers: [
         AuthorService,
-        BookService
+        BookService,
+        HttpService
     ],
     bootstrap:    [ LibComponent ]
 })
