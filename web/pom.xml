@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.patex.zombielib2</groupId>
         <artifactId>main</artifactId>
-        <version>${project.version}</version>
+        <version>1.0-SNAPSHOT</version>
     </parent>
     <build>
         <plugins>
