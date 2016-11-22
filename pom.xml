@@ -27,6 +27,7 @@
         <profile>
             <id>web</id>
             <modules>
+                <module>core</module>
                 <module>web</module>
             </modules>
         </profile>
