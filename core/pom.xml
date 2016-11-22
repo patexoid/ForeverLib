@@ -12,6 +12,7 @@
         <groupId>com.patex.zombielib2</groupId>
         <artifactId>main</artifactId>
         <version>${project.version}</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <build>
