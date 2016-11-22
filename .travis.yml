@@ -1,5 +1,5 @@
 language: java
-script: mvn -f -P web verify
+script: mvn -P web verify
 jdk:
   - oraclejdk8
 cache:
