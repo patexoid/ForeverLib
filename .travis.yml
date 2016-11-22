@@ -1,5 +1,5 @@
 language: java
-script: mvn -f -P web /pom.xml verify
+script: mvn -f -P web verify
 jdk:
   - oraclejdk8
 cache:
