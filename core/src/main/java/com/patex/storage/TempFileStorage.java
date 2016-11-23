@@ -13,10 +13,6 @@ import java.nio.file.Path;
 
 @Service("tempStorage")
 public class TempFileStorage implements FileStorage {
-
-
-    @Value("${localStorage.folder}")
-    public  String storageFolder;
     private Path tempDirectory;
 
     @PostConstruct

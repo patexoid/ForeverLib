@@ -4,16 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <groupId>com.patex.zombielib2</groupId>
     <artifactId>core</artifactId>
-    <packaging>jar</packaging>
     <version>1.0-SNAPSHOT</version>
-
-    <parent>
-        <groupId>com.patex.zombielib2</groupId>
-        <artifactId>main</artifactId>
-        <version>1.0-SNAPSHOT</version>
-    </parent>
-
     <build>
         <plugins>
             <plugin>
@@ -29,10 +22,10 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <!--<jvmArguments>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005</jvmArguments>-->
-                    <profiles>
-                        <profile>tempStorage</profile>
-                        <profile>test</profile>
-                    </profiles>
+                <profiles>
+                    <profile>tempStorage</profile>
+                    <profile>test</profile>
+                </profiles>
                     <useTestClasspath>true</useTestClasspath>
                 </configuration>
                 <executions>
@@ -66,6 +59,12 @@
         </plugins>
     </build>
 
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>1.4.1.RELEASE</version>
+    </parent>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -90,11 +89,12 @@
         <dependency>
             <groupId>com.rometools</groupId>
             <artifactId>rome</artifactId>
+            <version>1.5.0</version>
         </dependency>
         <!--<dependency>-->
-        <!--<groupId>org.springframework.boot</groupId>-->
-        <!--<artifactId>spring-boot-devtools</artifactId>-->
-        <!--<optional>true</optional>-->
+            <!--<groupId>org.springframework.boot</groupId>-->
+            <!--<artifactId>spring-boot-devtools</artifactId>-->
+            <!--<optional>true</optional>-->
         <!--</dependency>-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -111,8 +111,9 @@
             <artifactId>httpmime</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.commons</groupId>
+            <groupId>org.apache.commons </groupId>
             <artifactId>commons-lang3</artifactId>
+            <version>3.4</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
