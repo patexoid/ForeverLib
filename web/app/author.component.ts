@@ -15,7 +15,8 @@ import {AuthorService} from "./author.service";
         <div class="sequence">
             <div *ngFor="let sequence of _author.sequences" >
                {{sequence.name}}
-                <div *ngFor="let bookSequence of sequence.bookSequences" 
+                <div *ngFor="let bookSequence of sequence.bookSequences"
+                 class="bookSequence"
                  [class.selected]="bookSequence.book === selectedBook" 
                  (click)="onSelect(bookSequence.book)">
                    {{bookSequence.seqOrder}} {{bookSequence.book.title}}
@@ -37,7 +38,10 @@ import {AuthorService} from "./author.service";
 h1 {
     text-align: center;
 }
-
+.bookSequence{
+    padding: 0;
+    margin-left: 20px;
+}
 .selected {
   background-color: #CFD8DC !important;
   color: white;
@@ -57,7 +61,7 @@ export class AuthorComponent {
 
     @Input()
     set author(author: Author) {
-        this.selectedBook=null;
+        this.selectedBook = null;
         this._author = author;
         this.authorsService.getAuthor(author.id).then(author=> {
             this._author = author;

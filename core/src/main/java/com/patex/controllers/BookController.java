@@ -1,4 +1,4 @@
-package com.patex.сontrollers;
+package com.patex.controllers;
 
 import com.patex.BookUploadInfo;
 import com.patex.LibException;

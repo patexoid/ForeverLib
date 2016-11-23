@@ -65,3 +65,5 @@ web/app/*.js
 /web/typings/
 /core/target/
 /web/dist/
+/web/dev/
+/web/node/
