@@ -8,16 +8,35 @@
     <artifactId>web</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <profiles>
+        <profile>
+            <id>prod</id>
+            <activation>
+                <activeByDefault/>
+            </activation>
+            <properties>
+                <nmpArgument>run build</nmpArgument>
+            </properties>
 
-    <build>
+        </profile>
+        <profile>
+            <id>dev</id>
+
+            <properties>
+                <nmpArgument>start</nmpArgument>
+            </properties>
+
+        </profile>
+
+    </profiles>    <build>
         <plugins>
             <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
                 <version>1.0</version>
                 <configuration>
-                    <nodeVersion>v4.5.0</nodeVersion>
-                    <npmVersion>3.10.6</npmVersion>
+                    <nodeVersion>v6.9.4</nodeVersion>
+                    <npmVersion>3.10.10</npmVersion>
                 </configuration>
                 <executions>
                     <execution>
@@ -46,7 +65,7 @@
                         </goals>
                         <phase>generate-resources</phase>
                         <configuration>
-                            <arguments>run build</arguments>
+                            <arguments>${nmpArgument}</arguments>
                         </configuration>
                     </execution>
                 </executions>
