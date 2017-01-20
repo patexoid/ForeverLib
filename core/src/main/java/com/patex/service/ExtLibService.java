@@ -50,7 +50,7 @@ public class ExtLibService {
     private BookService bookService;
 
     private List<MapLink> mapLinks =new ArrayList<>();
-    private final Pattern fileNamePattern=Pattern.compile("attachment; filename=\"([^\"]+)\"");;
+    private final Pattern fileNamePattern=Pattern.compile("attachment; filename=\"([^\"]+)\"");
     private static Logger log = LoggerFactory.getLogger(ExtLibService.class);
 
     @PostConstruct
@@ -60,17 +60,14 @@ public class ExtLibService {
     }
 
 
-    public List<Entry> getDataForLibrary(Long libId, String uri, String urlPrefix) {
+    public List<Entry> getDataForLibrary(Long libId, String uri, String urlPrefix) throws LibException{
         try {
-
             SyndFeed feed = getFeed(libId, uri);
             return feed.getEntries().stream().
                     map(entry -> mapEntry(urlPrefix, entry)).collect(Collectors.toList());
         } catch (IOException | FeedException e) {
-            e.printStackTrace();
+            throw new LibException(e);
         }
-        return null;
-
     }
 
     private Entry mapEntry(String urlPrefix, SyndEntry entry) {
@@ -148,7 +145,6 @@ public class ExtLibService {
     private interface MapLink {
 
         boolean accept(String type);
-
         Link mapLink(SyndLink link, String urlPrefix);
     }
 
@@ -164,7 +160,7 @@ public class ExtLibService {
             try {
                 newLink.setHref(urlPrefix + "?" + REQUEST_P_NAME + "=" + URLEncoder.encode(link.getHref(), "UTF-8"));
             } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
+                log.error(e.getMessage(),e);
             }
             newLink.setRel(link.getRel());
             newLink.setType(link.getType());
@@ -184,7 +180,7 @@ public class ExtLibService {
             try {
                 newLink.setHref(urlPrefix + "/fb2?" + REQUEST_P_NAME + "=" + URLEncoder.encode(link.getHref(), "UTF-8"));
             } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
+                log.error(e.getMessage(),e);
             }
             newLink.setRel(link.getRel());
             newLink.setType(link.getType());
