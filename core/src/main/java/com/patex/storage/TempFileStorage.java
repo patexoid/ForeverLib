@@ -40,9 +40,8 @@ public class TempFileStorage implements FileStorage {
 
     @Override
     public InputStream load(String fileId) throws LibException{
-        String filePath = tempDirectory.toAbsolutePath() + File.separator + fileId;
         try {
-            return new FileInputStream(filePath);
+            return new FileInputStream(fileId);
         } catch (FileNotFoundException e) {
             throw new LibException(e);
         }
