@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.1"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.1
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.1.xsd">
+    <changeSet author="patex" id="1">
+        <sql>INSERT INTO PUBLIC.EXT_LIBRARY (LOGIN, PASSWORD, URL, NAME, OPDS_PATH) VALUES (null, null,
+            'http://flibusta.is', 'flibusta', 'opds')
+        </sql>
+    </changeSet>
+</databaseChangeLog>

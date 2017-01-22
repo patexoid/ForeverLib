@@ -1,0 +1,112 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    <changeSet author="Alexey (generated)" id="0">
+        <createTable tableName="AUTHOR">
+            <column autoIncrement="true" name="ID" type="BIGINT(19)">
+                <constraints primaryKey="true" primaryKeyName="CONSTRAINT_7"/>
+            </column>
+            <column name="DESCR" type="CLOB"/>
+            <column name="NAME" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="FILE_RESOURCE">
+            <column autoIncrement="true" name="ID" type="BIGINT(19)">
+                <constraints primaryKey="true" primaryKeyName="CONSTRAINT_9"/>
+            </column>
+            <column name="DRAFT" type="BOOLEAN(1)"/>
+            <column name="FILE_PATH" type="VARCHAR(255)"/>
+        </createTable>
+        <createTable tableName="BOOK">
+            <column autoIncrement="true" name="ID" type="BIGINT(19)">
+                <constraints primaryKey="true" primaryKeyName="CONSTRAINT_1"/>
+            </column>
+            <column name="CHECKSUM" type="VARBINARY(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DESCR" type="CLOB"/>
+            <column name="FILE_NAME" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="SIZE" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TITLE" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="FILE_RESOURCE_ID" type="BIGINT(19)">
+                <constraints foreignKeyName="BOOK_FILE_RESOURCE_ID" references="FILE_RESOURCE(ID)"/>
+            </column>
+        </createTable>
+        <createTable tableName="GENRE">
+            <column autoIncrement="true" name="ID" type="BIGINT(19)">
+                <constraints primaryKey="true" primaryKeyName="CONSTRAINT_4"/>
+            </column>
+            <column name="NAME" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="SEQUENCE">
+            <column autoIncrement="true" name="ID" type="BIGINT(19)">
+                <constraints primaryKey="true" primaryKeyName="CONSTRAINT_7F"/>
+            </column>
+            <column name="NAME" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="AUTHOR_BOOK">
+            <column autoIncrement="true" name="ID" type="BIGINT(19)">
+                <constraints primaryKey="true" primaryKeyName="CONSTRAINT_A"/>
+            </column>
+            <column name="AUTHOR_ID" type="BIGINT(19)">
+                <constraints foreignKeyName="AUTHOR_BOOK_AUTHOR_ID" references="AUTHOR(ID)"/>
+            </column>
+            <column name="BOOK_ID" type="BIGINT(19)">
+                <constraints foreignKeyName="AUTHOR_BOOK_BOOK_ID" references="BOOK(ID)"/>
+            </column>
+        </createTable>
+        <createTable tableName="BOOK_GENRE">
+            <column autoIncrement="true" name="ID" type="BIGINT(19)">
+                <constraints primaryKey="true" primaryKeyName="CONSTRAINT_F"/>
+            </column>
+            <column name="BOOK_ID" type="BIGINT(19)">
+                <constraints foreignKeyName="BOOK_GENRE_BOOK_ID" references="BOOK(ID)"/>
+            </column>
+            <column name="GENRE_ID" type="BIGINT(19)">
+                <constraints foreignKeyName="BOOK_GENRE_GENRE_ID" references="GENRE(ID)"/>
+            </column>
+        </createTable>
+        <createTable tableName="BOOK_SEQUENCE">
+            <column autoIncrement="true" name="ID" type="BIGINT(19)">
+                <constraints primaryKey="true" primaryKeyName="CONSTRAINT_E"/>
+            </column>
+            <column name="SEQ_ORDER" type="INT(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="BOOK_ID" type="BIGINT(19)">
+                <constraints foreignKeyName="BOOK_SEQUENCE_BOOK_ID" references="BOOK(ID)"/>
+            </column>
+            <column name="SEQUENCE_ID" type="BIGINT(19)">
+                <constraints foreignKeyName="BOOK_SEQUENCE_SEQUENCE_ID" references="SEQUENCE(ID)"/>
+            </column>
+        </createTable>
+        <createTable tableName="EXT_LIBRARY">
+            <column autoIncrement="true" name="ID" type="BIGINT(19)">
+                <constraints primaryKey="true" primaryKeyName="CONSTRAINT_8"/>
+            </column>
+            <column name="LOGIN" type="VARCHAR(255)"/>
+            <column name="PASSWORD" type="VARCHAR(255)"/>
+            <column name="URL" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="NAME" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="OPDS_PATH" type="VARCHAR(255)"/>
+        </createTable>
+
+    </changeSet>
+</databaseChangeLog>
