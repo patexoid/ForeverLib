@@ -10,6 +10,6 @@ import java.io.InputStream;
  */
 public interface FileParser {
 
-    public String getExtension();
+    String getExtension();
     Book parseFile(String fileName, InputStream file) throws LibException;
 }

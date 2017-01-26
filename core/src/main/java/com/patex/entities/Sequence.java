@@ -1,7 +1,6 @@
 package com.patex.entities;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
@@ -10,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Alexey on 11.05.2016.
+ *
  */
 @Entity
 @JsonIdentityInfo(
@@ -34,7 +33,7 @@ public class Sequence {
 
 
     protected Sequence(Long id, String name) {
-        this.id=id;
+        this.id = id;
         this.name = name;
     }
 

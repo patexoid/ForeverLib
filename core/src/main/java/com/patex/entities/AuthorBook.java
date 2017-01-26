@@ -1,12 +1,11 @@
 package com.patex.entities;
 
-import com.fasterxml.jackson.annotation.*;
-import org.hibernate.annotations.Formula;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import javax.persistence.*;
 
 /**
- * Created by Alexey on 10/22/2016.
+ *
  */
 @Entity
 public class AuthorBook {
@@ -16,11 +15,11 @@ public class AuthorBook {
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST}, optional = false)
-    @JsonIgnoreProperties({Author.SEQUENCES,Author.BOOKS_NO_SEQUENCE})
+    @JsonIgnoreProperties({Author.SEQUENCES, Author.BOOKS_NO_SEQUENCE})
     private Author author;
 
-    @ManyToOne(fetch = FetchType.EAGER,cascade = {CascadeType.PERSIST}, optional = false)
-    @JsonIgnoreProperties({Book.AUTHORS_BOOKS,Book.SEQUENCES,Book.GENRES, Book.DESCR})
+    @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST}, optional = false)
+    @JsonIgnoreProperties({Book.AUTHORS_BOOKS, Book.SEQUENCES, Book.GENRES, Book.DESCR})
     private Book book;
 
     public AuthorBook() {

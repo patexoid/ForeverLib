@@ -5,7 +5,6 @@ import com.patex.BookUploadInfo;
 import com.patex.entities.Author;
 import com.patex.entities.Book;
 import fb2.Fb2Creator;
-import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -92,7 +91,7 @@ public class UploadIT {
         String middleName = randomAlphanumeric(10);
         String lastName = randomAlphanumeric(10);
         String sequence = randomAlphanumeric(10);
-        files.put( randomAlphanumeric(10)+ ".fb2", new Fb2Creator(title).
+        files.put(randomAlphanumeric(10) + ".fb2", new Fb2Creator(title).
                 addAuthor(firstName, middleName, lastName).addSequence(sequence, 1).
                 addAnnotationLine(annotationLine).getFbook());
 
@@ -134,8 +133,8 @@ public class UploadIT {
         Book book1 = httpClient.get("book/" + response.getBody().get(0).getId(), Book.class);
         Book book2 = httpClient.get("book/" + response.getBody().get(1).getId(), Book.class);
         long authorId = book1.getAuthorBooks().get(0).getAuthor().getId();
-        assertThat(book1.getAuthorBooks(),hasSize(1));
-        assertThat(book2.getAuthorBooks(),hasSize(1));
+        assertThat(book1.getAuthorBooks(), hasSize(1));
+        assertThat(book2.getAuthorBooks(), hasSize(1));
         Assert.assertTrue(authorId > 0);
         Assert.assertTrue(book2.getAuthorBooks().get(0).getAuthor().getId() == authorId);
     }
@@ -149,7 +148,7 @@ public class UploadIT {
         String middleName = randomAlphanumeric(10);
         String lastName = randomAlphanumeric(10);
         String sequence = randomAlphanumeric(10);
-        files.put( randomAlphanumeric(10)+ ".fb2", new Fb2Creator(randomAlphanumeric(10)).
+        files.put(randomAlphanumeric(10) + ".fb2", new Fb2Creator(randomAlphanumeric(10)).
                 addAuthor(firstName, middleName, lastName).addSequence(sequence, 1).getFbook());
         files.put(randomAlphanumeric(10) + ".fb2", new Fb2Creator(randomAlphanumeric(10)).
                 addAuthor(firstName, middleName, lastName).addSequence(sequence, 1).getFbook());
@@ -171,7 +170,7 @@ public class UploadIT {
     @Test
     public void updateBookDescription() throws IOException {
         Map<String, InputStream> files = new HashMap<>();
-        files.put(randomAlphanumeric(10) +  ".fb2", new Fb2Creator(randomAlphanumeric(10)).
+        files.put(randomAlphanumeric(10) + ".fb2", new Fb2Creator(randomAlphanumeric(10)).
                 addAuthor(randomAlphanumeric(10), randomAlphanumeric(10), randomAlphanumeric(10)).
                 addAnnotationLine(randomAlphanumeric(50)).
                 getFbook());
