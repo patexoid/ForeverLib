@@ -1,8 +1,6 @@
 package com.patex.storage;
 
 import com.patex.LibException;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -27,9 +25,9 @@ public class TempFileStorage implements FileStorage {
 
 
     @Override
-    public String save(String fileName, byte[] fileContent) throws LibException{
+    public String save(String fileName, byte[] fileContent) throws LibException {
         String filePath = tempDirectory.toAbsolutePath() + File.separator + fileName;
-        try(FileOutputStream fos = new FileOutputStream(filePath)){
+        try (FileOutputStream fos = new FileOutputStream(filePath)) {
             fos.write(fileContent);
             fos.flush();
         } catch (IOException e) {
@@ -39,7 +37,7 @@ public class TempFileStorage implements FileStorage {
     }
 
     @Override
-    public InputStream load(String fileId) throws LibException{
+    public InputStream load(String fileId) throws LibException {
         try {
             return new FileInputStream(fileId);
         } catch (FileNotFoundException e) {
@@ -48,7 +46,7 @@ public class TempFileStorage implements FileStorage {
     }
 
     @PreDestroy
-    public void after(){
+    public void after() {
         tempDirectory.toFile().delete();
     }
 }

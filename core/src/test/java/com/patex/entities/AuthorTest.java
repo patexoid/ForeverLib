@@ -14,12 +14,12 @@ public class AuthorTest {
     @Test
     public void getSequences() {
         Author author = new Author("author");
-        assertThat(author.getSequencesStream().collect(Collectors.toList()), is((empty())));
+        assertThat(author.getSequencesStream().collect(Collectors.toList()), is(empty()));
         Book book1 = new Book(author, "book1");
         author.getBooks().add(new AuthorBook(author, book1));
         Book book2 = new Book(author, "book2");
         author.getBooks().add(new AuthorBook(author, book2));
-        assertThat(author.getSequencesStream().collect(Collectors.toList()), is((empty())));
+        assertThat(author.getSequencesStream().collect(Collectors.toList()), is(empty()));
         Sequence sequence1 = new Sequence(1L,"sequence1");
         book1.getSequences().add(new BookSequence(0, sequence1));
         assertThat(author.getSequencesStream().collect(Collectors.toList()), hasSize(1));

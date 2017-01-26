@@ -13,7 +13,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -36,7 +35,8 @@ public class BookSequence {
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false, cascade = {CascadeType.PERSIST})
     @JsonIgnoreProperties(value = {Book.AUTHORS_BOOKS, Book.SEQUENCES, Book.GENRES, Book.DESCR})
-    @JsonDeserialize(using = MyDeserializer.class)//TODO workaround for Could not read document: No _valueDeserializer assigned
+    @JsonDeserialize(using = MyDeserializer.class)
+//TODO workaround for Could not read document: No _valueDeserializer assigned
     private Book book;
 
 
@@ -81,14 +81,15 @@ public class BookSequence {
     }
 
     public static class MyDeserializer extends JsonDeserializer<Book> {
-        private static Map<String,Method> fieldsM= new HashMap<>();
-        static{
+        private static Map<String, Method> fieldsM = new HashMap<>();
+
+        static {
             try {
                 for (String field : Arrays.asList("id", "title")) {
                     Method getMethod = Book.class.getMethod("get" + field.substring(0, 1).toUpperCase() + field.substring(1));
                     Class<?> typeCLass = getMethod.getReturnType();
-                    Method method = Book.class.getMethod("set" + field.substring(0, 1).toUpperCase() + field.substring(1),typeCLass);
-                fieldsM.put(field, method);
+                    Method method = Book.class.getMethod("set" + field.substring(0, 1).toUpperCase() + field.substring(1), typeCLass);
+                    fieldsM.put(field, method);
                 }
             } catch (NoSuchMethodException e) {
                 e.printStackTrace();
@@ -104,11 +105,11 @@ public class BookSequence {
                     String field = p.getCurrentName();
                     if (field != null && fieldsM.containsKey(field)) {
                         p.nextToken();
-                        Method method=fieldsM.get(field);
-                        if(method.getParameterTypes()[0]==Long.class){
+                        Method method = fieldsM.get(field);
+                        if (method.getParameterTypes()[0] == Long.class) {
                             method.invoke(value, p.getLongValue());
-                        } else if(method.getParameterTypes()[0]==String.class){
-                            method.invoke(value,p.getValueAsString());
+                        } else if (method.getParameterTypes()[0] == String.class) {
+                            method.invoke(value, p.getValueAsString());
                         }
 
                     }

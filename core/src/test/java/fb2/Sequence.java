@@ -1,19 +1,14 @@
 
 package fb2;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.XmlValue;
+import javax.xml.bind.annotation.*;
 
 
 /**
  * <p>Java class for anonymous complex type.
- * 
+ * <p>
  * <p>The following schema fragment specifies the expected content contained within this class.
- * 
+ * <p>
  * <pre>
  * &lt;complexType>
  *   &lt;simpleContent>
@@ -24,15 +19,13 @@ import javax.xml.bind.annotation.XmlValue;
  *   &lt;/simpleContent>
  * &lt;/complexType>
  * </pre>
- * 
- * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "")
 @XmlRootElement(name = "sequence")
 public class Sequence {
 
-    @XmlAttribute(name = "name",required = true)
+    @XmlAttribute(name = "name", required = true)
     protected String name;
 
     @XmlAttribute(name = "number")
@@ -48,11 +41,9 @@ public class Sequence {
 
     /**
      * Gets the value of the name property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
+     *
+     * @return possible object is
+     * {@link String }
      */
     public String getName() {
         return name;
@@ -60,11 +51,9 @@ public class Sequence {
 
     /**
      * Sets the value of the name property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link String }
      */
     public void setName(String value) {
         this.name = value;
@@ -72,11 +61,9 @@ public class Sequence {
 
     /**
      * Gets the value of the number property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Byte }
-     *     
+     *
+     * @return possible object is
+     * {@link Byte }
      */
     public int getNumber() {
         return number;
@@ -84,11 +71,9 @@ public class Sequence {
 
     /**
      * Sets the value of the number property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Byte }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link Byte }
      */
     public void setNumber(int value) {
         this.number = value;

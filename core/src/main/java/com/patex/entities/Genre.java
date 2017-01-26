@@ -1,13 +1,12 @@
 package com.patex.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 /**
- * Created by Alexey on 11.05.2016.
+ *
  */
 @Entity
 public class Genre {
