@@ -24,7 +24,7 @@ export class BookUpload{
 
     fileChangeEvent(fileInput: any): void {
         var files = fileInput.target.files;
-        this.makeFileRequest("http://localhost:8080/book/upload",files);
+        this.makeFileRequest("/book/upload",files);
          fileInput.srcElement.parentElement.reset();
     }
 
