@@ -167,6 +167,7 @@ public class OPDSController2 {
 
     private static Entry mapSequenceToEntry(Sequence sequence) {
         Entry entry = new Entry();
+        entry.setId("sequence:" + sequence.getId());
         entry.setTitle(sequence.getName());
         Content content = new Content();
         content.setType("text/html");

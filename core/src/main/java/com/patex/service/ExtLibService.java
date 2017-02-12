@@ -73,7 +73,7 @@ public class ExtLibService {
     private Entry mapEntry(String urlPrefix, SyndEntry entry) {
         Entry newEntry = new Entry();
         newEntry.setId(entry.getUri());
-        newEntry.setTitle(entry.getTitle());
+        newEntry.setTitleEx(mapContent(entry.getTitleEx()));
         List<Link> links = entry.getLinks().stream().
                 map(link -> mapLink(urlPrefix, link)).filter(Objects::nonNull).collect(Collectors.toList());
         newEntry.setOtherLinks(links);
@@ -88,6 +88,7 @@ public class ExtLibService {
         Content newContent = new Content();
         newContent.setType(content.getType());
         newContent.setValue(content.getValue());
+        content.setMode(content.getMode());
         return newContent;
     }
 
