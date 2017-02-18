@@ -1,9 +1,7 @@
 package com.patex.opds;
 
-import com.patex.LibException;
 import com.patex.entities.*;
 import com.patex.service.AuthorService;
-import com.patex.service.ExtLibService;
 import com.patex.service.SequenceService;
 import com.rometools.rome.feed.atom.Content;
 import com.rometools.rome.feed.atom.Entry;
@@ -15,24 +13,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.io.IOException;
+import javax.annotation.PostConstruct;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 
 @Controller
 @RequestMapping(OPDSController2.PREFIX)
 public class OPDSController2 {
 
-    static final String PREFIX = "opds";
+    public static final String PREFIX = "opds";
     private static final String AUTHORSINDEX = "authorsindex";
-    private static final String APPLICATION_ATOM_XML = "application/atom+xml";
+    public static final String APPLICATION_ATOM_XML = "application/atom+xml";
     private static Logger log = LoggerFactory.getLogger(OPDSController2.class);
 
     private static final int EXPAND_FOR_AUTHORS_COUNT = 3;
@@ -42,22 +38,25 @@ public class OPDSController2 {
 
     @Autowired
     private SequenceService sequenceService;
+    private final List<Entry> rootEntries = new ArrayList<>();
 
-    @Autowired
-    private ExtLibService extLibService;
+    @PostConstruct
+    public void setUp(){
+        rootEntries.add(createEntry("root:authors", "По Авторам", makeURL(PREFIX, AUTHORSINDEX)));
+    }
 
+
+    public void addRoot( Entry entry){
+        rootEntries.add(entry);
+
+    }
 
     @RequestMapping(produces = "application/atom+xml")
     public ModelAndView getMain() {
         ModelAndView mav = new ModelAndView();
         mav.setViewName(OpdsView.OPDS_VIEW);
         mav.addObject(OpdsView.TITLE, "Zombie Catalog");
-        return createMav("Zombie Catalog", new Object(), o -> {
-            List<Entry> entries = new ArrayList<>(4);
-            entries.add(createEntry("root:authors", "По Авторам", makeURL(PREFIX, AUTHORSINDEX)));
-            entries.add(createEntry("root:libraries", "Библиотеки", makeURL(PREFIX, ExtLibService.EXT_LIB)));
-            return entries;
-        });
+        return createMav("Zombie Catalog", rootEntries);
     }
 
     @RequestMapping(value = AUTHORSINDEX, produces = "application/atom+xml")
@@ -139,31 +138,7 @@ public class OPDSController2 {
                         collect(Collectors.toList()));
     }
 
-    @RequestMapping(value = ExtLibService.EXT_LIB, produces = APPLICATION_ATOM_XML)
-    public ModelAndView getExtLibraries() {
-        return createMav("Библиотеки", extLibService.findAll(), extLibraries ->
-                StreamSupport.stream(extLibService.findAll().spliterator(), false).map(extLib ->
-                        createEntry("" + extLib.getId(), extLib.getName(), makeURL(PREFIX, ExtLibService.EXT_LIB, extLib.getId()))
-                ).collect(Collectors.toList()));
-    }
 
-    @RequestMapping(value = ExtLibService.EXT_LIB + "/{id}", produces = APPLICATION_ATOM_XML)
-    public ModelAndView getExtLibOPDS(@PathVariable(value = "id") long id,
-                                      @RequestParam(name = ExtLibService.REQUEST_P_NAME, required = false) String uri)
-    throws LibException{
-        List<Entry> entries = extLibService.getDataForLibrary(id, uri, makeURL(PREFIX, ExtLibService.EXT_LIB, id));
-        return createMav("Библиотек",entries, e -> e);
-
-    }
-
-    @RequestMapping(value = ExtLibService.EXT_LIB + "/{id}/{type}", produces = APPLICATION_ATOM_XML)
-    public String getExtLibFile(@PathVariable(value = "type") String type,
-                                @PathVariable(value = "id") long id,
-                                @RequestParam(name = ExtLibService.REQUEST_P_NAME) String uri)
-            throws IOException, LibException {
-        Book book = extLibService.downloadFromExtLib(id, type, uri);
-        return "redirect:/book/loadFile/" + book.getId();
-    }
 
     private static Entry mapSequenceToEntry(Sequence sequence) {
         Entry entry = new Entry();
@@ -205,7 +180,7 @@ public class OPDSController2 {
         return entry;
     }
 
-    private Entry createEntry(String id, String title, String... hrefs) {
+    public static Entry createEntry(String id, String title, String... hrefs) {
         Entry authorEntry = new Entry();
         authorEntry.setId(id);
         authorEntry.setTitle(title);
@@ -221,11 +196,11 @@ public class OPDSController2 {
         return authorEntry;
     }
 
-    private static String makeURL(Object... parts) {
+    public static String makeURL(Object... parts) {
         return Arrays.stream(parts).map(String::valueOf).reduce("", (s, s2) -> s + "/" + s2);
     }
 
-    private <E> ModelAndView createMav(String title, E e, Function<E, List<Entry>> func) {
+    public static <E> ModelAndView createMav(String title, E e, Function<E, List<Entry>> func) {
         ModelAndView mav = new ModelAndView();
         mav.setViewName(OpdsView.OPDS_VIEW);
         if (e != null) {
@@ -236,5 +211,9 @@ public class OPDSController2 {
         }
         mav.addObject(OpdsView.TITLE, title);
         return mav;
+    }
+
+    public static ModelAndView createMav(String title, List<Entry> entries) {
+        return createMav(title, entries, e -> e);
     }
 }
