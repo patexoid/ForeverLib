@@ -40,7 +40,7 @@ public class ExtLibController {
     public ModelAndView getExtLibraries() {
         return createMav("Библиотеки", extLibService.findAll(), extLibraries ->
                 StreamSupport.stream(extLibService.findAll().spliterator(), false).map(extLib ->
-                        createEntry("" + extLib.getId(), extLib.getName(), makeURL(OPDS_EXT_LIB, extLib.getId()))
+                        createEntry("" + extLib.getId(), extLib.getName(), makeURL(PREFIX,EXT_LIB, extLib.getId()))
                 ).collect(Collectors.toList()));
     }
 
