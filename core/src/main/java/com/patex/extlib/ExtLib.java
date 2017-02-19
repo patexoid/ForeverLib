@@ -99,6 +99,9 @@ public class ExtLib {
     private SyndFeed getFeed(String uri) throws LibException {
         if (uri == null) {
             uri = extLibrary.getOpdsPath();
+            if(!uri.startsWith("/")){
+                uri="/"+uri;
+            }
         }
         return getDataFromURL(uri, uc -> new SyndFeedInput().build(new XmlReader(uc)));
     }

@@ -170,16 +170,11 @@ public class OPDSController2 {
         // TODO entry.setCategories();
         Content content = new Content();
         content.setType("text/html");
-        content.setValue(book.getDescr());
-        List<Content> contents = book.getSequences().stream().map(bS -> {
-            Content sequenceContent = new Content();
-            sequenceContent.setType("text/html");
-            sequenceContent.setValue("Серия:" + bS.getSequence().getName() +
-                    "#" + bS.getSeqOrder());
-            return sequenceContent;
-        }).collect(Collectors.toList());
-        contents.add(0,content);
-        entry.setContents(contents);
+        String descr=book.getSequences().stream().
+                map(bs -> "Серия:" + bs.getSequence().getName() +" #" + bs.getSeqOrder()+"&lt;br/&gt;").
+                reduce(book.getDescr(),String::concat);
+        content.setValue(descr.replaceAll("\n","&lt;br/&gt;"));
+        entry.setContents(Collections.singletonList(content));
         Link link = new Link();
         link.setHref("/book/loadFile/" + book.getId());
         link.setRel(null);
