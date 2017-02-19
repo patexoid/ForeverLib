@@ -196,7 +196,15 @@ public class OPDSController2 {
         Content content = new Content();
         content.setType("text/html");
         content.setValue(book.getDescr());
-        entry.setContents(Collections.singletonList(content));
+        List<Content> contents = book.getSequences().stream().map(bS -> {
+            Content sequenceContent = new Content();
+            sequenceContent.setType("text/html");
+            sequenceContent.setValue("Серия:" + bS.getSequence().getName() +
+                    "#" + bS.getSeqOrder());
+            return sequenceContent;
+        }).collect(Collectors.toList());
+        contents.add(0,content);
+        entry.setContents(contents);
         Link link = new Link();
         link.setHref("/book/loadFile/" + book.getId());
         link.setRel(null);
