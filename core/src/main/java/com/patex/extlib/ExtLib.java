@@ -21,9 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.URLEncoder;
+import java.net.*;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.*;
@@ -110,7 +108,14 @@ public class ExtLib {
         try {
             return connectionExecutor.submit(() -> {
                 URL url = new URL(extLibrary.getUrl() + uri);
-                URLConnection uc = url.openConnection();
+                URLConnection uc;
+                if (extLibrary.getProxyType() == null || Proxy.Type.DIRECT.equals(extLibrary.getProxyType())) {
+                    uc = url.openConnection();
+                } else {
+                    Proxy proxy = new Proxy(extLibrary.getProxyType(),
+                            new InetSocketAddress(extLibrary.getProxyHost(), extLibrary.getProxyPort()));
+                    uc = url.openConnection(proxy);
+                }
                 if (extLibrary.getLogin() != null) {
                     String userpass = extLibrary.getLogin() + ":" + extLibrary.getPassword();
                     String basicAuth = "Basic " + new String(Base64.getEncoder().encode(userpass.getBytes()));
