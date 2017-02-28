@@ -1,9 +1,7 @@
 package com.patex.entities;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
+import java.net.Proxy;
 
 /**
  *
@@ -25,6 +23,12 @@ public class ExtLibrary {
 
     private String login;
     private String password;
+
+    private String proxyHost;
+    private Integer proxyPort;
+
+    @Enumerated(EnumType.STRING)
+    private Proxy.Type proxyType;
 
     public Long getId() {
         return id;
@@ -72,5 +76,29 @@ public class ExtLibrary {
 
     public void setOpdsPath(String opdsPath) {
         this.opdsPath = opdsPath;
+    }
+
+    public String getProxyHost() {
+        return proxyHost;
+    }
+
+    public void setProxyHost(String proxyHost) {
+        this.proxyHost = proxyHost;
+    }
+
+    public Integer getProxyPort() {
+        return proxyPort;
+    }
+
+    public void setProxyPort(Integer proxyPort) {
+        this.proxyPort = proxyPort;
+    }
+
+    public Proxy.Type getProxyType() {
+        return proxyType;
+    }
+
+    public void setProxyType(Proxy.Type proxyType) {
+        this.proxyType = proxyType;
     }
 }
