@@ -72,16 +72,14 @@ public class ExtLib {
     }
 
     private ExtLibFeed getData(String uri) throws LibException {
-        SyndFeed feed = getFeed(uri);
-
-        List<Entry> entries = feed.getEntries().stream().map(this::mapEntry).collect(Collectors.toList());
-        if (entries.stream().
+        ExtLibFeed extLibFeed = fetchEntries(uri);
+        if (extLibFeed.getEntries().stream().
                 anyMatch(entry ->
                         entry.getOtherLinks().stream().
                                 anyMatch(link -> link.getType().contains(FB2_TYPE)))) {
             Entry downloadEntry = new Entry();
             downloadEntry.setId("download:" + uri);
-            downloadEntry.setTitle("Download all " + feed.getTitle());
+            downloadEntry.setTitle("Download all " + extLibFeed.getTitle());
             Content content = new Content();
             content.setValue("Download all ");
             content.setType("html");
@@ -90,7 +88,21 @@ public class ExtLib {
             link.setHref(mapToUri("/downloadAll?", uri));
             link.setType("application/atom+xml;profile=opds-catalog");
             downloadEntry.setOtherLinks(Collections.singletonList(link));
+            List<Entry> entries = extLibFeed.getEntries();
             entries.add(0, downloadEntry);
+            return new ExtLibFeed(extLibFeed.getTitle(), extLibFeed.getLink(), entries);
+        }
+        return extLibFeed;
+    }
+
+    private ExtLibFeed fetchEntries(String uri) throws LibException {
+        SyndFeed feed = getFeed(uri);
+        List<Entry> entries = feed.getEntries().
+                stream().map(this::mapEntry).collect(Collectors.toList());
+        Optional<SyndLink> nextPage = feed.getLinks().stream().
+                filter(syndLink -> "next".equals(syndLink.getRel())).findFirst();
+        if(nextPage.isPresent()){
+            entries.addAll(fetchEntries(nextPage.get().getHref()).getEntries());
         }
         return new ExtLibFeed(feed.getTitle(), feed.getLink(), entries);
     }
