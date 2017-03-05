@@ -6,9 +6,11 @@
 
     <groupId>com.patex.zombielib2</groupId>
     <artifactId>core</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.2</version>
+
     <build>
         <plugins>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -27,6 +29,9 @@
                         <profile>test</profile>
                     </profiles>
                     <useTestClasspath>true</useTestClasspath>
+                    <maxAttempts>200</maxAttempts>
+                    <wait>1000</wait>
+                    <finalName>zombieCore</finalName>
                 </configuration>
                 <executions>
                     <execution>
