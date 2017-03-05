@@ -1,5 +1,5 @@
 language: java
-script: mvn -P web verify
+script: mvn -P web,prod verify
 jdk:
   - oraclejdk8
 cache:
@@ -9,3 +9,13 @@ cache:
     - $TRAVIS_BUILD_DIR/web/node_modules
     - $TRAVIS_BUILD_DIR/web/typings
     - $TRAVIS_BUILD_DIR/web/node
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key:
+      secure: "$GITHUB_DEPLOY_TOKEN"
+  file:
+     $TRAVIS_BUILD_DIR/core/target/zombieCore.jar
+#     $TRAVIS_BUILD_DIR/web/dist/*
+  on:
+    tags: true
