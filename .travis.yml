@@ -22,3 +22,6 @@ deploy:
 #     $TRAVIS_BUILD_DIR/web/dist/*
   on:
     tags: true
+    
+notifications:
+  email: false
