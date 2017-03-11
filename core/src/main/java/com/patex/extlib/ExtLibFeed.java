@@ -1,7 +1,9 @@
 package com.patex.extlib;
 
 import com.rometools.rome.feed.atom.Entry;
+import com.rometools.rome.feed.atom.Link;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,23 +13,25 @@ public class ExtLibFeed {
 
     private final String title;
     private final List<Entry> entries;
-    private final String link;
+    private final List<Link> links;
 
-    public ExtLibFeed(String title, String link, List<Entry> entries) {
+
+    public ExtLibFeed(String title, List<Entry> entries, List<Link> links) {
         this.title = title;
-        this.link = link;
         this.entries = entries;
+        this.links = links;
     }
 
     public String getTitle() {
         return title;
     }
 
-    public String getLink() {
-        return link;
-    }
 
     public List<Entry> getEntries() {
         return entries;
+    }
+
+    public List<Link> getLinks() {
+        return links;
     }
 }
