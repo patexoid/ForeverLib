@@ -3,8 +3,6 @@ install: true
 script: mvn -P web,prod verify
 jdk:
   - oraclejdk8
-#before_cache:
-#  - rm -rf $HOME/.m2/repository/com/patex/zombielib2
 cache:
   directories:
     - .autoconf
@@ -19,7 +17,6 @@ deploy:
       secure: "$GITHUB_DEPLOY_TOKEN"
   file:
      $TRAVIS_BUILD_DIR/core/target/zombieCore.jar
-#     $TRAVIS_BUILD_DIR/web/dist/*
   on:
     tags: true
     

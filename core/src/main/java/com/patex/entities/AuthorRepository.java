@@ -20,10 +20,11 @@ public interface AuthorRepository extends CrudRepository<Author, Long> {
 
     List<Author> findByNameStartingWithIgnoreCaseOrderByName(String name);
 
-
-    @Query("SELECT NEW com.patex.entities.AggrResult(substring(a.name,0, :prefixLenth) as  id, count(*) as result)" +
-            " FROM Author a where name like :prefix% group by col_0_0_")//TODO FIX THAT
-    List<AggrResult> getAuthorsCount(@Param("prefixLenth")int length, @Param("prefix") String name);
+    @Query(value = "SELECT " +
+            "  substring(a.name, 0, :prefixLength) AS id, " +
+            "  count(*)                            AS result " +
+            "FROM Author a WHERE name LIKE :prefix% GROUP BY id ORDER BY id",nativeQuery = true)
+    List<AggrResult> getAuthorsCount(@Param("prefixLength")int length, @Param("prefix") String name);
 
     Page<Author> findByNameStartingWithIgnoreCase(String name, Pageable pageable);
 

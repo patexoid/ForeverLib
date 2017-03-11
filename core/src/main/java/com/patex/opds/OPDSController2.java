@@ -101,7 +101,7 @@ public class OPDSController2 {
             entry.setContents(Collections.singletonList(content));
             entries.add(entry);
             entries.add(createEntry("" + author.getId(), author.getName() + "Книги по алфавиту",
-                    makeURL("opds","author",author.getId()),"alphabet"));
+                    makeURL("opds","author",author.getId(),"alphabet")));
             entries.add(createEntry("" + author.getId(), author.getName() + "Книги по сериям",
                     makeURL("opds","authorsequences",author.getId())));
             return entries;

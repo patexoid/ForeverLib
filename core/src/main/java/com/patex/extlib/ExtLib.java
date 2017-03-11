@@ -37,6 +37,7 @@ public class ExtLib {
 
     static final String REQUEST_P_NAME = "uri";
     static final String FB2_TYPE = "application/fb2";
+    public static final String REL_NEXT = "next";
 
     private final ExecutorService connectionExecutor = Executors.newSingleThreadExecutor();
     private final ExecutorService actionExecutor = Executors.newCachedThreadPool();
@@ -70,14 +71,16 @@ public class ExtLib {
     }
 
     private ExtLibFeed getData(String uri) throws LibException {
-        ExtLibFeed extLibFeed = fetchEntries(uri);
-        if (extLibFeed.getEntries().stream().
+        SyndFeed feed = getFeed(uri);
+
+        List<Entry> entries = feed.getEntries().stream().map(this::mapEntry).collect(Collectors.toList());
+        if (entries.stream().
                 anyMatch(entry ->
                         entry.getOtherLinks().stream().
                                 anyMatch(link -> link.getType().contains(FB2_TYPE)))) {
             Entry downloadEntry = new Entry();
             downloadEntry.setId("download:" + uri);
-            downloadEntry.setTitle("Download all " + extLibFeed.getTitle());
+            downloadEntry.setTitle("Download all " + feed.getTitle());
             Content content = new Content();
             content.setValue("Download all ");
             content.setType("html");
@@ -86,23 +89,26 @@ public class ExtLib {
             link.setHref(mapToUri("/downloadAll?", uri));
             link.setType("application/atom+xml;profile=opds-catalog");
             downloadEntry.setOtherLinks(Collections.singletonList(link));
-            List<Entry> entries = extLibFeed.getEntries();
             entries.add(0, downloadEntry);
-            return new ExtLibFeed(extLibFeed.getTitle(), extLibFeed.getLink(), entries);
         }
-        return extLibFeed;
-    }
 
-    private ExtLibFeed fetchEntries(String uri) throws LibException {
-        SyndFeed feed = getFeed(uri);
-        List<Entry> entries = feed.getEntries().
-                stream().map(this::mapEntry).collect(Collectors.toList());
+        ArrayList<Link> links = new ArrayList<>();
         Optional<SyndLink> nextPage = feed.getLinks().stream().
-                filter(syndLink -> "next".equals(syndLink.getRel())).findFirst();
+                filter(syndLink -> REL_NEXT.equals(syndLink.getRel())).findFirst();
         if(nextPage.isPresent()){
-            entries.addAll(fetchEntries(nextPage.get().getHref()).getEntries());
+            SyndLink syndLink = nextPage.get();
+            Entry nextEntry = new Entry();
+            nextEntry.setId("next:" + uri);
+            nextEntry.setTitle("Next");
+            Content content = new Content();
+            content.setValue("Next Page");
+            content.setType("html");
+            nextEntry.setContents(Collections.singletonList(content));
+            nextEntry.setOtherLinks(Collections.singletonList(mapLink(syndLink)));
+            entries.add(nextEntry);
+            links.add(mapLink(syndLink));
         }
-        return new ExtLibFeed(feed.getTitle(), feed.getLink(), entries);
+        return new ExtLibFeed(feed.getTitle(), entries, links);
     }
 
 
@@ -178,30 +184,46 @@ public class ExtLib {
             return "/book/loadFile/" + book.getId();
         } else if ("downloadAll".equals(action)) {
             String uri = params.get(REQUEST_P_NAME);
-            actionExecutor.execute(() -> downloadAll(uri));
+            actionExecutor.execute(() -> downloadAll(uri, FB2_TYPE));
             return mapToUri("?", uri);
         }
         throw new LibException("Unknown action: " + action);
     }
 
-    private void downloadAll(String uri) {
+    private void downloadAll(String uri, String type) {
         try {
             ExtLibFeed data = getData(uri);
             data.getEntries().stream().flatMap(entry -> entry.getOtherLinks().stream()).
-                    filter(link -> link.getType().contains(FB2_TYPE)).
+                    filter(link -> link.getType().contains(type)).
                     forEach(link -> {
                         try {
-                            Optional<NameValuePair> uriO = URLEncodedUtils.parse(link.getHref(), Charset.forName("UTF-8")).stream().
-                                    filter(nvp -> nvp.getName().equals(REQUEST_P_NAME)).findFirst();
-                            if(uriO.isPresent()) {
-                                downloadFromExtLib(FB2_TYPE, uriO.get().getValue());
+                            Optional<String> bookUri = extractExtUri(link);
+                            if(bookUri.isPresent()) {
+                                downloadFromExtLib(link.getType(), bookUri.get());
                             }
                         } catch (LibException e) {
                             log.error(e.getMessage(), e);
                         }
                     });
+            Optional<Link> nextLink = data.getLinks().stream().
+                    filter(link -> REL_NEXT.equals(link.getRel())).findFirst();
+            if(nextLink.isPresent()){
+                Optional<String> nextExtUri = extractExtUri(nextLink.get());
+                downloadAll(nextExtUri.orElse(""), type);
+            }
         } catch (LibException e) {
             log.error(e.getMessage(), e);
+        }
+    }
+
+    private Optional<String> extractExtUri(Link link) {
+        Optional<NameValuePair> uriO =
+                URLEncodedUtils.parse(link.getHref(), Charset.forName("UTF-8")).stream().
+                filter(nvp -> nvp.getName().equals(REQUEST_P_NAME)).findFirst();
+        if(uriO.isPresent()){
+            return Optional.of(uriO.get().getValue());
+        } else {
+            return Optional.empty();
         }
     }
 

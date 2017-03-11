@@ -2,6 +2,7 @@ package com.patex.opds;
 
 import com.rometools.rome.feed.atom.Entry;
 import com.rometools.rome.feed.atom.Feed;
+import com.rometools.rome.feed.atom.Link;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.view.feed.AbstractAtomFeedView;
 
@@ -19,11 +20,10 @@ public class OpdsView extends AbstractAtomFeedView {
     public static final String OPDS_VIEW = "opdsView";
     public static final String TITLE = "Title";
     public static final String ENTRIES = "Entries";
-
+    public static final String LINKS = "LINKS";
     @SuppressWarnings("unchecked")
     @Override
     protected List<Entry> buildFeedEntries(Map<String, Object> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
-
         return (List<Entry>) model.get(ENTRIES);
     }
 
@@ -35,5 +35,6 @@ public class OpdsView extends AbstractAtomFeedView {
         feed.setId(title);
         feed.setUpdated(Date.from(Instant.now()));
         feed.setIcon("favicon.ico");
+        feed.setOtherLinks((List<Link>) model.get(LINKS));
     }
 }
