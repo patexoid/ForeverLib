@@ -3,7 +3,6 @@ package com.patex.extlib;
 import com.rometools.rome.feed.atom.Entry;
 import com.rometools.rome.feed.atom.Link;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
