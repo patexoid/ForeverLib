@@ -22,6 +22,10 @@ public class ExtLibFactory {
     @Autowired
     private BookService bookService;
 
+    @Autowired
+    private ExtLibConnectionService extLibConnectionService;
+
+
     private final Map<Long, ExtLib> extLibMap = new HashMap<>();
 
     ExtLib getExtLib(Long id) throws LibException {
@@ -34,7 +38,7 @@ public class ExtLibFactory {
                     if (extLibrary == null) {
                         throw new LibException("External Lib unknown id:" + id);
                     }
-                    extLib = new ExtLib(extLibrary, bookService);
+                    extLib = new ExtLib(extLibrary, bookService, extLibConnectionService);
                     extLibMap.put(id, extLib);
                 }
             }

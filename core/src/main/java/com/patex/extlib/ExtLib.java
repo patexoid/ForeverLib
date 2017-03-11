@@ -21,10 +21,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
-import java.net.*;
+import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -39,7 +42,6 @@ public class ExtLib {
     static final String FB2_TYPE = "application/fb2";
     public static final String REL_NEXT = "next";
 
-    private final ExecutorService connectionExecutor = Executors.newSingleThreadExecutor();
     private final ExecutorService actionExecutor = Executors.newCachedThreadPool();
 
     private final Cache<String, Book> bookCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
@@ -59,10 +61,12 @@ public class ExtLib {
 
 
     private final BookService bookService;
+    private final ExtLibConnectionService extLibConnectionService;
 
-    public ExtLib(ExtLibrary extLibrary, BookService bookService) {
+    public ExtLib(ExtLibrary extLibrary, BookService bookService, ExtLibConnectionService extLibConnectionService) {
         this.extLibrary = extLibrary;
         this.bookService = bookService;
+        this.extLibConnectionService = extLibConnectionService;
     }
 
 
@@ -123,28 +127,14 @@ public class ExtLib {
     }
 
     private <E> E getDataFromURL(String uri, ExtLibFunction<URLConnection, E> function) throws LibException {
-        try {
-            return connectionExecutor.submit(() -> {
-                URL url = new URL(extLibrary.getUrl() + uri);
-                URLConnection uc;
-                if (extLibrary.getProxyType() == null || Proxy.Type.DIRECT.equals(extLibrary.getProxyType())) {
-                    uc = url.openConnection();
-                } else {
-                    Proxy proxy = new Proxy(extLibrary.getProxyType(),
-                            new InetSocketAddress(extLibrary.getProxyHost(), extLibrary.getProxyPort()));
-                    uc = url.openConnection(proxy);
-                }
-                if (extLibrary.getLogin() != null) {
-                    String userpass = extLibrary.getLogin() + ":" + extLibrary.getPassword();
-                    String basicAuth = "Basic " + new String(Base64.getEncoder().encode(userpass.getBytes()));
-                    uc.setRequestProperty("Authorization", basicAuth);
-                }
-                return function.apply(uc);
-            }).get(60, TimeUnit.SECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            log.error(e.getMessage(), e);
-            throw new LibException(e.getMessage(), e);
+        ExtLibConnectionService.ExtlibConnection connection = extLibConnectionService.openConnection(uri);
+        if (extLibrary.getProxyType() != null) {
+            connection = connection.proxy(extLibrary.getProxyType(), extLibrary.getProxyHost(), extLibrary.getProxyPort());
         }
+        if (extLibrary.getLogin() != null) {
+            connection = connection.setAuthorization(extLibrary.getLogin(), extLibrary.getPassword());
+        }
+        return connection.getData(function);
     }
 
     private Entry mapEntry(SyndEntry entry) {
