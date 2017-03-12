@@ -28,17 +28,17 @@ public class ExtLibConnectionService {
         }
     });
 
-    public ExtlibConnection openConnection(String urlString) throws LibException {
-        return new ExtlibConnection(urlString);
+    public ExtlibCon openConnection(String urlString) throws LibException {
+        return new ExtlibCon(urlString);
     }
 
-    public class ExtlibConnection {
+    class ExtlibCon {
         private URLConnection _uc;
         private final URL _url;
 
         private Proxy _proxy;
 
-        private ExtlibConnection(String url) throws LibException {
+        private ExtlibCon(String url) throws LibException {
             try {
                 _url = new URL(url);
             } catch (MalformedURLException e) {
@@ -63,12 +63,12 @@ public class ExtLibConnectionService {
             }
         }
 
-        public ExtlibConnection proxy(Proxy.Type proxyType, String proxyHost, int proxyPort) {
+        public ExtlibCon proxy(Proxy.Type proxyType, String proxyHost, int proxyPort) {
             _proxy = new Proxy(proxyType, new InetSocketAddress(proxyHost, proxyPort));
             return this;
         }
 
-        public ExtlibConnection setAuthorization(String login, String password) throws  LibException{
+        public ExtlibCon setAuthorization(String login, String password) throws  LibException{
             String userpass = login + ":" + password;
             String basicAuth = "Basic " + new String(Base64.getEncoder().encode(userpass.getBytes()));
             getConnection().setRequestProperty("Authorization", basicAuth);
