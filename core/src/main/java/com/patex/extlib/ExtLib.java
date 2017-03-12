@@ -1,5 +1,6 @@
 package com.patex.extlib;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.patex.LibException;
@@ -40,7 +41,7 @@ public class ExtLib {
 
     static final String REQUEST_P_NAME = "uri";
     static final String FB2_TYPE = "application/fb2";
-    public static final String REL_NEXT = "next";
+    static final String REL_NEXT = "next";
 
     private final ExecutorService actionExecutor = Executors.newCachedThreadPool();
 
@@ -86,7 +87,7 @@ public class ExtLib {
             downloadEntry.setId("download:" + uri);
             downloadEntry.setTitle("Download all " + feed.getTitle());
             Content content = new Content();
-            content.setValue("Download all ");
+            content.setValue("Download all");
             content.setType("html");
             downloadEntry.setContents(Collections.singletonList(content));
             Link link = new Link();
@@ -127,7 +128,7 @@ public class ExtLib {
     }
 
     private <E> E getDataFromURL(String uri, ExtLibFunction<URLConnection, E> function) throws LibException {
-        ExtLibConnectionService.ExtlibConnection connection = extLibConnectionService.openConnection(uri);
+        ExtLibConnectionService.ExtlibCon connection = extLibConnectionService.openConnection(extLibrary.getUrl() + uri);
         if (extLibrary.getProxyType() != null) {
             connection = connection.proxy(extLibrary.getProxyType(), extLibrary.getProxyHost(), extLibrary.getProxyPort());
         }
@@ -155,7 +156,9 @@ public class ExtLib {
         Content newContent = new Content();
         newContent.setType(content.getType());
         newContent.setValue(content.getValue());
-        content.setMode(content.getMode());
+        if(content.getMode()!=null) {
+            newContent.setMode(content.getMode());
+        }
         return newContent;
     }
 
@@ -238,7 +241,8 @@ public class ExtLib {
         );
     }
 
-    private static String mapToUri(String prefix, String href) {
+    @VisibleForTesting
+    static String mapToUri(String prefix, String href) {
         try {
             return prefix + REQUEST_P_NAME + "=" + URLEncoder.encode(href, "UTF-8");
         } catch (UnsupportedEncodingException e) {
