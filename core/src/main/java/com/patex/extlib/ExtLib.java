@@ -1,6 +1,5 @@
 package com.patex.extlib;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.patex.LibException;
@@ -42,6 +41,9 @@ public class ExtLib {
     static final String REQUEST_P_NAME = "uri";
     static final String FB2_TYPE = "application/fb2";
     static final String REL_NEXT = "next";
+    static final String ACTION_DOWNLOAD = "download";
+    static final String ACTION_DOWNLOAD_ALL = "downloadAll";
+    public static final String PARAM_TYPE = "type";
 
     private final ExecutorService actionExecutor = Executors.newCachedThreadPool();
 
@@ -172,10 +174,10 @@ public class ExtLib {
     }
 
     public String action(String action, Map<String, String> params) throws LibException {
-        if ("download".equals(action)) {
-            Book book = downloadFromExtLib(params.get("type"), params.get(REQUEST_P_NAME));
+        if (ACTION_DOWNLOAD.equals(action)) {
+            Book book = downloadFromExtLib(params.get(PARAM_TYPE), params.get(REQUEST_P_NAME));
             return "/book/loadFile/" + book.getId();
-        } else if ("downloadAll".equals(action)) {
+        } else if (ACTION_DOWNLOAD_ALL.equals(action)) {
             String uri = params.get(REQUEST_P_NAME);
             actionExecutor.execute(() -> downloadAll(uri, FB2_TYPE));
             return mapToUri("?", uri);
@@ -241,7 +243,6 @@ public class ExtLib {
         );
     }
 
-    @VisibleForTesting
     static String mapToUri(String prefix, String href) {
         try {
             return prefix + REQUEST_P_NAME + "=" + URLEncoder.encode(href, "UTF-8");

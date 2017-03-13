@@ -28,7 +28,7 @@ public class ExtLibConnectionService {
         }
     });
 
-    public ExtlibCon openConnection(String urlString) throws LibException {
+    ExtlibCon openConnection(String urlString) throws LibException {
         return new ExtlibCon(urlString);
     }
 
@@ -38,7 +38,11 @@ public class ExtLibConnectionService {
 
         private Proxy _proxy;
 
-        private ExtlibCon(String url) throws LibException {
+        public  ExtlibCon() {
+            _url=null;
+        }
+
+        ExtlibCon(String url) throws LibException {
             try {
                 _url = new URL(url);
             } catch (MalformedURLException e) {
@@ -47,7 +51,7 @@ public class ExtLibConnectionService {
             }
         }
 
-        private URLConnection getConnection() throws LibException {
+        URLConnection getConnection() throws LibException {
             try {
                 if (_uc == null) {
                     if (_proxy == null) {
