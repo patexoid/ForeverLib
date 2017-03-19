@@ -3,31 +3,57 @@ package com.patex.api;
 
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.apache.http.HttpHeaders.AUTHORIZATION;
+
 /**
  * Created by Alexey on 8/15/2016.
  */
+@SuppressWarnings("Duplicates")
 public class HttpTestClient {
 
     private final String url;
 
+    private String username;
+    private String password;
 
     public HttpTestClient(String url) {
         this.url = url;
 
     }
 
+    public void setCreds(String username,String pasword){
+        this.username=username;
+        this.password=pasword;
+    }
 
-    public <M, E extends List<M>> ResponseEntity<E> uploadFiles(String path, String filesPropName, Map<String, InputStream> files, ParameterizedTypeReference<E> responseType) {
+
+    private void updateHeaders(HttpHeaders headers){
+        if(username!=null) {
+            String basic = Base64.getEncoder().encodeToString((username + ":" + password).getBytes());
+            headers.add(AUTHORIZATION, "Basic " + basic);
+        }
+    }
+
+
+    public <M, E extends List<M>> ResponseEntity<E> uploadFiles(String path,
+                                                                String filesPropName,
+                                                                Map<String, InputStream> files,
+                                                                ParameterizedTypeReference<E> responseType) {
         LinkedMultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
         map.put(filesPropName,
                 files.entrySet().stream().
@@ -41,38 +67,47 @@ public class HttpTestClient {
                                          M body,
                                          MediaType mediaType,
                                          ParameterizedTypeReference<E> responseType) {
+        return exchange(path, body, mediaType, responseType, HttpMethod.POST);
+    }
+
+    private <E, M> ResponseEntity<E> exchange(String path, M body, MediaType mediaType, ParameterizedTypeReference<E> responseType, HttpMethod method) {
         RestTemplate template = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(mediaType);
-
+        updateHeaders(headers);
         HttpEntity<M> requestEntity = new HttpEntity<M>(body, headers);
         return template.exchange(url + "/" + path,
-                HttpMethod.POST, requestEntity, responseType);
+                method, requestEntity, responseType);
     }
 
     public <E, M> ResponseEntity<E> post(String path,
                                          M body,
                                          MediaType mediaType,
                                          Class<E> responseType) {
+        return exchange(path, body, mediaType, responseType, HttpMethod.POST);
+    }
+
+    private <E, M> ResponseEntity<E> exchange(String path, M body, MediaType mediaType,
+                                              Class<E> responseType, HttpMethod method) {
         RestTemplate template = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(mediaType);
-
+        if(mediaType!=null) {
+            headers.setContentType(mediaType);
+        }
+        updateHeaders(headers);
         HttpEntity<M> requestEntity = new HttpEntity<M>(body, headers);
-        return template.exchange(url + "/" + path, HttpMethod.POST, requestEntity, responseType);
+        return template.exchange(url + "/" + path, method, requestEntity, responseType);
     }
 
 
     public <T> T get(String uri, Class<T> clazz) throws IOException {
-        RestTemplate template = new RestTemplate();
-        return template.getForObject(url + "/" + uri, clazz);
+        return exchange(uri, null, MediaType.TEXT_HTML, clazz, HttpMethod.GET).getBody();
     }
 
     public <T> T get(String uri, ParameterizedTypeReference<T> responseType) throws IOException {
-        RestTemplate template = new RestTemplate();
-        return template.exchange(url + "/" + uri, HttpMethod.GET, null, responseType).getBody();
+        return exchange(uri, null, MediaType.TEXT_HTML, responseType, HttpMethod.GET).getBody();
     }
 
     private class MultipartFileResource extends InputStreamResource {

@@ -15,7 +15,6 @@ module.exports = webpackMerge(commonConfig, {
     },
 
     plugins: [
-        new webpack.optimize.DedupePlugin(),
         new ExtractTextPlugin('[name].css'),
         new webpack.DefinePlugin({
             'process.env': {

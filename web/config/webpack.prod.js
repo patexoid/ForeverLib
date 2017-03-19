@@ -3,26 +3,23 @@ var webpackMerge = require('webpack-merge');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var commonConfig = require('./webpack.common.js');
 var helpers = require('./helpers');
+var CompressionPlugin = require("compression-webpack-plugin")
 
 const ENV = process.env.NODE_ENV = process.env.ENV = 'production';
 
+const publicPath = 'web/';
 module.exports = webpackMerge(commonConfig, {
     devtool: 'source-map',
 
     output: {
         path: helpers.root('dist'),
-        publicPath: 'web/',
+        publicPath: publicPath,
         filename: '[name].js',
         chunkFilename: '[id].chunk.js'
     },
 
-    htmlLoader: {
-        minimize: false // workaround for ng2
-    },
-
     plugins: [
-        new webpack.NoErrorsPlugin(),
-        new webpack.optimize.DedupePlugin(),
+        new webpack.NoEmitOnErrorsPlugin(),
         new webpack.optimize.UglifyJsPlugin({ // https://github.com/angular/angular/issues/10618
             mangle: {
                 keep_fnames: true
@@ -32,7 +29,12 @@ module.exports = webpackMerge(commonConfig, {
         new webpack.DefinePlugin({
             'process.env': {
                 'ENV': JSON.stringify(ENV),
-                'API_URL': JSON.stringify("")
+                'API_URL': JSON.stringify(""),
+            }
+        }),
+        new webpack.LoaderOptionsPlugin({
+            htmlLoader: {
+                minimize: false // workaround for ng2
             }
         })
     ]

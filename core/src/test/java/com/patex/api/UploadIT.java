@@ -4,6 +4,7 @@ package com.patex.api;
 import com.patex.BookUploadInfo;
 import com.patex.entities.Author;
 import com.patex.entities.Book;
+import com.patex.entities.ZUser;
 import fb2.Fb2Creator;
 import org.junit.Assert;
 import org.junit.Before;
@@ -12,6 +13,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,14 +32,23 @@ public class UploadIT {
     private HttpTestClient httpClient;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         httpClient = new HttpTestClient("http://localhost:8080");
+        httpClient.setCreds("testUser","simplePassword");
+        try {
+            httpClient.get("user/current", ZUser.class);
+        } catch (HttpClientErrorException e) {
+            httpClient.setCreds(null,null);
+            httpClient.post("user/create", "{\"username\":\"testUser\", \"password\":\"simplePassword\"}",
+                    MediaType.APPLICATION_JSON, ZUser.class);
+        }
+        httpClient.setCreds("testUser","simplePassword");
     }
 
     @Test
     public void uploadFile() throws IOException {
-        Map<String, InputStream> files = new HashMap<>();
         String fileName = randomAlphanumeric(10) + ".fb2";
+        Map<String, InputStream> files = new HashMap<>();
         files.put(fileName, new Fb2Creator(randomAlphanumeric(10)).
                 addAuthor(randomAlphanumeric(10), randomAlphanumeric(10), randomAlphanumeric(10)).
                 getFbook());
