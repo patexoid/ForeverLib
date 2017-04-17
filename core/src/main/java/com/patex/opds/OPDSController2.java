@@ -69,7 +69,7 @@ public class OPDSController2 {
         return createMav("", authorService.getAuthorsCount(start), aggrResults -> {
             List<Entry> entries = new ArrayList<>();
             List<Entry> authors = aggrResults.stream().
-                    filter(aggrResult -> aggrResult.getResult() < EXPAND_FOR_AUTHORS_COUNT).
+                    filter(aggrResult -> aggrResult.getResult() <= EXPAND_FOR_AUTHORS_COUNT).
                     flatMap(aggrResult -> authorService.findByName(aggrResult.getId()).stream()).
                     map(author ->
                             createEntry("" + author.getId(), author.getName(),
