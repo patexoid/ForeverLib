@@ -1,6 +1,10 @@
 package com.patex.opds;
 
-import com.patex.entities.*;
+import com.patex.entities.Author;
+import com.patex.entities.AuthorBook;
+import com.patex.entities.Book;
+import com.patex.entities.BookSequence;
+import com.patex.entities.Sequence;
 import com.patex.service.AuthorService;
 import com.patex.service.SequenceService;
 import com.rometools.rome.feed.atom.Content;
@@ -16,8 +20,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletResponse;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -38,24 +48,25 @@ public class OPDSController2 {
 
     @Autowired
     private SequenceService sequenceService;
+
+    @Autowired
+    private LatestURIComponent latestURIComponent;
+
     private final List<Entry> rootEntries = new ArrayList<>();
 
+
     @PostConstruct
-    public void setUp(){
+    public void setUp() {
+        rootEntries.add(createEntry("root:latest", "Последнее", makeURL(PREFIX, "latest")));
         rootEntries.add(createEntry("root:authors", "По Авторам", makeURL(PREFIX, AUTHORSINDEX)));
     }
 
-
-    public void addRoot( Entry entry){
+    public void addRoot(Entry entry) {
         rootEntries.add(entry);
-
     }
 
     @RequestMapping(produces = "application/atom+xml")
     public ModelAndView getMain() {
-        ModelAndView mav = new ModelAndView();
-        mav.setViewName(OpdsView.OPDS_VIEW);
-        mav.addObject(OpdsView.TITLE, "Zombie Catalog");
         return createMav("Zombie Catalog", rootEntries);
     }
 
@@ -64,6 +75,7 @@ public class OPDSController2 {
         return getAuthorsIndex("");
     }
 
+    @SaveLatest
     @RequestMapping(value = AUTHORSINDEX + "/{start}", produces = "application/atom+xml")
     public ModelAndView getAuthorsIndex(@PathVariable(value = "start") String start) {
         return createMav("", authorService.getAuthorsCount(start), aggrResults -> {
@@ -73,22 +85,23 @@ public class OPDSController2 {
                     flatMap(aggrResult -> authorService.findByName(aggrResult.getId()).stream()).
                     map(author ->
                             createEntry("" + author.getId(), author.getName(),
-                                    makeURL("opds","author",author.getId()),
-                                    makeURL("opds","authorsequences",author.getId()),
-                                    makeURL("opds","authorsequenceless",author.getId()))).
+                                    makeURL("opds", "author", author.getId()),
+                                    makeURL("opds", "authorsequences", author.getId()),
+                                    makeURL("opds", "authorsequenceless", author.getId()))).
                     sorted(Comparator.comparing(Entry::getTitle)).
                     collect(Collectors.toList());
             entries.addAll(authors);
 
             List<Entry> serachEntries = aggrResults.stream().
                     filter(aggrResult -> aggrResult.getResult() > EXPAND_FOR_AUTHORS_COUNT && aggrResults.size() != 1).
-                    map(aggr -> createEntry(aggr.getId(), aggr.getId(), makeURL("opds",AUTHORSINDEX,aggr.getId()))).
+                    map(aggr -> createEntry(aggr.getId(), aggr.getId(), makeURL("opds", AUTHORSINDEX, aggr.getId()))).
                     collect(Collectors.toList());
             entries.addAll(serachEntries);
             return entries;
         });
     }
 
+    @SaveLatest
     @RequestMapping(value = "author/{id}", produces = "application/atom+xml")
     public ModelAndView getAuthor(@PathVariable(value = "id") long id) {
         return createMav("", authorService.getAuthors(id), author -> {
@@ -101,13 +114,14 @@ public class OPDSController2 {
             entry.setContents(Collections.singletonList(content));
             entries.add(entry);
             entries.add(createEntry("" + author.getId(), author.getName() + "Книги по алфавиту",
-                    makeURL("opds","author",author.getId(),"alphabet")));
+                    makeURL("opds", "author", author.getId(), "alphabet")));
             entries.add(createEntry("" + author.getId(), author.getName() + "Книги по сериям",
-                    makeURL("opds","authorsequences",author.getId())));
+                    makeURL("opds", "authorsequences", author.getId())));
             return entries;
         });
     }
 
+    @SaveLatest
     @RequestMapping(value = "author/{id}/alphabet", produces = "application/atom+xml")
     public ModelAndView getAuthorBookAlphabet(@PathVariable(value = "id") long id) {
         Author bookAuthor = authorService.getAuthors(id);
@@ -118,6 +132,7 @@ public class OPDSController2 {
                         collect(Collectors.toList()));
     }
 
+    @SaveLatest
     @RequestMapping(value = "sequence/{id}", produces = "application/atom+xml")
     public ModelAndView getBookBySequence(@PathVariable(value = "id") long id) {
 
@@ -130,6 +145,7 @@ public class OPDSController2 {
         );
     }
 
+    @SaveLatest
     @RequestMapping(value = "authorsequences/{id}", produces = APPLICATION_ATOM_XML)
     public ModelAndView getAuthorSequences(@PathVariable(value = "id") long id) {
         Author author = authorService.getAuthors(id);
@@ -138,6 +154,14 @@ public class OPDSController2 {
                         collect(Collectors.toList()));
     }
 
+
+    @RequestMapping(value = "latest")
+    public ModelAndView getLatest(HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
+        response.setHeader("Pragma", "no-cache"); // HTTP 1.0.
+        response.setHeader("Expires", "0"); // Proxies.
+        return latestURIComponent.getLatestForCurrentUser();
+    }
 
 
     private static Entry mapSequenceToEntry(Sequence sequence) {
@@ -170,10 +194,10 @@ public class OPDSController2 {
         // TODO entry.setCategories();
         Content content = new Content();
         content.setType("text/html");
-        String descr=book.getSequences().stream().
-                map(bs -> "Серия:" + bs.getSequence().getName() +" #" + bs.getSeqOrder()+"&lt;br/&gt;").
-                reduce(book.getDescr(),String::concat);
-        content.setValue(descr.replaceAll("\n","&lt;br/&gt;"));
+        String descr = book.getSequences().stream().
+                map(bs -> "Серия:" + bs.getSequence().getName() + " #" + bs.getSeqOrder() + "&lt;br/&gt;").
+                reduce(book.getDescr(), String::concat);
+        content.setValue(descr.replaceAll("\n", "&lt;br/&gt;"));
         entry.setContents(Collections.singletonList(content));
         Link link = new Link();
         link.setHref("/book/loadFile/" + book.getId());
@@ -199,6 +223,7 @@ public class OPDSController2 {
         return authorEntry;
     }
 
+
     public static String makeURL(Object... parts) {
         return Arrays.stream(parts).map(String::valueOf).reduce("", (s, s2) -> s + "/" + s2);
     }
@@ -210,7 +235,7 @@ public class OPDSController2 {
             List<Entry> entries = func.apply(e);
             mav.addObject(OpdsView.ENTRIES, entries);
         } else {
-            log.warn("empty obj:" +title);
+            log.warn("empty obj:" + title);
         }
         mav.addObject(OpdsView.TITLE, title);
         return mav;

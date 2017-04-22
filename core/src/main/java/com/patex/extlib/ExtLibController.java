@@ -2,6 +2,7 @@ package com.patex.extlib;
 
 import com.patex.LibException;
 import com.patex.opds.OPDSController2;
+import com.patex.opds.SaveLatest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,6 +45,7 @@ public class ExtLibController {
                 ).collect(Collectors.toList()));
     }
 
+    @SaveLatest
     @RequestMapping(value = "{id}", produces = APPLICATION_ATOM_XML)
     public ModelAndView getExtLibData(@PathVariable(value = "id") long id,
                                       @RequestParam(required = false) Map<String, String> requestParams) throws LibException {

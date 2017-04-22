@@ -8,8 +8,6 @@ import org.springframework.web.servlet.view.feed.AbstractAtomFeedView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.time.Instant;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +31,7 @@ public class OpdsView extends AbstractAtomFeedView {
         String title = (String) model.get(TITLE);
         feed.setTitle(title);
         feed.setId(title);
-        feed.setUpdated(Date.from(Instant.now()));
+//        feed.setUpdated(Date.from(Instant.now()));
         feed.setIcon("favicon.ico");
         feed.setOtherLinks((List<Link>) model.get(LINKS));
     }
