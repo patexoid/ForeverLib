@@ -5,7 +5,10 @@ import com.google.common.cache.CacheBuilder;
 import com.patex.LibException;
 import com.patex.entities.Book;
 import com.patex.entities.ExtLibrary;
+import com.patex.entities.ZUser;
+import com.patex.messaging.MessengerService;
 import com.patex.service.BookService;
+import com.patex.service.ZUserService;
 import com.rometools.rome.feed.atom.Content;
 import com.rometools.rome.feed.atom.Entry;
 import com.rometools.rome.feed.atom.Link;
@@ -19,12 +22,23 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.stereotype.Component;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +50,8 @@ import java.util.stream.Collectors;
  *
  */
 @SuppressWarnings("WeakerAccess")
+@Component
+@Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class ExtLib {
 
     static final String REQUEST_P_NAME = "uri";
@@ -43,6 +59,15 @@ public class ExtLib {
     static final String REL_NEXT = "next";
     static final String ACTION_DOWNLOAD = "download";
     static final String ACTION_DOWNLOAD_ALL = "downloadAll";
+    private static List<MapLink> mapLinks = new ArrayList<>();
+
+    static {
+        mapLinks.add(new OpdsCatalogLink());
+        mapLinks.add(new FB2Link());
+    }
+
+    private static Logger log = LoggerFactory.getLogger(ExtLibrary.class);
+
     public static final String PARAM_TYPE = "type";
 
     private final ExecutorService actionExecutor = Executors.newCachedThreadPool();
@@ -51,27 +76,24 @@ public class ExtLib {
 
     private final ExtLibrary extLibrary;
 
-    private static List<MapLink> mapLinks = new ArrayList<>();
-    private static Logger log = LoggerFactory.getLogger(ExtLibrary.class);
+    @Autowired
+    private MessengerService messengerService;
+
 
     private final Pattern fileNamePattern = Pattern.compile("attachment; filename=\"([^\"]+)\"");
 
+    @Autowired
+    private BookService bookService;
 
-    static {
-        mapLinks.add(new OpdsCatalogLink());
-        mapLinks.add(new FB2Link());
-    }
+    @Autowired
+    private ExtLibConnectionService extLibConnectionService;
 
+    @Autowired
+    ZUserService userService;
 
-    private final BookService bookService;
-    private final ExtLibConnectionService extLibConnectionService;
-
-    public ExtLib(ExtLibrary extLibrary, BookService bookService, ExtLibConnectionService extLibConnectionService) {
+    public ExtLib(ExtLibrary extLibrary) {
         this.extLibrary = extLibrary;
-        this.bookService = bookService;
-        this.extLibConnectionService = extLibConnectionService;
     }
-
 
     public ExtLibFeed getData(Map<String, String> requestParams) throws LibException {
         return getData(requestParams.get(REQUEST_P_NAME));
@@ -102,7 +124,7 @@ public class ExtLib {
         ArrayList<Link> links = new ArrayList<>();
         Optional<SyndLink> nextPage = feed.getLinks().stream().
                 filter(syndLink -> REL_NEXT.equals(syndLink.getRel())).findFirst();
-        if(nextPage.isPresent()){
+        if (nextPage.isPresent()) {
             SyndLink syndLink = nextPage.get();
             Entry nextEntry = new Entry();
             nextEntry.setId("next:" + uri);
@@ -122,8 +144,8 @@ public class ExtLib {
     private SyndFeed getFeed(String uri) throws LibException {
         if (uri == null) {
             uri = extLibrary.getOpdsPath();
-            if(!uri.startsWith("/")){
-                uri="/"+uri;
+            if (!uri.startsWith("/")) {
+                uri = "/" + uri;
             }
         }
         return getDataFromURL(uri, uc -> new SyndFeedInput().build(new XmlReader(uc)));
@@ -158,7 +180,7 @@ public class ExtLib {
         Content newContent = new Content();
         newContent.setType(content.getType());
         newContent.setValue(content.getValue());
-        if(content.getMode()!=null) {
+        if (content.getMode() != null) {
             newContent.setMode(content.getMode());
         }
         return newContent;
@@ -173,19 +195,21 @@ public class ExtLib {
         return null;
     }
 
+    @Secured(ZUserService.USER)
     public String action(String action, Map<String, String> params) throws LibException {
         if (ACTION_DOWNLOAD.equals(action)) {
             Book book = downloadFromExtLib(params.get(PARAM_TYPE), params.get(REQUEST_P_NAME));
             return "/book/loadFile/" + book.getId();
         } else if (ACTION_DOWNLOAD_ALL.equals(action)) {
             String uri = params.get(REQUEST_P_NAME);
-            actionExecutor.execute(() -> downloadAll(uri, FB2_TYPE));
+            ZUser user = userService.getCurrentUser();
+            actionExecutor.execute(() -> downloadAll(user, uri, FB2_TYPE));
             return mapToUri("?", uri);
         }
         throw new LibException("Unknown action: " + action);
     }
 
-    private void downloadAll(String uri, String type) {
+    public void downloadAll(ZUser user, String uri, String type) {
         try {
             ExtLibFeed data = getData(uri);
             data.getEntries().stream().flatMap(entry -> entry.getOtherLinks().stream()).
@@ -193,7 +217,7 @@ public class ExtLib {
                     forEach(link -> {
                         try {
                             Optional<String> bookUri = extractExtUri(link);
-                            if(bookUri.isPresent()) {
+                            if (bookUri.isPresent()) {
                                 downloadFromExtLib(link.getType(), bookUri.get());
                             }
                         } catch (LibException e) {
@@ -202,9 +226,12 @@ public class ExtLib {
                     });
             Optional<Link> nextLink = data.getLinks().stream().
                     filter(link -> REL_NEXT.equals(link.getRel())).findFirst();
-            if(nextLink.isPresent()){
+            if (nextLink.isPresent()) {
                 Optional<String> nextExtUri = extractExtUri(nextLink.get());
-                downloadAll(nextExtUri.orElse(""), type);
+                downloadAll(null, nextExtUri.orElse(""), type);
+            }
+            if (user != null) {
+                messengerService.sendMessageToUser("Download of " + data.getTitle() + " was finished", user);
             }
         } catch (LibException e) {
             log.error(e.getMessage(), e);
@@ -214,32 +241,28 @@ public class ExtLib {
     private Optional<String> extractExtUri(Link link) {
         Optional<NameValuePair> uriO =
                 URLEncodedUtils.parse(link.getHref(), Charset.forName("UTF-8")).stream().
-                filter(nvp -> nvp.getName().equals(REQUEST_P_NAME)).findFirst();
-        if(uriO.isPresent()){
-            return Optional.of(uriO.get().getValue());
-        } else {
-            return Optional.empty();
-        }
+                        filter(nvp -> nvp.getName().equals(REQUEST_P_NAME)).findFirst();
+        return uriO.map(NameValuePair::getValue);
     }
 
     public Book downloadFromExtLib(String type, String uri) throws LibException {
         return getDataFromURL(uri, conn ->
-            bookCache.get(uri, () -> {
-                String contentDisposition = conn.getHeaderField("Content-Disposition");
-                String fileName;
-                if (contentDisposition != null) {
-                    Matcher matcher = fileNamePattern.matcher(contentDisposition);
-                    if (matcher.matches()) {
-                        fileName = matcher.group(1);
+                bookCache.get(uri, () -> {
+                    String contentDisposition = conn.getHeaderField("Content-Disposition");
+                    String fileName;
+                    if (contentDisposition != null) {
+                        Matcher matcher = fileNamePattern.matcher(contentDisposition);
+                        if (matcher.matches()) {
+                            fileName = matcher.group(1);
+                        } else {
+                            fileName = UUID.randomUUID().toString() + "." + type;
+                            log.warn("Unable to find fileName in Content-Disposition: {}", contentDisposition);
+                        }
                     } else {
                         fileName = UUID.randomUUID().toString() + "." + type;
-                        log.warn("Unable to find fileName in Content-Disposition: {}", contentDisposition);
                     }
-                } else {
-                    fileName = UUID.randomUUID().toString() + "." + type;
-                }
-                return bookService.uploadBook(fileName, conn.getInputStream());
-            })
+                    return bookService.uploadBook(fileName, conn.getInputStream());
+                })
         );
     }
 

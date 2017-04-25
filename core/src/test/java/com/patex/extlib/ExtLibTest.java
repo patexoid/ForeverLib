@@ -2,7 +2,9 @@ package com.patex.extlib;
 
 import com.patex.entities.Book;
 import com.patex.entities.ExtLibrary;
+import com.patex.messaging.MessengerService;
 import com.patex.service.BookService;
+import com.patex.service.ZUserService;
 import com.rometools.rome.feed.atom.Content;
 import com.rometools.rome.feed.atom.Entry;
 import com.rometools.rome.feed.atom.Link;
@@ -14,6 +16,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.InputStream;
 import java.net.URLConnection;
@@ -59,7 +62,7 @@ public class ExtLibTest {
         connectionService = mock(ExtLibConnectionService.class);
         extlibConnection = mock(ExtLibConnectionService.ExtlibCon.class);
         when(connectionService.openConnection(url + uri)).thenReturn(extlibConnection);
-        extLib = new ExtLib(extLibrary, bookService, connectionService);
+        extLib = createExtLib(extLibrary);
 
         syndFeed = new SyndFeedImpl();
         syndFeed.setTitle(RandomStringUtils.randomAlphabetic(10));
@@ -241,7 +244,7 @@ public class ExtLibTest {
         when(connectionService.openConnection(url + uri)).thenReturn(extlibConnection);
         when(extlibConnection.getData(any())).thenReturn(syndFeed);
 
-        extLib = new ExtLib(extLibrary, bookService, connectionService);
+        extLib = createExtLib(extLibrary);
         HashMap<String, String> params = new HashMap<>();
         String type = RandomStringUtils.randomAlphabetic(10);
         params.put(ExtLib.PARAM_TYPE, type);
@@ -253,12 +256,22 @@ public class ExtLibTest {
         verifyNoMoreInteractions(bookService);
     }
 
+    private ExtLib createExtLib(ExtLibrary extLibrary) {
+        ExtLib extLib = new ExtLib(extLibrary);
+        ReflectionTestUtils.setField(extLib, "extLibConnectionService", connectionService);
+        ReflectionTestUtils.setField(extLib, "bookService", bookService);
+        ReflectionTestUtils.setField(extLib, "messengerService", mock(MessengerService.class));
+        ReflectionTestUtils.setField(extLib, "userService", mock(ZUserService.class));
+
+        return extLib;
+    }
+
     @Test
     public void testDownloadAction() throws Exception {
         String uri = RandomStringUtils.randomAlphabetic(10);
         connectionService = spy(ExtLibConnectionService.class);
         extlibConnection = spy(connectionService.new ExtlibCon("http://" + RandomStringUtils.randomAlphabetic(10)));
-        extLib = new ExtLib(extLibrary, bookService, connectionService);
+        extLib = createExtLib(extLibrary);
         URLConnection urlConnection = mock(URLConnection.class);
         String fileName = RandomStringUtils.randomAlphabetic(10);
         when(urlConnection.getHeaderField("Content-Disposition")).thenReturn("attachment; filename=\"" + fileName + "\"");

@@ -10,6 +10,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,6 +31,10 @@ public class ZUser implements UserDetails, CredentialsContainer {
 
     @OneToMany(fetch = FetchType.EAGER, cascade = {CascadeType.ALL}, mappedBy = "user")
     private List<ZUserAuthority> authorities=new ArrayList<>();
+
+    @OneToOne(fetch = FetchType.EAGER, cascade = {CascadeType.ALL}, mappedBy = "user")
+    private ZUserConfig userConfig;
+
 
     public ZUser() {
     }
@@ -89,5 +94,13 @@ public class ZUser implements UserDetails, CredentialsContainer {
     @Override
     public void eraseCredentials() {
         password = null;
+    }
+
+    public ZUserConfig getUserConfig() {
+        return userConfig;
+    }
+
+    public void setUserConfig(ZUserConfig userConfig) {
+        this.userConfig = userConfig;
     }
 }

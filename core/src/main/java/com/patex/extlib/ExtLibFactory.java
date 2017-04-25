@@ -3,8 +3,8 @@ package com.patex.extlib;
 import com.patex.LibException;
 import com.patex.entities.ExtLibrary;
 import com.patex.entities.ExtLibraryRepository;
-import com.patex.service.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -20,11 +20,7 @@ public class ExtLibFactory {
     private ExtLibraryRepository extLibRepo;
 
     @Autowired
-    private BookService bookService;
-
-    @Autowired
-    private ExtLibConnectionService extLibConnectionService;
-
+    ApplicationContext context;
 
     private final Map<Long, ExtLib> extLibMap = new HashMap<>();
 
@@ -38,12 +34,11 @@ public class ExtLibFactory {
                     if (extLibrary == null) {
                         throw new LibException("External Lib unknown id:" + id);
                     }
-                    extLib = new ExtLib(extLibrary, bookService, extLibConnectionService);
+                    extLib = context.getBean(ExtLib.class, extLibrary);
                     extLibMap.put(id, extLib);
                 }
             }
         }
         return extLib;
     }
-
 }
