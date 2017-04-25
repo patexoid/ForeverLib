@@ -28,6 +28,10 @@ public class ZUserAuthority implements GrantedAuthority {
         this.authority = authority;
     }
 
+    public ZUserAuthority(String authority) {
+        this.authority = authority;
+    }
+
     public ZUserAuthority() {
     }
 

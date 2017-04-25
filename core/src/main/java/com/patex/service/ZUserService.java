@@ -3,7 +3,11 @@ package com.patex.service;
 import com.patex.LibException;
 import com.patex.entities.ZUser;
 import com.patex.entities.ZUserAuthority;
+import com.patex.entities.ZUserConfig;
+import com.patex.entities.ZUserConfigRepository;
 import com.patex.entities.ZUserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
@@ -13,6 +17,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Method;
+import java.util.Collection;
 
 /**
  * Created by Alexey on 25.03.2017.
@@ -25,8 +33,14 @@ public class ZUserService implements UserDetailsService {
     public static final String ADMIN_AUTHORITY = "ROLE_ADMIN";
     private final ZUser anonim = new ZUser("anonimus", true);
 
+    private static Logger log = LoggerFactory.getLogger(ZUserService.class);
+
     @Autowired
     private ZUserRepository userRepo;
+
+    @Autowired
+    private ZUserConfigRepository userConfigRepo;
+
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -61,6 +75,9 @@ public class ZUserService implements UserDetailsService {
 
     public ZUser createUser(ZUser user) {
         user.getAuthorities().add(new ZUserAuthority(user, USER));
+        if(getByRole(ADMIN_AUTHORITY).isEmpty()){
+            user.getAuthorities().add(new ZUserAuthority(user, ADMIN_AUTHORITY));
+        }
         user.setEnabled(true);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepo.save(user);
@@ -78,5 +95,43 @@ public class ZUserService implements UserDetailsService {
         }
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepo.save(user);
+    }
+
+    @Secured(USER)
+    public void updateUserConfig(ZUserConfig newConfig) {
+        updateUserConfig(getCurrentUser(), newConfig);
+    }
+
+
+    @Secured(USER)
+    public void updateUserConfig(ZUser user, ZUserConfig newConfig) {
+
+        ZUserConfig userConfig = user.getUserConfig();
+        if (userConfig == null) {
+            userConfig = new ZUserConfig();
+            user.setUserConfig(userConfig);
+            userConfig.setUser(userRepo.findOne(user.getUsername()));
+
+        }
+        PropertyDescriptor[] pds = BeanUtils.getPropertyDescriptors(ZUserConfig.class);
+        for (PropertyDescriptor pd : pds) {
+            Method writeMethod = pd.getWriteMethod();
+            Method readMethod = pd.getReadMethod();
+            if (writeMethod != null && readMethod != null) {
+                try {
+                    Object value = readMethod.invoke(newConfig);
+                    if (value != null) {
+                        writeMethod.invoke(userConfig, value);
+                    }
+                } catch (ReflectiveOperationException e) {
+                    log.error(e.getMessage(), e);
+                }
+            }
+        }
+        userConfigRepo.save(userConfig);
+    }
+
+    public Collection<ZUser> getByRole(String role) {
+        return userRepo.findAllByAuthoritiesIs(role);
     }
 }

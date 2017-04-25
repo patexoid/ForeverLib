@@ -2,6 +2,7 @@ package com.patex.controllers;
 
 import com.patex.LibException;
 import com.patex.entities.ZUser;
+import com.patex.entities.ZUserConfig;
 import com.patex.service.ZUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -35,7 +36,8 @@ public class ZUserController {
 
 
     @RequestMapping(value = "/create", method = RequestMethod.POST)
-    public @ResponseBody ZUser createUser(@RequestBody ZUser user) {
+    public @ResponseBody
+    ZUser createUser(@RequestBody ZUser user) {
         return userDetailsService.createUser(user);
     }
 
@@ -58,5 +60,10 @@ public class ZUserController {
         if (auth != null) {
             new SecurityContextLogoutHandler().logout(request, response, auth);
         }
+    }
+
+    @RequestMapping(value = "/updateConfig", method = RequestMethod.GET)
+    public void updateUserConfig(ZUserConfig newConfig) {
+        userDetailsService.updateUserConfig(newConfig);
     }
 }

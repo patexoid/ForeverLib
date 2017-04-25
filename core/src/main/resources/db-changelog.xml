@@ -40,4 +40,16 @@
                              tableName="authorities"
                              constraintName="fk_username_authority"/>
     </changeSet>
+
+    <changeSet id="4" author="patex">
+        <createTable tableName="ZUSER_CONFIG">
+            <column autoIncrement="true" name="ID" type="BIGINT(19)">
+                <constraints primaryKey="true" primaryKeyName="ZUSER_CONFIG_primary"/>
+            </column>
+            <column name="username" type="VARCHAR(50)">
+                <constraints foreignKeyName="ZUSER_CONFIG_USERS_USERNAME" references="users(username)"/>
+            </column>
+            <column name="telegram_chat_id" type="BIGINT(19)"/>
+        </createTable>
+    </changeSet>
 </databaseChangeLog>
