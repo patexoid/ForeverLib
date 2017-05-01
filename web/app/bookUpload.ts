@@ -5,6 +5,8 @@
  * Created by Alexey on 9/5/2016.
  */
 import {Component} from "@angular/core";
+import {HttpService} from "./HttpService";
+import {BookService} from "./book.service";
 
 
 @Component({
@@ -21,31 +23,12 @@ import {Component} from "@angular/core";
 })
 export class BookUpload{
 
+    constructor(private bookService: BookService) { }
 
     fileChangeEvent(fileInput: any): void {
         var files = fileInput.target.files;
-        this.makeFileRequest("/book/upload",files);
+        this.bookService.uploadFiles(files);
          fileInput.srcElement.parentElement.reset();
     }
 
-    makeFileRequest(url: string, files: Array<File>) {
-         new Promise((resolve, reject) => {
-            var formData = new FormData();
-            var xhr = new XMLHttpRequest();
-            for(var i = 0; i < files.length; i++) {
-                formData.append("file", files[i], files[i].name);
-            }
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState == 4) {
-                    if (xhr.status == 200) {
-                        resolve(JSON.parse(xhr.response));
-                    } else {
-                        reject(xhr.response);
-                    }
-                }
-            };
-            xhr.open("POST", url, true);
-            xhr.send(formData);
-        });
-    }
 }

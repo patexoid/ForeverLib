@@ -20,4 +20,7 @@ export class BookService {
              .then(obj => obj.content as Book)
     }
 
+    uploadFiles(files: Array<File>) {
+        this.http.uploadFiles("/book/upload",files);
+    }
 }

@@ -1,8 +1,6 @@
 package com.patex.messaging;
 
 import com.patex.entities.ZUser;
-import com.patex.service.ConfigComponent;
-import org.jvnet.hk2.annotations.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -27,8 +25,9 @@ public class TelegramZBot extends TelegramLongPollingBot implements Messenger {
         ApiContextInitializer.init(); //strange magic
     }
 
-    @Autowired
-    private ConfigComponent configComponent;
+    private final String botName;
+
+    private String baseurl;
 
     @Autowired
     private MessengerService messagingComponent;
@@ -36,13 +35,17 @@ public class TelegramZBot extends TelegramLongPollingBot implements Messenger {
     private final String botToken;
 
 
-    public TelegramZBot(@Optional @Value("${telegram.bot.token}") String botToken) {
+    public TelegramZBot(@Value("${telegram.bot.token}") String botToken,
+                        @Value("${telegram.bot.name}") String botName,
+                        @Value("${telegram.bot.baseurl}") String baseurl) {
         this.botToken = botToken;
+        this.botName = botName;
+        this.baseurl = baseurl;
     }
 
     @PostConstruct
     public void start() {
-        if (botToken != null&&!botToken.isEmpty()) {
+        if (botToken != null && !botToken.isEmpty()) {
             TelegramBotsApi botsApi = new TelegramBotsApi();
             try {
                 botsApi.registerBot(this);
@@ -64,7 +67,7 @@ public class TelegramZBot extends TelegramLongPollingBot implements Messenger {
             Message message = update.getMessage();
             if ("/subscribe".equalsIgnoreCase(message.getText().trim())) {
                 Long chatId = message.getChatId();
-                String url = configComponent.getBaseUrl() + "/user/updateConfig?telegramChatId=" + chatId;
+                String url = baseurl + "/user/updateConfig?telegramChatId=" + chatId;
                 sendMessageToChat("Please open <a href=\"" + url + "\">Link</a> to register chat", chatId);
             }
         }
@@ -91,7 +94,7 @@ public class TelegramZBot extends TelegramLongPollingBot implements Messenger {
 
     @Override
     public String getBotUsername() {
-        return "ZombieLib_dev_bot";
+        return botName;
     }
 
     @Override

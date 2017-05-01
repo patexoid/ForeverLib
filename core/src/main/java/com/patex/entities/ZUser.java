@@ -1,5 +1,6 @@
 package com.patex.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.security.core.CredentialsContainer;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -33,6 +34,7 @@ public class ZUser implements UserDetails, CredentialsContainer {
     private List<ZUserAuthority> authorities=new ArrayList<>();
 
     @OneToOne(fetch = FetchType.EAGER, cascade = {CascadeType.ALL}, mappedBy = "user")
+    @JsonIgnore
     private ZUserConfig userConfig;
 
 
