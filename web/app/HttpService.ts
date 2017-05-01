@@ -1,6 +1,7 @@
 import "rxjs/add/operator/toPromise";
 import {Injectable} from "@angular/core";
-import {Headers, Http, URLSearchParams} from "@angular/http";
+import {Headers, Http, RequestOptions, URLSearchParams} from "@angular/http";
+import {Observable} from "rxjs/Observable";
 
 @Injectable()
 export class HttpService {
@@ -14,7 +15,7 @@ export class HttpService {
 
     get(uri: string): Promise<any> {
         const headers = this.getHeaders();
-        return this.http.get(this.url + '/' + uri, {headers: headers}).toPromise()
+        return this.http.get(this.getFullUrl(uri), {headers: headers}).toPromise()
             .then(response => response.json())
             .catch(HttpService.handleError);
     }
@@ -22,7 +23,7 @@ export class HttpService {
     post(uri: string, object: any): Promise<any> {
         const headers = this.getHeaders();
         headers.append('content-type', 'application/json');
-        return this.http.post(this.url + '/' + uri, JSON.stringify(object), {
+        return this.http.post(this.getFullUrl(uri), JSON.stringify(object), {
             headers: headers,
         }).toPromise()
             .then(response => response.json())
@@ -32,11 +33,15 @@ export class HttpService {
     postForm(uri: string, params: URLSearchParams): Promise<any> {
         const headers = this.getHeaders();
         headers.append('content-type', 'application/x-www-form-urlencoded');
-        return this.http.post(this.url + '/' + uri, params.toString(), {
+        return this.http.post(this.getFullUrl(uri), params.toString(), {
             headers: headers
         }).toPromise()
             .then(response => response.json())
             .catch(HttpService.handleError);
+    }
+
+    private getFullUrl(uri: string) {
+        return this.url + '/' + uri;
     }
 
     private static handleError(error: any): Promise<any> {
@@ -54,6 +59,27 @@ export class HttpService {
 
     login(username: string, password: string) {
         this.basic = btoa(username + ':' + password);
+    }
+
+    uploadFiles(uri: string, files: Array<File>) {
+        if (files.length > 0) {
+            let formData: FormData = new FormData();
+            for(let i = 0; i < files.length; i++) {
+                formData.append("file", files[i], files[i].name);
+            }
+            let headers = this.getHeaders();
+            // headers.append('Content-Type', 'multipart/form-data');
+            // headers.append('Accept', 'application/json');
+
+            let options = new RequestOptions({headers: headers});
+            this.http.post(this.getFullUrl(uri), formData, options)
+                .map(res => res.json())
+                .catch(error => Observable.throw(error))
+                .subscribe(
+                    data => console.log('success'),
+                    error => console.log(error)
+                )
+        }
     }
 
     logout() {
