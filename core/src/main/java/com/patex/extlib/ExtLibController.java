@@ -54,7 +54,7 @@ public class ExtLibController {
         return createMav(extLibFeed.getTitle(), extLibFeed.getEntries());
     }
 
-    @RequestMapping(value = "{id}/{action}")
+    @RequestMapping(value = "{id}/action/{action}")
     public String actionExtLibData(@PathVariable(value = "id") long id,
                                    @PathVariable(value = "action") String action,
                                    @RequestParam(required = false) Map<String, String> requestParams) throws LibException {

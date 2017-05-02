@@ -117,6 +117,8 @@ public class OPDSController2 {
                     makeURL("opds", "author", author.getId(), "alphabet")));
             entries.add(createEntry("" + author.getId(), author.getName() + "Книги по сериям",
                     makeURL("opds", "authorsequences", author.getId())));
+            entries.add(createEntry("" + author.getId(), author.getName() + "Книги вне серий",
+                    makeURL("opds", "authorsequenceless", author.getId())));
             return entries;
         });
     }
@@ -127,6 +129,18 @@ public class OPDSController2 {
         Author bookAuthor = authorService.getAuthors(id);
         return createMav("Книги по алфавиту " + bookAuthor.getName(), bookAuthor, author ->
                 author.getBooks().stream().
+                        map(AuthorBook::getBook).
+                        map(OPDSController2::mapBookToEntry).
+                        collect(Collectors.toList()));
+    }
+
+    @SaveLatest
+    @RequestMapping(value = "authorsequenceless/{id}", produces = "application/atom+xml")
+    public ModelAndView getAuthorBookNoSequence(@PathVariable(value = "id") long id) {
+        Author bookAuthor = authorService.getAuthors(id);
+        return createMav("Книги по алфавиту " + bookAuthor.getName(), bookAuthor, author ->
+                author.getBooksNoSequence().stream().
+
                         map(AuthorBook::getBook).
                         map(OPDSController2::mapBookToEntry).
                         collect(Collectors.toList()));

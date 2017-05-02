@@ -115,7 +115,7 @@ public class ExtLib {
             content.setType("html");
             downloadEntry.setContents(Collections.singletonList(content));
             Link link = new Link();
-            link.setHref(mapToUri("/downloadAll?", uri));
+            link.setHref(mapToUri("action/downloadAll?", uri));
             link.setType("application/atom+xml;profile=opds-catalog");
             downloadEntry.setOtherLinks(Collections.singletonList(link));
             entries.add(0, downloadEntry);
@@ -154,10 +154,10 @@ public class ExtLib {
     private <E> E getDataFromURL(String uri, ExtLibFunction<URLConnection, E> function) throws LibException {
         ExtLibConnectionService.ExtlibCon connection = extLibConnectionService.openConnection(extLibrary.getUrl() + uri);
         if (extLibrary.getProxyType() != null) {
-            connection = connection.proxy(extLibrary.getProxyType(), extLibrary.getProxyHost(), extLibrary.getProxyPort());
+            connection.proxy(extLibrary.getProxyType(), extLibrary.getProxyHost(), extLibrary.getProxyPort());
         }
         if (extLibrary.getLogin() != null) {
-            connection = connection.setAuthorization(extLibrary.getLogin(), extLibrary.getPassword());
+             connection.setAuthorization(extLibrary.getLogin(), extLibrary.getPassword());
         }
         return connection.getData(function);
     }
@@ -211,27 +211,31 @@ public class ExtLib {
 
     public void downloadAll(ZUser user, String uri, String type) {
         try {
-            ExtLibFeed data = getData(uri);
-            data.getEntries().stream().flatMap(entry -> entry.getOtherLinks().stream()).
-                    filter(link -> link.getType().contains(type)).
-                    forEach(link -> {
-                        try {
+            while (uri != null) {
+                ExtLibFeed data = getData(uri);
+                data.getEntries().stream().flatMap(entry -> entry.getOtherLinks().stream()).
+                        filter(link -> link.getType().contains(type)).
+                        forEach(link -> {
+                            try {
                             Optional<String> bookUri = extractExtUri(link);
                             if (bookUri.isPresent()) {
-                                downloadFromExtLib(link.getType(), bookUri.get());
+                                    downloadFromExtLib(link.getType(), bookUri.get());
                             }
-                        } catch (LibException e) {
-                            log.error(e.getMessage(), e);
-                        }
-                    });
-            Optional<Link> nextLink = data.getLinks().stream().
-                    filter(link -> REL_NEXT.equals(link.getRel())).findFirst();
-            if (nextLink.isPresent()) {
-                Optional<String> nextExtUri = extractExtUri(nextLink.get());
-                downloadAll(null, nextExtUri.orElse(""), type);
+                            } catch (LibException e) {
+                                log.error(e.getMessage(), e);
+                            }
+                        });
+                Optional<Link> nextLink = data.getLinks().stream().
+                        filter(link -> REL_NEXT.equals(link.getRel())).findFirst();
+                if (nextLink.isPresent()) {
+                    Optional<String> nextExtUri = extractExtUri(nextLink.get());
+                    uri = nextExtUri.orElse(null);
+                } else {
+                    uri = null;
+                }
             }
             if (user != null) {
-                messengerService.sendMessageToUser("Download of " + data.getTitle() + " was finished", user);
+                messengerService.sendMessageToUser("Download was finished", user);
             }
         } catch (LibException e) {
             log.error(e.getMessage(), e);
@@ -239,8 +243,12 @@ public class ExtLib {
     }
 
     private Optional<String> extractExtUri(Link link) {
+        String href = link.getHref();
+        if (href.startsWith("?")) {
+            href = href.substring(1);
+        }
         Optional<NameValuePair> uriO =
-                URLEncodedUtils.parse(link.getHref(), Charset.forName("UTF-8")).stream().
+                URLEncodedUtils.parse(href, Charset.forName("UTF-8")).stream().
                         filter(nvp -> nvp.getName().equals(REQUEST_P_NAME)).findFirst();
         return uriO.map(NameValuePair::getValue);
     }
@@ -310,7 +318,7 @@ public class ExtLib {
         @Override
         public Link mapLink(SyndLink link) {
             Link newLink = new Link();
-            newLink.setHref(mapToUri("download?type=fb2&", link.getHref()));
+            newLink.setHref(mapToUri("action/download?type=fb2&", link.getHref()));
             newLink.setRel(link.getRel());
             newLink.setType(link.getType());
             return newLink;

@@ -125,7 +125,7 @@ public class ExtLibTest {
 
         assertThat("Entry other link size", entry.getOtherLinks(), hasSize(1));
         Link link = entry.getOtherLinks().get(0);
-        assertEquals("Link Href", ExtLib.mapToUri("download?type=fb2&", syndLink.getHref()), link.getHref());
+        assertEquals("Link Href", ExtLib.mapToUri("action/download?type=fb2&", syndLink.getHref()), link.getHref());
         assertEquals("Link Rel", syndLink.getRel(), link.getRel());
 
         assertThat("entry contents size", entry.getContents(), hasSize(1));
