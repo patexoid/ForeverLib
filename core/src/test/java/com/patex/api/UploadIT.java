@@ -9,10 +9,13 @@ import fb2.Fb2Creator;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.Repeat;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.IOException;
@@ -28,6 +31,7 @@ import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 
 
 @SuppressWarnings("Duplicates")
+@RunWith(SpringJUnit4ClassRunner.class)
 public class UploadIT {
 
     private HttpTestClient httpClient;
@@ -180,6 +184,7 @@ public class UploadIT {
     }
 
     @Test
+    @Repeat(value = 10)
     public void uploadOneSequenceDifferentAuthors() throws IOException {
         Map<String, InputStream> files = new HashMap<>();
         String firstFirstName = randomAlphanumeric(10);
@@ -220,6 +225,7 @@ public class UploadIT {
 
 
     @Test
+    @Repeat(value = 10)
     public void uploadOneSequenceDifferentAuthorsDifferentRequests() throws IOException {
         Map<String, InputStream> files = new HashMap<>();
         String firstFirstName = randomAlphanumeric(10);

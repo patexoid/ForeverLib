@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import javax.persistence.EntityManager;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -32,6 +33,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static org.springframework.transaction.annotation.Propagation.REQUIRES_NEW;
 
 /**
  *
@@ -55,15 +58,15 @@ public class BookService {
     @Autowired
     private StorageService fileStorage;
 
+    @Autowired
+    private EntityManager entityManager;
 
-    @Transactional(isolation = Isolation.SERIALIZABLE)
+    @Transactional(propagation = REQUIRES_NEW, isolation = Isolation.SERIALIZABLE)
     public synchronized Book uploadBook(String fileName, InputStream is) throws LibException {
-
         byte[] byteArray = loadFromStream(is);
         byte[] checksum = getChecksum(byteArray);
         Book book = parserService.getBookInfo(fileName, new ByteArrayInputStream(byteArray));
-
-        List<Book> books = bookRepository.findByTitleIgnoreCase(book.getTitle()).
+        List< Book> books = bookRepository.findByTitleIgnoreCase(book.getTitle()).
                 stream().filter(loaded -> hasTheSameAuthors(book, loaded)).
                 filter(loaded -> Arrays.equals(checksum, loaded.getChecksum())).
                 collect(Collectors.toList());
@@ -113,6 +116,7 @@ public class BookService {
     private Sequence mergeSequences(List<Sequence> sequences) {
         Sequence main = sequences.get(0);
         if (sequences.size() != 1) {
+            sequences.forEach(s -> entityManager.refresh(s));
             List<BookSequence> bookSequences = sequences.stream().
                     flatMap(s -> s.getBookSequences().stream()).collect(Collectors.toList());
             bookSequences.forEach(bs -> bs.setSequence(main));
