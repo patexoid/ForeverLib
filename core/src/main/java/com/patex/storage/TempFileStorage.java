@@ -1,6 +1,7 @@
 package com.patex.storage;
 
 import com.patex.LibException;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -9,12 +10,13 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-@Service("tempStorage")
+@Service
+@Profile("tempStorage")
 public class TempFileStorage implements FileStorage {
     private Path tempDirectory;
 
     @PostConstruct
-    public void postContruct() throws IOException {
+    public void postConstruct() throws IOException {
         tempDirectory = Files.createTempDirectory("zombieLibTemp");
     }
 

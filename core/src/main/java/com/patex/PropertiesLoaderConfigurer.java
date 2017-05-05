@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.support.StandardServletEnvironment;
@@ -11,6 +12,7 @@ import org.springframework.web.context.support.StandardServletEnvironment;
 import java.util.Map;
 
 @Component
+@Profile("test")
 public class PropertiesLoaderConfigurer
         extends PropertySourcesPlaceholderConfigurer {
 

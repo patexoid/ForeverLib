@@ -9,10 +9,13 @@ import fb2.Fb2Creator;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.Repeat;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.IOException;
@@ -27,6 +30,8 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 
 
+@SuppressWarnings("Duplicates")
+@RunWith(SpringJUnit4ClassRunner.class)
 public class UploadIT {
 
     private HttpTestClient httpClient;
@@ -177,6 +182,102 @@ public class UploadIT {
         Assert.assertTrue(sequenceId > 0);
         Assert.assertTrue(book2.getSequences().get(0).getSequence().getId() == sequenceId);
     }
+
+    @Test
+    @Repeat(value = 10)
+    public void uploadOneSequenceDifferentAuthors() throws IOException {
+        Map<String, InputStream> files = new HashMap<>();
+        String firstFirstName = randomAlphanumeric(10);
+        String firstMiddleName = randomAlphanumeric(10);
+        String firstLastName = randomAlphanumeric(10);
+
+        String secondFirstName = randomAlphanumeric(10);
+        String secondMiddleName = randomAlphanumeric(10);
+        String secondLastName = randomAlphanumeric(10);
+
+        String sequence = randomAlphanumeric(10);
+        files.put(randomAlphanumeric(10) + ".fb2", new Fb2Creator(randomAlphanumeric(10)).
+                addAuthor(firstFirstName, firstMiddleName, firstLastName).
+                addSequence(sequence, 1).getFbook());
+        files.put(randomAlphanumeric(10) + ".fb2", new Fb2Creator(randomAlphanumeric(10)).
+                addAuthor(secondFirstName, secondMiddleName, secondLastName).
+                addSequence(sequence, 2).getFbook());
+        files.put(randomAlphanumeric(10) + ".fb2", new Fb2Creator(randomAlphanumeric(10)).
+                addAuthor(firstFirstName, firstMiddleName, firstLastName).
+                addAuthor(secondFirstName, secondMiddleName, secondLastName).
+                addSequence(sequence, 2).getFbook());
+
+        ResponseEntity<List<BookUploadInfo>> response = httpClient.uploadFiles("book/upload",
+                "file", files, new ParameterizedTypeReference<List<BookUploadInfo>>() {
+                });
+        assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
+        assertThat(response.getBody(), hasSize(3));
+        Assert.assertTrue(response.getBody().stream().
+                allMatch(info -> info.getStatus().equals(BookUploadInfo.Status.Success)));
+        Book book1 = httpClient.get("book/" + response.getBody().get(0).getId(), Book.class);
+        Book book2 = httpClient.get("book/" + response.getBody().get(1).getId(), Book.class);
+        Book book3 = httpClient.get("book/" + response.getBody().get(2).getId(), Book.class);
+        long sequenceId = book1.getSequences().get(0).getSequence().getId();
+        Assert.assertTrue(sequenceId > 0);
+        Assert.assertTrue(book2.getSequences().get(0).getSequence().getId() == sequenceId);
+        Assert.assertTrue(book3.getSequences().get(0).getSequence().getId() == sequenceId);
+    }
+
+
+    @Test
+    @Repeat(value = 10)
+    public void uploadOneSequenceDifferentAuthorsDifferentRequests() throws IOException {
+        Map<String, InputStream> files = new HashMap<>();
+        String firstFirstName = randomAlphanumeric(10);
+        String firstMiddleName = randomAlphanumeric(10);
+        String firstLastName = randomAlphanumeric(10);
+
+        String secondFirstName = randomAlphanumeric(10);
+        String secondMiddleName = randomAlphanumeric(10);
+        String secondLastName = randomAlphanumeric(10);
+
+        String sequence = randomAlphanumeric(10);
+        files.put(randomAlphanumeric(10) + ".fb2", new Fb2Creator(randomAlphanumeric(10)).
+                addAuthor(firstFirstName, firstMiddleName, firstLastName).
+                addSequence(sequence, 1).getFbook());
+        files.put(randomAlphanumeric(10) + ".fb2", new Fb2Creator(randomAlphanumeric(10)).
+                addAuthor(secondFirstName, secondMiddleName, secondLastName).
+                addSequence(sequence, 2).getFbook());
+
+        ResponseEntity<List<BookUploadInfo>> response = httpClient.uploadFiles("book/upload",
+                "file", files, new ParameterizedTypeReference<List<BookUploadInfo>>() {
+                });
+        assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
+        Assert.assertTrue(response.getBody().stream().
+                allMatch(info -> info.getStatus().equals(BookUploadInfo.Status.Success)));
+        Book book1 = httpClient.get("book/" + response.getBody().get(0).getId(), Book.class);
+        Book book2 = httpClient.get("book/" + response.getBody().get(1).getId(), Book.class);
+        long sequenceId = book1.getSequences().get(0).getSequence().getId();
+        Assert.assertTrue(book2.getSequences().get(0).getSequence().getId() != sequenceId);
+
+
+        Map<String, InputStream> file = new HashMap<>();
+        file.put(randomAlphanumeric(10) + ".fb2", new Fb2Creator(randomAlphanumeric(10)).
+                addAuthor(firstFirstName, firstMiddleName, firstLastName).
+                addAuthor(secondFirstName, secondMiddleName, secondLastName).
+                addSequence(sequence, 2).getFbook());
+
+        ResponseEntity<List<BookUploadInfo>> response2 = httpClient.uploadFiles("book/upload",
+                "file", file, new ParameterizedTypeReference<List<BookUploadInfo>>() {
+                });
+        assertThat(response2.getStatusCode(), equalTo(HttpStatus.OK));
+        Assert.assertTrue(response2.getBody().stream().
+                allMatch(info -> info.getStatus().equals(BookUploadInfo.Status.Success)));
+        book1 = httpClient.get("book/" + response.getBody().get(0).getId(), Book.class);
+        book2 = httpClient.get("book/" + response.getBody().get(1).getId(), Book.class);
+        Book book3 = httpClient.get("book/" + response2.getBody().get(0).getId(), Book.class);
+        sequenceId = book1.getSequences().get(0).getSequence().getId();
+        Assert.assertTrue(sequenceId > 0);
+        Assert.assertTrue(book2.getSequences().get(0).getSequence().getId() == sequenceId);
+        Assert.assertTrue(book3.getSequences().get(0).getSequence().getId() == sequenceId);
+
+    }
+
 
     @Test
     public void updateBookDescription() throws IOException {
