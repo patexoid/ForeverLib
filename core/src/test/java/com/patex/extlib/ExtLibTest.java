@@ -16,6 +16,9 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.test.annotation.Repeat;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.InputStream;
@@ -33,6 +36,7 @@ import static org.mockito.Mockito.*;
  * Created by Alexey on 11.03.2017.
  */
 @SuppressWarnings("OptionalGetWithoutIsPresent")
+@RunWith(SpringJUnit4ClassRunner.class)
 public class ExtLibTest {
 
     private String url;
@@ -173,6 +177,7 @@ public class ExtLibTest {
     }
 
     @Test
+    @Repeat(value = 50)
     public void testDownloadAllAction() throws Exception {
         String uri1 = RandomStringUtils.randomAlphabetic(10);
         String uri2 = RandomStringUtils.randomAlphabetic(10);
@@ -250,7 +255,7 @@ public class ExtLibTest {
         params.put(ExtLib.PARAM_TYPE, type);
         params.put(ExtLib.REQUEST_P_NAME, this.uri);
         extLib.action(ExtLib.ACTION_DOWNLOAD_ALL, params);
-        Thread.sleep(100);
+        Thread.sleep(300);
         verify(bookService, times(1)).uploadBook(fileName1, isMock1);
         verify(bookService, times(1)).uploadBook(fileName2, isMock2);
         verifyNoMoreInteractions(bookService);
