@@ -28,6 +28,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLConnection;
 import java.net.URLEncoder;
@@ -39,6 +40,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -152,14 +154,38 @@ public class ExtLib {
     }
 
     private <E> E getDataFromURL(String uri, ExtLibFunction<URLConnection, E> function) throws LibException {
-        ExtLibConnectionService.ExtlibCon connection = extLibConnectionService.openConnection(extLibrary.getUrl() + uri);
+        IOException ee = null;
+        for (int i = 0; i < 3; i++) {
+            try {
+                return createConnection(uri).getData(function);
+            } catch (ExecutionException e) {
+                if (e.getCause() instanceof IOException) {
+                    ee = (IOException) e.getCause();
+                    try {
+                        Thread.sleep(10000L);
+                    } catch (InterruptedException e1) {
+                        //do nothing
+                    }
+                } else {
+                    throw new LibException(e);
+                }
+                log.error(e.getMessage(), e);
+            }
+        }
+        assert ee != null;
+        throw new LibException(ee.getMessage(), ee);
+    }
+
+    private ExtLibConnectionService.ExtlibCon createConnection(String uri) throws LibException {
+        ExtLibConnectionService.ExtlibCon connection =
+                extLibConnectionService.openConnection(extLibrary.getUrl() + uri);
         if (extLibrary.getProxyType() != null) {
             connection.proxy(extLibrary.getProxyType(), extLibrary.getProxyHost(), extLibrary.getProxyPort());
         }
         if (extLibrary.getLogin() != null) {
-             connection.setAuthorization(extLibrary.getLogin(), extLibrary.getPassword());
+            connection.setAuthorization(extLibrary.getLogin(), extLibrary.getPassword());
         }
-        return connection.getData(function);
+        return connection;
     }
 
     private Entry mapEntry(SyndEntry entry) {
@@ -217,10 +243,10 @@ public class ExtLib {
                         filter(link -> link.getType().contains(type)).
                         forEach(link -> {
                             try {
-                            Optional<String> bookUri = extractExtUri(link);
-                            if (bookUri.isPresent()) {
+                                Optional<String> bookUri = extractExtUri(link);
+                                if (bookUri.isPresent()) {
                                     downloadFromExtLib(link.getType(), bookUri.get());
-                            }
+                                }
                             } catch (LibException e) {
                                 log.error(e.getMessage(), e);
                             }

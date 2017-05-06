@@ -79,7 +79,7 @@ public class ExtLibConnectionService {
             return this;
         }
 
-        public <E> E getData(ExtLib.ExtLibFunction<URLConnection, E> function) throws LibException {
+        public <E> E getData(ExtLib.ExtLibFunction<URLConnection, E> function) throws LibException, ExecutionException {
             try {
                 return connectionExecutor.submit(() -> {
                     Semaphore semaphore = _semaphores.get(_url.getHost());
@@ -90,7 +90,7 @@ public class ExtLibConnectionService {
                         semaphore.release();
                     }
                 }).get(60, TimeUnit.SECONDS);
-            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            } catch (InterruptedException | TimeoutException e) {
                 log.error(e.getMessage(), e);
                 throw new LibException(e.getMessage(), e);
             }
