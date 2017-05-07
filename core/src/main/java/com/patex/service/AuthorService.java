@@ -17,7 +17,7 @@ import java.util.List;
 public class AuthorService {
 
     @Autowired
-    AuthorRepository authorRepository;
+    private AuthorRepository authorRepository;
 
     public Author getAuthors(long id) {
         return authorRepository.findOne(id);

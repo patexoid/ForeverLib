@@ -17,7 +17,7 @@ import java.util.zip.ZipInputStream;
 public class ZipFileParser implements FileParser {
 
     @Autowired
-    ParserService parserService;
+    private ParserService parserService;
 
     @PostConstruct
     public void register() {

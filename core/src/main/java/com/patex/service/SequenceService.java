@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 public class SequenceService {
 
   @Autowired
-  SequenceRepository sequenceRepository;
+  private SequenceRepository sequenceRepository;
 
   public Sequence getSequence(long id){
     return sequenceRepository.findOne(id);

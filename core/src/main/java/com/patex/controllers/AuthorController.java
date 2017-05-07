@@ -17,7 +17,7 @@ public class AuthorController {
     private static Logger log = LoggerFactory.getLogger(AuthorController.class);
 
     @Autowired
-    AuthorService authorService;
+    private AuthorService authorService;
 
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)

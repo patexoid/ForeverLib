@@ -21,7 +21,7 @@ public class MessengerService {
     private List<Messenger> messengers = new ArrayList<>();
 
     @Autowired
-    ZUserService userService;
+    private ZUserService userService;
 
     public void register(Messenger messenger) {
         messengers.add(messenger);

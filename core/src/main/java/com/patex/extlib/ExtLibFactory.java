@@ -20,7 +20,7 @@ public class ExtLibFactory {
     private ExtLibraryRepository extLibRepo;
 
     @Autowired
-    ApplicationContext context;
+    private ApplicationContext context;
 
     private final Map<Long, ExtLib> extLibMap = new HashMap<>();
 

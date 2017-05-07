@@ -30,7 +30,7 @@ public class BookController {
     private static Logger log = LoggerFactory.getLogger(BookController.class);
 
     @Autowired
-    BookService bookService;
+    private BookService bookService;
 
 
     @RequestMapping(value = "/{id}" , method = RequestMethod.GET)

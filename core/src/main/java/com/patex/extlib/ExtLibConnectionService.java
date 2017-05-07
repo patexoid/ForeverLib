@@ -24,7 +24,7 @@ public class ExtLibConnectionService {
     private final LoadingCache<String, Semaphore> _semaphores = CacheBuilder.newBuilder().build(new CacheLoader<String, Semaphore>() {
         @Override
         public Semaphore load(String key) throws Exception {
-            return new Semaphore(2, true);
+            return new Semaphore(1, true);
         }
     });
 
@@ -67,19 +67,17 @@ public class ExtLibConnectionService {
             }
         }
 
-        public ExtlibCon proxy(Proxy.Type proxyType, String proxyHost, int proxyPort) {
+        void setProxy(Proxy.Type proxyType, String proxyHost, int proxyPort) {
             _proxy = new Proxy(proxyType, new InetSocketAddress(proxyHost, proxyPort));
-            return this;
         }
 
-        public ExtlibCon setAuthorization(String login, String password) throws  LibException{
+        void setBasicAuthorization(String login, String password) throws  LibException{
             String userpass = login + ":" + password;
             String basicAuth = "Basic " + new String(Base64.getEncoder().encode(userpass.getBytes()));
             getConnection().setRequestProperty("Authorization", basicAuth);
-            return this;
         }
 
-        public <E> E getData(ExtLib.ExtLibFunction<URLConnection, E> function) throws LibException, ExecutionException {
+        <E> E getData(ExtLib.ExtLibFunction<URLConnection, E> function) throws LibException, ExecutionException {
             try {
                 return connectionExecutor.submit(() -> {
                     Semaphore semaphore = _semaphores.get(_url.getHost());
@@ -95,11 +93,5 @@ public class ExtLibConnectionService {
                 throw new LibException(e.getMessage(), e);
             }
         }
-    }
-
-    @FunctionalInterface
-    public interface ExtLibFunction<T, R> {
-
-        R apply(T t) throws Exception;
     }
 }

@@ -29,7 +29,7 @@ public class Fb2FileParser implements FileParser {
     }
 
     @Autowired
-    ParserService parserService;
+    private ParserService parserService;
 
     @PostConstruct
     public void register() {
@@ -95,21 +95,21 @@ public class Fb2FileParser implements FileParser {
     }
 
     private String getText(XMLEventReader reader, String tag) throws XMLStreamException {
-        String text = "";
+        StringBuilder text = new StringBuilder();
         while (reader.hasNext()) {
             XMLEvent event = reader.nextEvent();
             if (event.isCharacters()) {
                 String data = event.asCharacters().getData().trim();
                 if (!data.isEmpty()) {
-                    text += data + "\n";
+                    text.append(data).append("\n");
                 }
             } else if (event.isEndElement() && tag.equals(event.asEndElement().getName().getLocalPart())) {
-                return text;
+                return text.toString();
 
             }
         }
 
-        return text;
+        return text.toString();
     }
 
     private Author parseAuthor(XMLEventReader reader) throws XMLStreamException {
