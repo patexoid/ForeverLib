@@ -76,7 +76,7 @@ public class HttpTestClient {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(mediaType);
         updateHeaders(headers);
-        HttpEntity<M> requestEntity = new HttpEntity<M>(body, headers);
+        HttpEntity<M> requestEntity = new HttpEntity<>(body, headers);
         return template.exchange(url + "/" + path,
                 method, requestEntity, responseType);
     }
@@ -97,7 +97,7 @@ public class HttpTestClient {
             headers.setContentType(mediaType);
         }
         updateHeaders(headers);
-        HttpEntity<M> requestEntity = new HttpEntity<M>(body, headers);
+        HttpEntity<M> requestEntity = new HttpEntity<>(body, headers);
         return template.exchange(url + "/" + path, method, requestEntity, responseType);
     }
 

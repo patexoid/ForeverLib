@@ -178,7 +178,7 @@ public class BookService {
     }
 
     private byte[] getChecksum(byte[] bookByteArray) throws LibException {
-        MessageDigest digest = null;
+        MessageDigest digest;
         try {
             digest = MessageDigest.getInstance("SHA");
         } catch (NoSuchAlgorithmException e) {

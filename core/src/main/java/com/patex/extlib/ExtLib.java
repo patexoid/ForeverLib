@@ -44,6 +44,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -126,8 +127,7 @@ public class ExtLib {
         ArrayList<Link> links = new ArrayList<>();
         Optional<SyndLink> nextPage = feed.getLinks().stream().
                 filter(syndLink -> REL_NEXT.equals(syndLink.getRel())).findFirst();
-        if (nextPage.isPresent()) {
-            SyndLink syndLink = nextPage.get();
+        nextPage.ifPresent(syndLink -> {
             Entry nextEntry = new Entry();
             nextEntry.setId("next:" + uri);
             nextEntry.setTitle("Next");
@@ -138,18 +138,12 @@ public class ExtLib {
             nextEntry.setOtherLinks(Collections.singletonList(mapLink(syndLink)));
             entries.add(nextEntry);
             links.add(mapLink(syndLink));
-        }
+        });
         return new ExtLibFeed(feed.getTitle(), entries, links);
     }
 
 
     private SyndFeed getFeed(String uri) throws LibException {
-        if (uri == null) {
-            uri = extLibrary.getOpdsPath();
-            if (!uri.startsWith("/")) {
-                uri = "/" + uri;
-            }
-        }
         return getDataFromURL(uri, uc -> new SyndFeedInput().build(new XmlReader(uc)));
     }
 
@@ -178,14 +172,24 @@ public class ExtLib {
 
     private ExtLibConnectionService.ExtlibCon createConnection(String uri) throws LibException {
         ExtLibConnectionService.ExtlibCon connection =
-                extLibConnectionService.openConnection(extLibrary.getUrl() + uri);
+                extLibConnectionService.openConnection(toUrl(uri));
         if (extLibrary.getProxyType() != null) {
-            connection.proxy(extLibrary.getProxyType(), extLibrary.getProxyHost(), extLibrary.getProxyPort());
+            connection.setProxy(extLibrary.getProxyType(), extLibrary.getProxyHost(), extLibrary.getProxyPort());
         }
         if (extLibrary.getLogin() != null) {
-            connection.setAuthorization(extLibrary.getLogin(), extLibrary.getPassword());
+            connection.setBasicAuthorization(extLibrary.getLogin(), extLibrary.getPassword());
         }
         return connection;
+    }
+
+    private String toUrl(String uri) {
+        if (uri == null) {
+            uri = extLibrary.getOpdsPath();
+            if (!uri.startsWith("/")) {
+                uri = "/" + uri;
+            }
+        }
+        return extLibrary.getUrl() + uri;
     }
 
     private Entry mapEntry(SyndEntry entry) {
@@ -237,18 +241,33 @@ public class ExtLib {
 
     public void downloadAll(ZUser user, String uri, String type) {
         try {
+            AtomicInteger downloaded = new AtomicInteger(0);
+            AtomicInteger failed = new AtomicInteger(0);
+            AtomicInteger emptyLinks = new AtomicInteger(0);
             while (uri != null) {
-                ExtLibFeed data = getData(uri);
-                data.getEntries().stream().flatMap(entry -> entry.getOtherLinks().stream()).
-                        filter(link -> link.getType().contains(type)).
-                        forEach(link -> {
+                String uri0 = uri;ExtLibFeed data = getData(uri0);
+                data.getEntries().forEach(entry -> {
+                    List<Link> downloadLinks =entry.getOtherLinks().stream().
+                        filter(link -> link.getType().contains(type)).collect(Collectors.toList());
+                        if (downloadLinks.isEmpty()) {
+                        emptyLinks.incrementAndGet();
+                    } else if (downloadLinks.size() > 1) {
+                        //I'm to lazy to implement this
+                        String warning = "Book vialink " + toUrl(uri0) + " have more that 1 download link for book type " + type +
+                                "\nBook title:" + entry.getTitle();
+                        log.warn(warning);
+                        messengerService.toRole(warning, ZUserService.ADMIN_AUTHORITY);
+                    } else {
                             try {
-                                Optional<String> bookUri = extractExtUri(link);
-                                if (bookUri.isPresent()) {
+                            Link link = downloadLinks.get(0);Optional<String> bookUri = extractExtUri(link);
+                            if (bookUri.isPresent()) {
                                     downloadFromExtLib(link.getType(), bookUri.get());
-                                }
+                            downloaded.incrementAndGet();
+                            } else {
+                                emptyLinks.incrementAndGet();}
                             } catch (LibException e) {
-                                log.error(e.getMessage(), e);
+                                log.error(e.getMessage(), e);failed.incrementAndGet();
+                        }
                             }
                         });
                 Optional<Link> nextLink = data.getLinks().stream().
@@ -261,9 +280,16 @@ public class ExtLib {
                 }
             }
             if (user != null) {
-                messengerService.sendMessageToUser("Download was finished", user);
+                messengerService.sendMessageToUser("" +
+                                downloaded.get() + "books was downloaded\n" +
+                                emptyLinks.get() + "wasn't found\n" +
+                                failed.get() + "failed"
+                        , user);
             }
-        } catch (LibException e) {
+        } catch (
+                LibException e)
+
+        {
             log.error(e.getMessage(), e);
         }
     }

@@ -13,13 +13,13 @@ public class FileResource {
 
     @Id
     @GeneratedValue
-    long id;
+    private long id;
 
     @Column
-    String filePath;
+    private String filePath;
 
     @Column
-    boolean draft;
+    private boolean draft;
 
     public FileResource() {
     }

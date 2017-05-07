@@ -33,6 +33,7 @@ public class OpdsView extends AbstractAtomFeedView {
         feed.setId(title);
 //        feed.setUpdated(Date.from(Instant.now()));
         feed.setIcon("favicon.ico");
+        //noinspection unchecked
         feed.setOtherLinks((List<Link>) model.get(LINKS));
     }
 }

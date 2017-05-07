@@ -11,7 +11,7 @@ public class BookUploadInfo {
     private String fileName;
     private Status status;
 
-    public static enum Status {
+    public enum Status {
         Failed,
         Success
     }
