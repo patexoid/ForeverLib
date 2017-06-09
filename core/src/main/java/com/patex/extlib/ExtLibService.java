@@ -27,8 +27,9 @@ public class ExtLibService {
     private ExtLibFactory extLibFactory;
 
     public ExtLibFeed getDataForLibrary(String prefix, Long libId, Map<String, String> requestParams) throws LibException {
-        ExtLibFeed data = extLibFactory.getExtLib(libId).getData(requestParams);
-        data.getEntries().forEach(entry -> entry.getOtherLinks().forEach(link -> link.setHref(prefix + "/" + libId + "/" + link.getHref())));//TODO FIXIT
+        ExtLibFeed data = extLibFactory.getExtLib(libId).getExtLibFeed(requestParams);
+        data.getEntries().forEach(entry -> entry.getLinks().
+                forEach(link -> link.setHref(prefix + "/" + libId + "/" + link.getHref())));//TODO FIXIT
         return data;
     }
 
@@ -38,7 +39,7 @@ public class ExtLibService {
 
 
     public String actionExtLibData(long libId, String action, Map<String, String> params) throws LibException {
-        log.trace("{} libid:{} params:{}",action,libId,params);
+        log.trace("{} libid:{} params:{}", action, libId, params);
         ExtLib extLib = extLibFactory.getExtLib(libId);
         return extLib.action(action, params);
     }

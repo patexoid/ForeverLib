@@ -1,7 +1,7 @@
 package com.patex.extlib;
 
-import com.rometools.rome.feed.atom.Entry;
-import com.rometools.rome.feed.atom.Link;
+import com.patex.opds.OPDSEntryI;
+import com.patex.opds.OPDSLink;
 
 import java.util.List;
 
@@ -11,11 +11,11 @@ import java.util.List;
 public class ExtLibFeed {
 
     private final String title;
-    private final List<Entry> entries;
-    private final List<Link> links;
+    private final List<OPDSEntryI> entries;
+    private final List<OPDSLink> links;
 
 
-    public ExtLibFeed(String title, List<Entry> entries, List<Link> links) {
+    public ExtLibFeed(String title, List<OPDSEntryI> entries, List<OPDSLink> links) {
         this.title = title;
         this.entries = entries;
         this.links = links;
@@ -26,11 +26,11 @@ public class ExtLibFeed {
     }
 
 
-    public List<Entry> getEntries() {
+    public List<OPDSEntryI> getEntries() {
         return entries;
     }
 
-    public List<Link> getLinks() {
+    public List<OPDSLink> getLinks() {
         return links;
     }
 }

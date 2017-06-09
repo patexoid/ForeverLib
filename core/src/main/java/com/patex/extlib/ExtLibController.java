@@ -1,8 +1,9 @@
 package com.patex.extlib;
 
 import com.patex.LibException;
-import com.patex.opds.OPDSController2;
+import com.patex.opds.OPDSController;
 import com.patex.opds.SaveLatest;
+import com.patex.utils.LinkUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,7 +16,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import static com.patex.opds.OPDSController2.*;
+import static com.patex.opds.OPDSController.*;
 
 /**
  *
@@ -30,7 +31,7 @@ public class ExtLibController {
     private ExtLibService extLibService;
 
     @Autowired
-    private OPDSController2 opdsController2;
+    private OPDSController opdsController2;
 
     @PostConstruct
     public void setUp() {
@@ -41,7 +42,7 @@ public class ExtLibController {
     public ModelAndView getExtLibraries() {
         return createMav("Библиотеки", extLibService.findAll(), extLibraries ->
                 StreamSupport.stream(extLibService.findAll().spliterator(), false).map(extLib ->
-                        createEntry("" + extLib.getId(), extLib.getName(), makeURL(PREFIX,EXT_LIB, extLib.getId()))
+                        createEntry("" + extLib.getId(), extLib.getName(), LinkUtils.makeURL(PREFIX, EXT_LIB, extLib.getId()))
                 ).collect(Collectors.toList()));
     }
 
