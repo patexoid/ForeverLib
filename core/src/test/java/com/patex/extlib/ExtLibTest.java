@@ -15,9 +15,6 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.test.annotation.Repeat;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.InputStream;
@@ -35,7 +32,6 @@ import static org.mockito.Mockito.*;
  * Created by Alexey on 11.03.2017.
  */
 @SuppressWarnings({"OptionalGetWithoutIsPresent", "ConstantConditions"})
-@RunWith(SpringJUnit4ClassRunner.class)
 public class ExtLibTest {
 
     private String url;
@@ -43,8 +39,8 @@ public class ExtLibTest {
     private String opdsPath;
     private ExtLib extLib;
     private BookService bookService;
-    private ExtLibConnectionService connectionService;
-    private ExtLibConnectionService.ExtlibCon extlibConnection;
+    private ExtLibConnection connectionService;
+    private ExtLibConnection.ExtlibCon extlibConnection;
     private SyndFeedImpl syndFeed;
     private SyndLinkImpl syndLink;
     private SyndContentImpl syndContent;
@@ -62,8 +58,8 @@ public class ExtLibTest {
         extLibrary.setUrl(url);
         extLibrary.setOpdsPath(opdsPath);
         bookService = mock(BookService.class);
-        connectionService = mock(ExtLibConnectionService.class);
-        extlibConnection = mock(ExtLibConnectionService.ExtlibCon.class);
+        connectionService = mock(ExtLibConnection.class);
+        extlibConnection = mock(ExtLibConnection.ExtlibCon.class);
         when(connectionService.openConnection(url + uri)).thenReturn(extlibConnection);
         extLib = createExtLib(extLibrary);
 
@@ -122,8 +118,8 @@ public class ExtLibTest {
         ExtLibFeed data = extLib.getExtLibFeed(map);
         assertEquals("ExtLibFeed Title", syndFeed.getTitle(), data.getTitle());
 
-        assertThat("ExtLibFeed entries size", data.getEntries(), hasSize(2));
-        OPDSEntryI entry = data.getEntries().get(1);
+        assertThat("ExtLibFeed entries size", data.getEntries(), hasSize(3));
+        OPDSEntryI entry = data.getEntries().get(2);
         checkSyndEntry(syndEntry, entry);
 
         assertThat("Entry other link size", entry.getLinks(), hasSize(1));
@@ -176,7 +172,6 @@ public class ExtLibTest {
     }
 
     @Test
-    @Repeat(value = 50) //mandel bug
     public void testDownloadAllAction() throws Exception {
         String uri1 = RandomStringUtils.randomAlphabetic(10);
         String uri2 = RandomStringUtils.randomAlphabetic(10);
@@ -215,9 +210,9 @@ public class ExtLibTest {
         syndContent2.setMode("xml");
         syndEntry2.setContents(Collections.singletonList(syndContent2));
 
-        connectionService = spy(ExtLibConnectionService.class);
+        connectionService = spy(ExtLibConnection.class);
 
-        ExtLibConnectionService.ExtlibCon extlibConnection1 =
+        ExtLibConnection.ExtlibCon extlibConnection1 =
                 spy(connectionService.new ExtlibCon("http://" + RandomStringUtils.randomAlphabetic(10)));
         URLConnection urlConnection1 = mock(URLConnection.class);
         String fileName1 = RandomStringUtils.randomAlphabetic(10);
@@ -230,7 +225,7 @@ public class ExtLibTest {
         when(extlibConnection1.getConnection()).thenReturn(urlConnection1);
         when(connectionService.openConnection(url + uri1)).thenReturn(extlibConnection1);
 
-        ExtLibConnectionService.ExtlibCon extlibConnection2 =
+        ExtLibConnection.ExtlibCon extlibConnection2 =
                 spy(connectionService.new ExtlibCon("http://" + RandomStringUtils.randomAlphabetic(10)));
         URLConnection urlConnection2 = mock(URLConnection.class);
         String fileName2 = RandomStringUtils.randomAlphabetic(10);
@@ -273,7 +268,7 @@ public class ExtLibTest {
     @Test
     public void testDownloadAction() throws Exception {
         String uri = RandomStringUtils.randomAlphabetic(10);
-        connectionService = spy(ExtLibConnectionService.class);
+        connectionService = spy(ExtLibConnection.class);
         extlibConnection = spy(connectionService.new ExtlibCon("http://" + RandomStringUtils.randomAlphabetic(10)));
         extLib = createExtLib(extLibrary);
         URLConnection urlConnection = mock(URLConnection.class);

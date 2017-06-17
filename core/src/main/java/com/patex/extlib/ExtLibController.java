@@ -27,6 +27,7 @@ public class ExtLibController {
 
     private static final String EXT_LIB = "extLib";
     static final String OPDS_EXT_LIB = "/" + PREFIX + "/" + EXT_LIB;
+
     @Autowired
     private ExtLibService extLibService;
 
