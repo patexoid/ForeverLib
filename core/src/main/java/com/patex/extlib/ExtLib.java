@@ -3,6 +3,8 @@ package com.patex.extlib;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.patex.LibException;
+import com.patex.entities.Author;
+import com.patex.entities.AuthorBook;
 import com.patex.entities.Book;
 import com.patex.entities.ExtLibrary;
 import com.patex.entities.SavedBook;
@@ -341,10 +343,15 @@ public class ExtLib {
                         filter(entry -> !saved.contains(entry.getId()));
                 DownloadAllResult result = downloadAll(newEntries, extLibrary::addSaved);
 
+                Optional<String> authors =
+                        result.getSuccess().stream().
+                                flatMap(book -> book.getAuthorBooks().stream()).map(AuthorBook::getAuthor)
+                                .map(Author::getName).reduce((s, s2) -> s + ", " + s2);
                 Optional<String> bookTitles =
                         result.getSuccess().stream().map(Book::getTitle).reduce((s, s2) -> s + ", " + s2);
 
                 messengerService.sendMessageToUser("Subscription result\n " +
+                                "authors: " + authors +
                                 result.getSuccess().size() + " books was downloaded\n" +
                                 bookTitles + "\n" +
                                 result.getEmpty() + " wasn't found\n" +
