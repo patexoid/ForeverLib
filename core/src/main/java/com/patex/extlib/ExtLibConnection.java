@@ -6,20 +6,31 @@ import com.google.common.cache.LoadingCache;
 import com.patex.LibException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.net.*;
+import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.Proxy;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.Base64;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  *
  */
 
-@Service
-public class ExtLibConnectionService {
-    private static Logger log = LoggerFactory.getLogger(ExtLibConnectionService.class);
+@Component
+public class ExtLibConnection {
+
+    private static Logger log = LoggerFactory.getLogger(ExtLibConnection.class);
+
     private final ExecutorService connectionExecutor = Executors.newCachedThreadPool();
     private final LoadingCache<String, Semaphore> _semaphores = CacheBuilder.newBuilder().build(new CacheLoader<String, Semaphore>() {
         @Override
@@ -67,17 +78,19 @@ public class ExtLibConnectionService {
             }
         }
 
-        void setProxy(Proxy.Type proxyType, String proxyHost, int proxyPort) {
+        ExtlibCon setProxy(Proxy.Type proxyType, String proxyHost, int proxyPort) {
             _proxy = new Proxy(proxyType, new InetSocketAddress(proxyHost, proxyPort));
+            return this;
         }
 
-        void setBasicAuthorization(String login, String password) throws  LibException{
+        ExtlibCon setBasicAuthorization(String login, String password) throws  LibException{
             String userpass = login + ":" + password;
             String basicAuth = "Basic " + new String(Base64.getEncoder().encode(userpass.getBytes()));
             getConnection().setRequestProperty("Authorization", basicAuth);
+            return this;
         }
 
-        <E> E getData(ExtLib.ExtLibFunction<URLConnection, E> function) throws LibException, ExecutionException {
+        <E> E getData(ExtLibFunction<URLConnection, E> function) throws LibException {
             try {
                 return connectionExecutor.submit(() -> {
                     Semaphore semaphore = _semaphores.get(_url.getHost());
@@ -88,7 +101,7 @@ public class ExtLibConnectionService {
                         semaphore.release();
                     }
                 }).get(60, TimeUnit.SECONDS);
-            } catch (InterruptedException | TimeoutException e) {
+            } catch (InterruptedException | TimeoutException | ExecutionException e) {
                 log.error(e.getMessage(), e);
                 throw new LibException(e.getMessage(), e);
             }

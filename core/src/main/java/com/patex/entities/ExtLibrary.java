@@ -1,7 +1,12 @@
 package com.patex.entities;
 
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+
 import javax.persistence.*;
 import java.net.Proxy;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -22,13 +27,22 @@ public class ExtLibrary {
     private String name;
 
     private String login;
+
     private String password;
 
     private String proxyHost;
+
     private Integer proxyPort;
 
     @Enumerated(EnumType.STRING)
     private Proxy.Type proxyType;
+
+    @OneToMany(cascade = {CascadeType.PERSIST,CascadeType.MERGE}, fetch = FetchType.EAGER, mappedBy = "extLibrary")
+    private List<Subscription> subscriptions = new ArrayList<>();
+
+    @OneToMany(cascade = {CascadeType.PERSIST,CascadeType.MERGE}, fetch = FetchType.EAGER, mappedBy = "extLibrary")
+    @Fetch(value = FetchMode.SUBSELECT)
+    private List<SavedBook> savedBooks = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -100,5 +114,32 @@ public class ExtLibrary {
 
     public void setProxyType(Proxy.Type proxyType) {
         this.proxyType = proxyType;
+    }
+
+    public List<Subscription> getSubscriptions() {
+        return subscriptions;
+    }
+
+    public void setSubscriptions(List<Subscription> subscriptions) {
+        this.subscriptions = subscriptions;
+    }
+
+    public List<SavedBook> getSavedBooks() {
+        return savedBooks;
+    }
+
+    public void setSavedBooks(List<SavedBook> savedBooks) {
+        this.savedBooks = savedBooks;
+    }
+
+    public Subscription addSubscription(String uri, ZUser user) {
+        Subscription subscription = new Subscription(this, uri, user);
+        getSubscriptions().add(subscription);
+        return subscription;
+    }
+
+
+    public void addSaved(String extId){
+        getSavedBooks().add(new SavedBook(this, extId));
     }
 }

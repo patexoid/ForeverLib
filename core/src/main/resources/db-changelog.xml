@@ -52,4 +52,27 @@
             <column name="telegram_chat_id" type="BIGINT(19)"/>
         </createTable>
     </changeSet>
+    <changeSet id="5" author="patex">
+        <createTable tableName="SUBSCRIPTION">
+            <column autoIncrement="true" name="ID" type="BIGINT(19)">
+                <constraints primaryKey="true" primaryKeyName="SUBSCRIPTION_primary"/>
+            </column>
+            <column name="EXT_LIBRARY_ID" type="BIGINT(19)">
+                <constraints foreignKeyName="SUBSCRIPTION_EXT_LIBRARY" references="EXT_LIBRARY(ID)"/>
+            </column>
+            <column name="LINK" type="VARCHAR(500)"/>
+            <column name="USER_USERNAME" type="VARCHAR(50)">
+                <constraints foreignKeyName="SUBSCRIPTION_USER" references="users(username)"/>
+            </column>
+        </createTable>
+        <createTable tableName="SAVED_BOOK">
+            <column autoIncrement="true" name="ID" type="BIGINT(19)">
+                <constraints primaryKey="true" primaryKeyName="SAVED_BOOK_primary"/>
+            </column>
+            <column name="EXT_LIBRARY_ID" type="BIGINT(19)">
+                <constraints foreignKeyName="SAVED_BOOK_EXT_LIBRARY" references="EXT_LIBRARY(ID)"/>
+            </column>
+            <column name="EXT_ID" type="VARCHAR(500)"/>
+        </createTable>
+    </changeSet>
 </databaseChangeLog>

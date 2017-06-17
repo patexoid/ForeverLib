@@ -1,6 +1,5 @@
 package com.patex.messaging;
 
-import com.patex.LibException;
 import com.patex.entities.ZUser;
 import com.patex.service.ZUserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +33,7 @@ public class MessengerService {
     }
 
 
-    public void sendMessageToUser(String message, ZUser user) throws LibException {
+    public void sendMessageToUser(String message, ZUser user) {
         if (user != null && user.getUserConfig() != null) {
             messengers.forEach(messenger -> messenger.sendToUser(message, user));
         }
