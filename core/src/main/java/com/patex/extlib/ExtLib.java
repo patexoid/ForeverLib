@@ -343,16 +343,17 @@ public class ExtLib {
                         filter(entry -> !saved.contains(entry.getId()));
                 DownloadAllResult result = downloadAll(newEntries, extLibrary::addSaved);
 
-                Optional<String> authors =
+                String authors =
                         result.getSuccess().stream().
                                 flatMap(book -> book.getAuthorBooks().stream()).map(AuthorBook::getAuthor)
-                                .map(Author::getName).reduce((s, s2) -> s + ", " + s2);
-                Optional<String> bookTitles =
-                        result.getSuccess().stream().map(Book::getTitle).reduce((s, s2) -> s + ", " + s2);
+                                .map(Author::getName).distinct().sorted().reduce((s, s2) -> s + ", " + s2).orElse("");
+                String bookTitles =
+                        result.getSuccess().stream().map(Book::getTitle).distinct().sorted()
+                                .reduce((s, s2) -> s + ", " + s2).orElse("");
 
                 messengerService.sendMessageToUser("Subscription result\n " +
-                                "authors: " + authors +
                                 result.getSuccess().size() + " books was downloaded\n" +
+                                "authors: " + authors + "\n" +
                                 bookTitles + "\n" +
                                 result.getEmpty() + " wasn't found\n" +
                                 result.getFailed() + " failed"
