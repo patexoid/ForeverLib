@@ -2,6 +2,7 @@ package com.patex.extlib;
 
 import com.patex.entities.Book;
 import com.patex.entities.ExtLibrary;
+import com.patex.entities.SavedBookRepository;
 import com.patex.messaging.MessengerService;
 import com.patex.opds.OPDSEntryI;
 import com.patex.opds.OPDSLink;
@@ -261,7 +262,7 @@ public class ExtLibTest {
         ReflectionTestUtils.setField(extLib, "bookService", bookService);
         ReflectionTestUtils.setField(extLib, "messengerService", mock(MessengerService.class));
         ReflectionTestUtils.setField(extLib, "userService", mock(ZUserService.class));
-
+        ReflectionTestUtils.setField(extLib, "savedBookRepo", mock(SavedBookRepository.class));
         return extLib;
     }
 

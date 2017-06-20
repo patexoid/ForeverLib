@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +25,17 @@ public class ExtLibFactory {
     private ApplicationContext context;
 
     private final Map<Long, ExtLib> extLibMap = new HashMap<>();
+
+    @PostConstruct
+    public void setUp(){
+        extLibRepo.findAll().forEach(extLibrary -> {
+            try {
+                getExtLib(extLibrary.getId());
+            } catch (LibException e) {
+                e.printStackTrace();
+            }
+        });
+    }
 
     ExtLib getExtLib(Long id) throws LibException {
         ExtLib extLib = extLibMap.get(id);

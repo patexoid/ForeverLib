@@ -3,7 +3,6 @@ package com.patex.extlib;
 import com.patex.LibException;
 import com.patex.opds.OPDSController;
 import com.patex.opds.SaveLatest;
-import com.patex.utils.LinkUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,8 +12,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.annotation.PostConstruct;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static com.patex.opds.OPDSController.*;
 
@@ -41,17 +38,13 @@ public class ExtLibController {
 
     @RequestMapping(produces = APPLICATION_ATOM_XML)
     public ModelAndView getExtLibraries() {
-        return createMav("Библиотеки", extLibService.findAll(), extLibraries ->
-                StreamSupport.stream(extLibService.findAll().spliterator(), false).map(extLib ->
-                        createEntry("" + extLib.getId(), extLib.getName(), LinkUtils.makeURL(PREFIX, EXT_LIB, extLib.getId()))
-                ).collect(Collectors.toList()));
+        return createMav("Библиотеки", extLibService.getRoot(OPDS_EXT_LIB));
     }
 
     @SaveLatest
     @RequestMapping(value = "{id}", produces = APPLICATION_ATOM_XML)
     public ModelAndView getExtLibData(@PathVariable(value = "id") long id,
                                       @RequestParam(required = false) Map<String, String> requestParams) throws LibException {
-
         ExtLibFeed extLibFeed = extLibService.getDataForLibrary(OPDS_EXT_LIB, id, requestParams);
         return createMav(extLibFeed.getTitle(), extLibFeed.getEntries());
     }

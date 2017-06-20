@@ -1,6 +1,5 @@
 package com.patex.entities;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -18,7 +17,7 @@ public class SavedBook {
     private Long id;
 
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST}, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     private ExtLibrary extLibrary;
 
     private String extId;
