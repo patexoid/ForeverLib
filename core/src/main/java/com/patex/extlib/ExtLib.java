@@ -3,14 +3,15 @@ package com.patex.extlib;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.patex.LibException;
-import com.patex.entities.Author;
-import com.patex.entities.AuthorBook;
 import com.patex.entities.Book;
 import com.patex.entities.ExtLibrary;
 import com.patex.entities.SavedBook;
+import com.patex.entities.SavedBookRepository;
 import com.patex.entities.Subscription;
+import com.patex.entities.SubscriptionRepository;
 import com.patex.entities.ZUser;
 import com.patex.messaging.MessengerService;
+import com.patex.opds.OPDSAuthor;
 import com.patex.opds.OPDSEntryI;
 import com.patex.opds.OPDSEntryImpl;
 import com.patex.opds.OPDSLink;
@@ -34,23 +35,22 @@ import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
+import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.patex.opds.OPDSLink.FB2;
 import static com.patex.opds.OPDSLink.OPDS_CATALOG;
@@ -63,31 +63,32 @@ import static com.patex.opds.OPDSLink.OPDS_CATALOG;
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class ExtLib {
 
+    public static final String PARAM_TYPE = "type";
     static final String REQUEST_P_NAME = "uri";
     static final String FB2_TYPE = "application/fb2";
     static final String REL_NEXT = "next";
     static final String ACTION_DOWNLOAD = "download";
     static final String ACTION_DOWNLOAD_ALL = "downloadAll";
     static final String ACTION_SUBSCRIBE = "subscribe";
-
+    static final String ACTION_UNSUBSCRIBE = "unsubscribe";
     private static Logger log = LoggerFactory.getLogger(ExtLibrary.class);
-
-    public static final String PARAM_TYPE = "type";
-
     private final ExecutorService actionExecutor = Executors.newCachedThreadPool();
-    private final ExecutorService subscriptionExecutor = Executors.newSingleThreadExecutor();
 
     private final Cache<String, Book> bookCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
+    private final Pattern fileNamePattern = Pattern.compile("attachment; filename=\"([^\"]+)\"");
+
+    @Autowired
+    ZUserService userService;
 
     private final ExtLibrary extLibrary;
-
     @Autowired
     private MessengerService messengerService;
 
     @Autowired
-    private ExtLibService extLibService;
+    private SavedBookRepository savedBookRepo;
 
-    private final Pattern fileNamePattern = Pattern.compile("attachment; filename=\"([^\"]+)\"");
+    @Autowired
+    private SubscriptionRepository subscriptionRepo;
 
     @Autowired
     private BookService bookService;
@@ -95,11 +96,19 @@ public class ExtLib {
     @Autowired
     private ExtLibConnection extLibConnectionService;
 
-    @Autowired
-    ZUserService userService;
 
     public ExtLib(ExtLibrary extLibrary) {
         this.extLibrary = extLibrary;
+    }
+
+    private static Optional<String> extractExtUri(String link) {
+        if (link.startsWith("?")) {
+            link = link.substring(1);
+        }
+        Optional<NameValuePair> uriO =
+                URLEncodedUtils.parse(link, Charset.forName("UTF-8")).stream().
+                        filter(nvp -> nvp.getName().equals(REQUEST_P_NAME)).findFirst();
+        return uriO.map(NameValuePair::getValue);
     }
 
     public ExtLibFeed getExtLibFeed(Map<String, String> requestParams) throws LibException {
@@ -108,8 +117,16 @@ public class ExtLib {
         List<OPDSEntryI> entries = feed.getEntries();
         if (entries.stream().flatMap(entry -> entry.getLinks().stream()).
                 anyMatch(link -> link.getType().contains(FB2))) {
-            if (extLibrary.getSubscriptions().stream().
-                    noneMatch(subscription -> uri.equals(subscription.getLink()))) {
+
+            Optional<Subscription> subscription =
+                    extLibrary.getSubscriptions().stream().
+                            filter(subscriptionf -> uri.equals(subscriptionf.getLink())).findFirst();
+            if (subscription.isPresent()) {
+                String href = ExtLibOPDSEntry.mapToUri("action/unsubscribe?id=" + subscription.get().getId() + "&", uri);
+                entries.add(0, new OPDSEntryImpl("subscribe:" + uri, new Date(),
+                        "unsubscribe to " + feed.getTitle(), "Subscribe",
+                        new OPDSLink(href, OPDS_CATALOG)));
+            } else {
                 entries.add(0, new OPDSEntryImpl("subscribe:" + uri, new Date(),
                         "Subscribe to " + feed.getTitle(), "Subscribe",
                         new OPDSLink(ExtLibOPDSEntry.mapToUri("action/subscribe?", uri), OPDS_CATALOG)));
@@ -141,12 +158,9 @@ public class ExtLib {
         ArrayList<OPDSLink> links = new ArrayList<>();
         Optional<SyndLink> nextPage = feed.getLinks().stream().
                 filter(syndLink -> REL_NEXT.equals(syndLink.getRel())).findFirst();
-        nextPage.ifPresent(syndLink -> {
-            links.add(ExtLibOPDSEntry.mapLink(syndLink));
-        });
+        nextPage.ifPresent(syndLink -> links.add(ExtLibOPDSEntry.mapLink(syndLink)));
         return new ExtLibFeed(feed.getTitle(), entries, links);
     }
-
 
     private SyndFeed getFeed(String uri) throws LibException {
         return getDataFromURL(uri, uc -> new SyndFeedInput().build(new XmlReader(uc)));
@@ -185,128 +199,82 @@ public class ExtLib {
             return ExtLibOPDSEntry.mapToUri("?", uri);
         } else if (ACTION_SUBSCRIBE.equals(action)) {
             return addSubscription(params.get(REQUEST_P_NAME));
+        } else if (ACTION_UNSUBSCRIBE.equals(action)) {
+            return deleteSubscription(params.get("id"), params.get(REQUEST_P_NAME));
         }
         throw new LibException("Unknown action: " + action);
     }
 
-    private synchronized String addSubscription(String uri) {
+    private String deleteSubscription(String idS, String uri) throws LibException {
+        Long id = Long.valueOf(idS);
+        extLibrary.getSubscriptions().stream().filter(s -> s.getId().equals(id)).findFirst().
+                ifPresent(s -> extLibrary.getSubscriptions().remove(s));
+        subscriptionRepo.delete(id);
+        return ExtLibOPDSEntry.mapToUri("?", uri);
+    }
+
+    private String addSubscription(String uri) throws LibException {
         Predicate<Subscription> uriFilter = subscription -> uri.equals(subscription.getLink());
         if (extLibrary.getSubscriptions().stream().
                 noneMatch(uriFilter)) {
             ZUser user = userService.getCurrentUser();
-            extLibrary.addSubscription(uri, user);
-            extLibService.save(extLibrary);
-            actionExecutor.execute(() -> extLibrary.getSubscriptions().stream().
-                    filter(uriFilter).findAny().
-                    ifPresent(this::checkSubscription)
-            );
+            Subscription saved = subscriptionRepo.save(new Subscription(extLibrary, uri, user));
+            extLibrary.getSubscriptions().add(saved);
+            actionExecutor.execute(() -> checkSubscription(saved));
         }
         return ExtLibOPDSEntry.mapToUri("?", uri);
     }
 
-
-    private Stream<OPDSEntryI> getAsEntryStream(String uri) throws LibException {
-        Stream<OPDSEntryI> resultStream = Stream.empty();
+    private List<OPDSEntryI> getEntries(String uri) throws LibException {
+        List<OPDSEntryI> result = new ArrayList<>();
         while (uri != null) {
             String uri0 = uri;
             ExtLibFeed data = getExtLibFeed(uri0);
-            resultStream = Stream.concat(resultStream, data.getEntries().stream());
+            result.addAll(data.getEntries());
             Optional<String> nextLink = data.getLinks().stream().
                     filter(link -> REL_NEXT.equals(link.getRel())).
-                    findFirst().map(link -> extractExtUri(link).orElse(null));
+                    findFirst().map(link -> extractExtUri(link.getHref()).orElse(null));
             uri = nextLink.orElse(null);
         }
-        return resultStream;
+        return result;
     }
-
 
     public void downloadAll(ZUser user, String uri) {
         try {
-            DownloadAllResult result = downloadAll(getAsEntryStream(uri), entry -> {
-            });
-            messengerService.sendMessageToUser("" +
-                            result.getSuccess().size() + " books was downloaded\n" +
-                            result.getEmpty() + " wasn't found\n" +
-                            result.getFailed() + " failed"
-                    , user);
+            downloadAll(getEntries(uri)).ifPresent(
+                    result -> messengerService.sendMessageToUser("Download " + result.getResultMessage(), user)
+            );
         } catch (LibException e) {
             log.error(e.getMessage(), e);
         }
     }
 
-    private DownloadAllResult downloadAll(Stream<OPDSEntryI> entryStream, Consumer<String> postDownload) {
-        AtomicInteger emptyCount = new AtomicInteger(0);
-        List<Book> rawResult = entryStream.
-                map(entry -> checkLinks(entry, emptyCount)).
-                flatMap(entry -> entry.getLinks().
-                        stream().filter(link -> link.getType().contains(FB2_TYPE))).
-                map(ExtLib::extractExtUri).
-                filter(Optional::isPresent).
-                map(Optional::get).map(
-                link -> {
-                    try {
-                        Book book = downloadFromExtLib("fb2", link);
-                        postDownload.accept(link);
-                        return book;
-                    } catch (LibException e) {
-                        return null;
-                    }
-                }).collect(Collectors.toList());
-
-        List<Book> result = rawResult.stream().filter(Objects::nonNull).collect(Collectors.toList());
-
-        return new DownloadAllResult(emptyCount.get(), rawResult.size() - result.size(), result);
-
+    private Optional<DownloadAllResult> downloadAll(List<OPDSEntryI> entryStream) {
+        return entryStream.stream().map(this::download).reduce(DownloadAllResult::concat);
     }
 
-    private OPDSEntryI checkLinks(OPDSEntryI entry, AtomicInteger emptyCount) {
-        long linkCount = entry.getLinks().stream().filter(link -> link.getType().contains(FB2_TYPE)).count();
-        if (linkCount > 1) {
+    private DownloadAllResult download(OPDSEntryI entry) {
+        List<OPDSLink> links = entry.getLinks().stream().
+                filter(link -> link.getType().contains(FB2_TYPE)).collect(Collectors.toList());
+        List<String> authors = entry.getAuthors().orElse(Collections.emptyList()).stream().
+                map(OPDSAuthor::getName).collect(Collectors.toList());
+        if (links.size() > 1) {
             String warning = "Book id: " + entry.getId() + " have more than 1 download link " +
                     "\nBook title:" + entry.getTitle();
             log.warn(warning);
             messengerService.toRole(warning, ZUserService.ADMIN_AUTHORITY);
-        } else if (linkCount == 0) {
-            emptyCount.incrementAndGet();
+            return DownloadAllResult.empty(authors, entry.getTitle());
+        } else if (links.size() == 0) {
+            return DownloadAllResult.empty(authors, entry.getTitle());
+        } else {
+            try {
+                Book book = downloadFromExtLib("fb2", extractExtUri(links.get(0).getHref()).orElse(""));
+                return DownloadAllResult.success(authors, book);
+            } catch (LibException e) {
+                log.error(e.getMessage(), e);
+                return DownloadAllResult.failed(authors, entry.getTitle());
+            }
         }
-        return entry;
-    }
-
-
-    private static class DownloadAllResult {
-
-        private final int empty;
-        private final int failed;
-        private Collection<Book> success;
-
-        public DownloadAllResult(int empty, int failed, Collection<Book> success) {
-            this.empty = empty;
-            this.failed = failed;
-            this.success = success;
-        }
-
-        public int getEmpty() {
-            return empty;
-        }
-
-        public Collection<Book> getSuccess() {
-            return success;
-        }
-
-        public int getFailed() {
-            return failed;
-        }
-    }
-
-    private static Optional<String> extractExtUri(OPDSLink link) {
-        String href = link.getHref();
-        if (href.startsWith("?")) {
-            href = href.substring(1);
-        }
-        Optional<NameValuePair> uriO =
-                URLEncodedUtils.parse(href, Charset.forName("UTF-8")).stream().
-                        filter(nvp -> nvp.getName().equals(REQUEST_P_NAME)).findFirst();
-        return uriO.map(NameValuePair::getValue);
     }
 
     private Book downloadFromExtLib(String type, String uri) throws LibException {
@@ -325,43 +293,105 @@ public class ExtLib {
                     } else {
                         fileName = UUID.randomUUID().toString() + "." + type;
                     }
-                    return bookService.uploadBook(fileName, conn.getInputStream());
+                    Book book = bookService.uploadBook(fileName, conn.getInputStream());
+                    savedBookRepo.save(new SavedBook(extLibrary, uri));
+                    return book;
                 })
         );
     }
 
     public void checkSubscriptions() {
-        extLibrary.getSubscriptions().forEach(this::checkSubscription);
+        actionExecutor.submit(() -> extLibrary.getSubscriptions().forEach(this::checkSubscription));
     }
 
     private void checkSubscription(Subscription subscription) {
-        subscriptionExecutor.submit(() -> {
-            Set<String> saved =
-                    extLibrary.getSavedBooks().stream().map(SavedBook::getExtId).collect(Collectors.toSet());
-            try {
-                Stream<OPDSEntryI> newEntries = getAsEntryStream(subscription.getLink()).
-                        filter(entry -> !saved.contains(entry.getId()));
-                DownloadAllResult result = downloadAll(newEntries, extLibrary::addSaved);
+        try {
+            List<OPDSEntryI> entries = getEntries(subscription.getLink());
+            List<String> links = entries.stream().
+                    map(OPDSEntryI::getLinks).flatMap(Collection::stream).map(OPDSLink::getHref).
+                    map(ExtLib::extractExtUri).
+                    filter(Optional::isPresent).map(Optional::get).distinct().collect(Collectors.toList());
+            Set<String> saved = savedBookRepo.findSavedBooksByExtLibraryAndExtIdIn(extLibrary, links).
+                    stream().map(SavedBook::getExtId).distinct().collect(Collectors.toSet());
 
-                String authors =
-                        result.getSuccess().stream().
-                                flatMap(book -> book.getAuthorBooks().stream()).map(AuthorBook::getAuthor)
-                                .map(Author::getName).distinct().sorted().reduce((s, s2) -> s + ", " + s2).orElse("");
-                String bookTitles =
-                        result.getSuccess().stream().map(Book::getTitle).distinct().sorted()
-                                .reduce((s, s2) -> s + ", " + s2).orElse("");
+            List<OPDSEntryI> newEntries = entries.stream().
+                    filter(entry -> entry.getLinks().stream().
+                            map(link -> extractExtUri(link.getHref())).
+                            filter(Optional::isPresent).map(Optional::get).noneMatch(saved::contains)
+                    ).collect(Collectors.toList());
+            downloadAll(newEntries).ifPresent(
+                    result -> messengerService.
+                            sendMessageToUser("Subscription " + result.getResultMessage(), subscription.getUser()));
+        } catch (LibException e) {
+            log.error(e.getMessage(), e);
+        }
+    }
 
-                messengerService.sendMessageToUser("Subscription result\n " +
-                                result.getSuccess().size() + " books was downloaded\n" +
-                                "authors: " + authors + "\n" +
-                                bookTitles + "\n" +
-                                result.getEmpty() + " wasn't found\n" +
-                                result.getFailed() + " failed"
-                        , subscription.getUser());
-            } catch (LibException e) {
-                log.error(e.getMessage(), e);
-            }
-            extLibService.save(extLibrary);
-        });
+    public OPDSEntryI getRootEntry() {
+        return new OPDSEntryImpl("" + extLibrary.getId(), extLibrary.getName(), new OPDSLink("", OPDS_CATALOG));
+    }
+
+    public String getExtLibId() {
+        return "" + extLibrary.getId();
+    }
+
+    private static class DownloadAllResult {
+
+        private final Set<String> authors;
+        private final Collection<String> emptyBooks;
+        private final Collection<String> failed;
+        private Collection<Book> success;
+
+        public DownloadAllResult(Collection<String> authors, Collection<String> emptyBooks, Collection<String> failed, Collection<Book> success) {
+            this.authors = new HashSet<>(authors);
+            this.emptyBooks = emptyBooks;
+            this.failed = failed;
+            this.success = success;
+        }
+
+        public static DownloadAllResult empty(Collection<String> authors, String empty) {
+            return new DownloadAllResult(authors,
+                    Collections.singletonList(empty), Collections.emptyList(), Collections.emptyList());
+        }
+
+        public static DownloadAllResult failed(Collection<String> authors, String failed) {
+            return new DownloadAllResult(authors,
+                    Collections.emptyList(), Collections.singletonList(failed), Collections.emptyList());
+        }
+
+        public static DownloadAllResult success(Collection<String> authors, Book success) {
+            return new DownloadAllResult(authors,
+                    Collections.emptyList(), Collections.emptyList(), Collections.singletonList(success));
+        }
+
+        public DownloadAllResult concat(DownloadAllResult other) {
+            HashSet<String> authors = new HashSet<>(this.authors);
+            authors.addAll(other.authors);
+            ArrayList<String> emptyBooks = new ArrayList<>(this.emptyBooks);
+            emptyBooks.addAll(other.emptyBooks);
+            ArrayList<String> failed = new ArrayList<>(this.failed);
+            failed.addAll(other.failed);
+            ArrayList<Book> success = new ArrayList<>(this.success);
+            success.addAll(other.success);
+            return new DownloadAllResult(authors, emptyBooks, failed, success);
+        }
+
+        public String getResultMessage() {
+            BinaryOperator<String> concat = (s, s2) -> s + ", " + s2;
+            return "result\n" +
+                    "Authors:\n" +
+                    authors.stream().reduce(concat).orElse("") + "\n" +
+                    "\n" +
+                    "Success:\n" +
+                    success.stream().map(Book::getTitle).reduce(concat).orElse("") + "\n" +
+                    "\n" +
+                    "Empty:\n" +
+                    emptyBooks.stream().reduce(concat).orElse("") + "\n" +
+                    "\n" +
+                    "Failed:\n" +
+                    failed.stream().reduce(concat).orElse("") + "\n";
+
+
+        }
     }
 }

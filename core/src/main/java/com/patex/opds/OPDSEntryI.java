@@ -23,7 +23,7 @@ public interface OPDSEntryI {
 
     List<OPDSLink> getLinks();
 
-    default Optional<List<OPDSAuthorImpl>> getAuthors() {
+    default Optional<List<OPDSAuthor>> getAuthors() {
         return Optional.empty();
     }
 }

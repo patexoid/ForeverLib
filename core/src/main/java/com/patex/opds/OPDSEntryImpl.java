@@ -24,11 +24,11 @@ public class OPDSEntryImpl implements OPDSEntryI {
         this.id = id;
         this.title = title;
         this.links = Collections.singletonList(link);
-        updated=Optional.empty();
-        content=Optional.empty();
+        updated = Optional.empty();
+        content = Optional.empty();
     }
 
-    public OPDSEntryImpl(String id, Date updated, String title, String content, OPDSLink link) {
+     public OPDSEntryImpl(String id, Date updated, String title, String content, OPDSLink link) {
         this.id = id;
         this.updated = Optional.ofNullable(updated);
         this.title = title;

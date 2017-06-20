@@ -21,7 +21,7 @@ public class BookEntry implements OPDSEntryI {
     private final String id;
     private final Date updated;
     private final String title;
-    private final List<OPDSAuthorImpl> authors;
+    private final List<OPDSAuthor> authors;
     private final List<String> content;
     private final List<OPDSLink> links;
 
@@ -58,7 +58,7 @@ public class BookEntry implements OPDSEntryI {
         return title;
     }
 
-    public Optional<List<OPDSAuthorImpl>> getAuthors() {
+    public Optional<List<OPDSAuthor>> getAuthors() {
         return Optional.ofNullable(authors);
     }
 

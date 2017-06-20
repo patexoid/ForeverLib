@@ -1,8 +1,8 @@
 package com.patex.extlib;
 
+import com.patex.opds.OPDSAuthor;
 import com.patex.opds.OPDSEntryI;
 import com.patex.opds.OPDSLink;
-import com.patex.utils.LinkUtils;
 import com.rometools.rome.feed.synd.SyndContent;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndLink;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 import static com.patex.opds.OPDSLink.FB2;
 
 /**
- * Created by Alexey on 07.06.2017.
+ *
  */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class ExtLibOPDSEntry implements OPDSEntryI {
@@ -40,6 +40,7 @@ public class ExtLibOPDSEntry implements OPDSEntryI {
     private final List<OPDSLink> links;
     private final Optional<Date> updated;
     private final Optional<List<String>> content;
+    private final Optional<List<OPDSAuthor>> authors;
 
 
     public ExtLibOPDSEntry(SyndEntry syndEntry) {
@@ -50,15 +51,21 @@ public class ExtLibOPDSEntry implements OPDSEntryI {
         updated = Optional.ofNullable(syndEntry.getUpdatedDate());
         content = Optional.of(syndEntry.getContents().stream().
                 map(SyndContent::getValue).collect(Collectors.toList()));
+
+        List<OPDSAuthor> authors = syndEntry.getAuthors().stream().
+                map(person -> new ExtLibAuthor(person.getName(), "")).collect(Collectors.toList());
+        this.authors = Optional.of(authors);
     }
 
-    ExtLibOPDSEntry(String id, String title, List<OPDSLink> links,
-                    Optional<Date> updated, Optional<List<String>> collect) {
-        this.id = id;
-        this.title = title;
-        this.links = links;
-        this.updated = updated;
-        content = collect;
+    public ExtLibOPDSEntry(OPDSEntryI entry, String linkPrefix) {
+        this.id = entry.getId();
+        this.title = entry.getTitle();
+        this.links = entry.getLinks().stream().
+                map(link -> new OPDSLink(linkPrefix + link.getHref(), link.getRel(), link.getType()))
+                .collect(Collectors.toList());
+        updated = entry.getUpdated();
+        content = entry.getContent();
+        authors = entry.getAuthors();
     }
 
     static String mapToUri(String prefix, String href) {
@@ -70,6 +77,15 @@ public class ExtLibOPDSEntry implements OPDSEntryI {
         }
     }
 
+    static OPDSLink mapLink(SyndLink link) {
+        for (MapLink mapLink : mapLinks) {
+            if (mapLink.accept(link.getType())) {
+                return mapLink.mapLink(link);
+            }
+        }
+        return null;
+    }
+
     @Override
     public Optional<Date> getUpdated() {
         return updated;
@@ -79,7 +95,6 @@ public class ExtLibOPDSEntry implements OPDSEntryI {
     public Optional<List<String>> getContent() {
         return content;
     }
-
 
     @Override
     public String getId() {
@@ -96,21 +111,9 @@ public class ExtLibOPDSEntry implements OPDSEntryI {
         return links;
     }
 
-    public ExtLibOPDSEntry updateLinksPrefix(String prefix) {
-        List<OPDSLink> links = this.links.stream().
-                map(link -> new OPDSLink(LinkUtils.makeURL(prefix, link.getHref()), link.getRel(), link.getType())).
-                collect(Collectors.toList());
-        return new ExtLibOPDSEntry(id, title, links, updated, content);
-    }
-
-
-    static OPDSLink mapLink(SyndLink link) {
-        for (MapLink mapLink : mapLinks) {
-            if (mapLink.accept(link.getType())) {
-                return mapLink.mapLink(link);
-            }
-        }
-        return null;
+    @Override
+    public Optional<List<OPDSAuthor>> getAuthors() {
+        return authors;
     }
 
     private interface MapLink {
