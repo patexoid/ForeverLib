@@ -319,7 +319,7 @@ public class ExtLib {
                             map(link -> extractExtUri(link.getHref())).
                             filter(Optional::isPresent).map(Optional::get).noneMatch(saved::contains)
                     ).collect(Collectors.toList());
-            downloadAll(newEntries).ifPresent(
+            downloadAll(newEntries).filter(result -> result.success.size() > 0 || result.failed.size() > 0).ifPresent(
                     result -> messengerService.
                             sendMessageToUser("Subscription " + result.getResultMessage(), subscription.getUser()));
         } catch (LibException e) {
