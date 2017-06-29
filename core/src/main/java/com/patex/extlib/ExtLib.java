@@ -308,9 +308,10 @@ public class ExtLib {
         try {
             List<OPDSEntryI> entries = getEntries(subscription.getLink());
             List<String> links = entries.stream().
-                    map(OPDSEntryI::getLinks).flatMap(Collection::stream).map(OPDSLink::getHref).
-                    map(ExtLib::extractExtUri).
-                    filter(Optional::isPresent).map(Optional::get).distinct().collect(Collectors.toList());
+                    map(OPDSEntryI::getLinks).
+                    flatMap(Collection::stream).map(OPDSLink::getHref).
+                    map(ExtLib::extractExtUri).filter(Optional::isPresent).map(Optional::get).
+                    distinct().collect(Collectors.toList());
             Set<String> saved = savedBookRepo.findSavedBooksByExtLibraryAndExtIdIn(extLibrary, links).
                     stream().map(SavedBook::getExtId).distinct().collect(Collectors.toSet());
 
@@ -319,11 +320,12 @@ public class ExtLib {
                             map(link -> extractExtUri(link.getHref())).
                             filter(Optional::isPresent).map(Optional::get).noneMatch(saved::contains)
                     ).collect(Collectors.toList());
+
             downloadAll(newEntries).
-//                    filter(result -> result.success.size() > 0 || result.failed.size() > 0).
+                    filter(result -> result.success.size() > 0 || result.failed.size() > 0).
                     ifPresent(
-                    result -> messengerService.
-                            sendMessageToUser("Subscription " + result.getResultMessage(), subscription.getUser()));
+                            result -> messengerService.
+                                    sendMessageToUser("Subscription " + result.getResultMessage(), subscription.getUser()));
         } catch (LibException e) {
             log.error(e.getMessage(), e);
         }
