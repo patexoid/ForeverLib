@@ -31,22 +31,23 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BinaryOperator;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -71,34 +72,40 @@ public class ExtLib {
     static final String ACTION_DOWNLOAD_ALL = "downloadAll";
     static final String ACTION_SUBSCRIBE = "subscribe";
     static final String ACTION_UNSUBSCRIBE = "unsubscribe";
+    private final static Pattern fileNamePattern = Pattern.compile("attachment; filename=\"([^\"]+)\"");
     private static Logger log = LoggerFactory.getLogger(ExtLibrary.class);
-    private final ExecutorService actionExecutor = Executors.newCachedThreadPool();
-
     private final Cache<String, Book> bookCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
-    private final Pattern fileNamePattern = Pattern.compile("attachment; filename=\"([^\"]+)\"");
-
+    private final ExtLibrary extLibrary;
     @Autowired
     ZUserService userService;
 
-    private final ExtLibrary extLibrary;
+    ExecutorService executor = Executors.newCachedThreadPool(r -> {
+        AtomicInteger count = new AtomicInteger();
+        Thread thread = new Thread(r);
+        thread.setName("ExtLib" + count.incrementAndGet());
+        thread.setDaemon(true);
+        return thread;
+    });
+
     @Autowired
     private MessengerService messengerService;
-
     @Autowired
+
     private SavedBookRepository savedBookRepo;
-
     @Autowired
+
     private SubscriptionRepository subscriptionRepo;
-
     @Autowired
+
     private BookService bookService;
 
-    @Autowired
-    private ExtLibConnection extLibConnectionService;
-
+    ExtLibConnection connection;
 
     public ExtLib(ExtLibrary extLibrary) {
         this.extLibrary = extLibrary;
+        connection = new ExtLibConnection(extLibrary.getUrl(), extLibrary.getOpdsPath(),
+                extLibrary.getLogin(), extLibrary.getPassword(), extLibrary.getProxyHost(),
+                extLibrary.getProxyPort(), extLibrary.getProxyType(), executor);
     }
 
     private static Optional<String> extractExtUri(String link) {
@@ -163,28 +170,8 @@ public class ExtLib {
     }
 
     private SyndFeed getFeed(String uri) throws LibException {
-        return getDataFromURL(uri, uc -> new SyndFeedInput().build(new XmlReader(uc)));
-    }
-
-    private <E> E getDataFromURL(String uri, ExtLibFunction<URLConnection, E> function) throws LibException {
-        ExtLibConnection.ExtlibCon connection = extLibConnectionService.openConnection(toUrl(uri));
-        if (extLibrary.getProxyType() != null) {
-            connection.setProxy(extLibrary.getProxyType(), extLibrary.getProxyHost(), extLibrary.getProxyPort());
-        }
-        if (extLibrary.getLogin() != null) {
-            connection.setBasicAuthorization(extLibrary.getLogin(), extLibrary.getPassword());
-        }
-        return connection.getData(function);
-    }
-
-    private String toUrl(String uri) {
-        if (uri == null) {
-            uri = extLibrary.getOpdsPath();
-            if (!uri.startsWith("/")) {
-                uri = "/" + uri;
-            }
-        }
-        return extLibrary.getUrl() + uri;
+        ExtLibFunction<URLConnection, SyndFeed> function = uc -> new SyndFeedInput().build(new XmlReader(uc));
+        return connection.getData(uri, function);
     }
 
     @Secured(ZUserService.USER)
@@ -195,7 +182,7 @@ public class ExtLib {
         } else if (ACTION_DOWNLOAD_ALL.equals(action)) {
             String uri = params.get(REQUEST_P_NAME);
             ZUser user = userService.getCurrentUser();
-            actionExecutor.execute(() -> downloadAll(user, uri));
+            executor.execute(() -> downloadAll(user, uri));
             return ExtLibOPDSEntry.mapToUri("?", uri);
         } else if (ACTION_SUBSCRIBE.equals(action)) {
             return addSubscription(params.get(REQUEST_P_NAME));
@@ -220,7 +207,7 @@ public class ExtLib {
             ZUser user = userService.getCurrentUser();
             Subscription saved = subscriptionRepo.save(new Subscription(extLibrary, uri, user));
             extLibrary.getSubscriptions().add(saved);
-            actionExecutor.execute(() -> checkSubscription(saved));
+            executor.execute(() -> checkSubscription(saved));
         }
         return ExtLibOPDSEntry.mapToUri("?", uri);
     }
@@ -278,30 +265,34 @@ public class ExtLib {
     }
 
     private Book downloadFromExtLib(String type, String uri) throws LibException {
-        return getDataFromURL(uri, conn ->
-                bookCache.get(uri, () -> {
-                    String contentDisposition = conn.getHeaderField("Content-Disposition");
-                    String fileName;
-                    if (contentDisposition != null) {
-                        Matcher matcher = fileNamePattern.matcher(contentDisposition);
-                        if (matcher.matches()) {
-                            fileName = matcher.group(1);
-                        } else {
-                            fileName = UUID.randomUUID().toString() + "." + type;
-                            log.warn("Unable to find fileName in Content-Disposition: {}", contentDisposition);
-                        }
-                    } else {
-                        fileName = UUID.randomUUID().toString() + "." + type;
-                    }
-                    Book book = bookService.uploadBook(fileName, conn.getInputStream());
-                    savedBookRepo.save(new SavedBook(extLibrary, uri));
-                    return book;
-                })
-        );
+        try {
+            return bookCache.get(uri,() ->  connection.getData(uri, conn -> downloadBook(type, uri, conn)));
+        } catch (ExecutionException e) {
+            throw new LibException(e.getMessage(),e);
+        }
+    }
+
+    private Book downloadBook(String type, String uri, URLConnection conn) throws LibException, IOException {
+        String contentDisposition = conn.getHeaderField("Content-Disposition");
+        String fileName;
+        if (contentDisposition != null) {
+            Matcher matcher = fileNamePattern.matcher(contentDisposition);
+            if (matcher.matches()) {
+                fileName = matcher.group(1);
+            } else {
+                fileName = UUID.randomUUID().toString() + "." + type;
+                log.warn("Unable to find fileName in Content-Disposition: {}", contentDisposition);
+            }
+        } else {
+            fileName = UUID.randomUUID().toString() + "." + type;
+        }
+        Book book = bookService.uploadBook(fileName, conn.getInputStream());
+        savedBookRepo.save(new SavedBook(extLibrary, uri));
+        return book;
     }
 
     public void checkSubscriptions() {
-        actionExecutor.submit(() -> extLibrary.getSubscriptions().forEach(this::checkSubscription));
+        executor.submit(() -> extLibrary.getSubscriptions().forEach(this::checkSubscription));
     }
 
     private void checkSubscription(Subscription subscription) {
@@ -322,7 +313,7 @@ public class ExtLib {
                     ).collect(Collectors.toList());
 
             downloadAll(newEntries).
-                    filter(result -> result.success.size() > 0 || result.failed.size() > 0).
+                    filter(DownloadAllResult::hasResult).
                     ifPresent(
                             result -> messengerService.
                                     sendMessageToUser("Subscription " + result.getResultMessage(), subscription.getUser()));
@@ -339,66 +330,4 @@ public class ExtLib {
         return "" + extLibrary.getId();
     }
 
-    private static class DownloadAllResult {
-
-        private final List<String> authors;
-        private final List<String> emptyBooks;
-        private final List<String> failed;
-        private final List<Book> success;
-
-        public DownloadAllResult(List<String> authors, List<String> emptyBooks, List<String> failed, List<Book> success) {
-            this.authors = authors;
-            this.emptyBooks = emptyBooks;
-            this.failed = failed;
-            this.success = success;
-        }
-
-        public static DownloadAllResult empty(List<String> authors, String empty) {
-            return new DownloadAllResult(authors,
-                    Collections.singletonList(empty), Collections.emptyList(), Collections.emptyList());
-        }
-
-        public static DownloadAllResult failed(List<String> authors, String failed) {
-            return new DownloadAllResult(authors,
-                    Collections.emptyList(), Collections.singletonList(failed), Collections.emptyList());
-        }
-
-        public static DownloadAllResult success(List<String> authors, Book success) {
-            return new DownloadAllResult(authors,
-                    Collections.emptyList(), Collections.emptyList(), Collections.singletonList(success));
-        }
-
-        public DownloadAllResult concat(DownloadAllResult other) {
-            List<String> authors = new ArrayList<>(this.authors);
-            authors.addAll(other.authors);
-            ArrayList<String> emptyBooks = new ArrayList<>(this.emptyBooks);
-            emptyBooks.addAll(other.emptyBooks);
-            ArrayList<String> failed = new ArrayList<>(this.failed);
-            failed.addAll(other.failed);
-            ArrayList<Book> success = new ArrayList<>(this.success);
-            success.addAll(other.success);
-            return new DownloadAllResult(authors, emptyBooks, failed, success);
-        }
-
-        public String getResultMessage() {
-
-            BinaryOperator<String> concat = (s, s2) -> s + ", " + s2;
-            return "result\n" +
-                    "Authors:\n" +
-                    authors.stream().collect(Collectors.groupingBy(o -> o)).
-                            entrySet().stream().sorted(Comparator.comparingInt(o -> -o.getValue().size())).
-                            limit(5).map(Map.Entry::getKey).reduce(concat).orElse("") + "\n" +
-                    "\n" +
-                    "Success:\n" +
-                    success.stream().map(Book::getTitle).reduce(concat).orElse("") + "\n" +
-                    "\n" +
-                    "Empty:\n" +
-                    emptyBooks.stream().reduce(concat).orElse("") + "\n" +
-                    "\n" +
-                    "Failed:\n" +
-                    failed.stream().reduce(concat).orElse("") + "\n";
-
-
-        }
-    }
 }

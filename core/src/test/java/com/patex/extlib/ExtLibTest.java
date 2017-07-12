@@ -1,5 +1,6 @@
 package com.patex.extlib;
 
+import com.google.common.util.concurrent.MoreExecutors;
 import com.patex.entities.Book;
 import com.patex.entities.ExtLibrary;
 import com.patex.entities.SavedBookRepository;
@@ -12,13 +13,17 @@ import com.rometools.rome.feed.synd.SyndContentImpl;
 import com.rometools.rome.feed.synd.SyndEntryImpl;
 import com.rometools.rome.feed.synd.SyndFeedImpl;
 import com.rometools.rome.feed.synd.SyndLinkImpl;
+import com.rometools.rome.io.SyndFeedOutput;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.net.URLConnection;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,7 +46,6 @@ public class ExtLibTest {
     private ExtLib extLib;
     private BookService bookService;
     private ExtLibConnection connectionService;
-    private ExtLibConnection.ExtlibCon extlibConnection;
     private SyndFeedImpl syndFeed;
     private SyndLinkImpl syndLink;
     private SyndContentImpl syndContent;
@@ -60,8 +64,6 @@ public class ExtLibTest {
         extLibrary.setOpdsPath(opdsPath);
         bookService = mock(BookService.class);
         connectionService = mock(ExtLibConnection.class);
-        extlibConnection = mock(ExtLibConnection.ExtlibCon.class);
-        when(connectionService.openConnection(url + uri)).thenReturn(extlibConnection);
         extLib = createExtLib(extLibrary);
 
         syndFeed = new SyndFeedImpl();
@@ -83,7 +85,7 @@ public class ExtLibTest {
         syndEntry.setContents(Collections.singletonList(syndContent));
 
         syndFeed.setEntries(Collections.singletonList(syndEntry));
-        when(extlibConnection.getData(any())).thenReturn(syndFeed);
+        when(connectionService.getData(eq(uri), any())).thenReturn(syndFeed);
     }
 
     @Test
@@ -174,8 +176,8 @@ public class ExtLibTest {
 
     @Test
     public void testDownloadAllAction() throws Exception {
-        String uri1 = RandomStringUtils.randomAlphabetic(10);
-        String uri2 = RandomStringUtils.randomAlphabetic(10);
+        String uri1 = "book1_" + RandomStringUtils.randomAlphabetic(10);
+        String uri2 = "book2_" + RandomStringUtils.randomAlphabetic(10);
 
 
         SyndEntryImpl syndEntry1 = new SyndEntryImpl();
@@ -211,10 +213,10 @@ public class ExtLibTest {
         syndContent2.setMode("xml");
         syndEntry2.setContents(Collections.singletonList(syndContent2));
 
-        connectionService = spy(ExtLibConnection.class);
-
-        ExtLibConnection.ExtlibCon extlibConnection1 =
-                spy(connectionService.new ExtlibCon("http://" + RandomStringUtils.randomAlphabetic(10)));
+        connectionService =
+                spy(new ExtLibConnection(url, "", null, null, null, 0, null,
+                        MoreExecutors.newDirectExecutorService()));
+        extLib.connection=connectionService;
         URLConnection urlConnection1 = mock(URLConnection.class);
         String fileName1 = RandomStringUtils.randomAlphabetic(10);
         when(urlConnection1.getHeaderField("Content-Disposition")).thenReturn("attachment; filename=\"" + fileName1 + "\"");
@@ -223,11 +225,9 @@ public class ExtLibTest {
         Book book1 = new Book();
         book1.setId(RandomUtils.nextLong(0, 1000));
         when(bookService.uploadBook(fileName1, isMock1)).thenReturn(book1);
-        when(extlibConnection1.getConnection()).thenReturn(urlConnection1);
-        when(connectionService.openConnection(url + uri1)).thenReturn(extlibConnection1);
+        when(connectionService.getConnection(url + uri1)).thenReturn(urlConnection1);
 
-        ExtLibConnection.ExtlibCon extlibConnection2 =
-                spy(connectionService.new ExtlibCon("http://" + RandomStringUtils.randomAlphabetic(10)));
+
         URLConnection urlConnection2 = mock(URLConnection.class);
         String fileName2 = RandomStringUtils.randomAlphabetic(10);
         when(urlConnection2.getHeaderField("Content-Disposition")).thenReturn("attachment; filename=\"" + fileName2 + "\"");
@@ -236,21 +236,25 @@ public class ExtLibTest {
         Book book2 = new Book();
         book2.setId(RandomUtils.nextLong(0, 1000));
         when(bookService.uploadBook(fileName2, isMock2)).thenReturn(book2);
-        when(extlibConnection2.getConnection()).thenReturn(urlConnection2);
-        when(connectionService.openConnection(url + uri2)).thenReturn(extlibConnection2);
+        when(connectionService.getConnection(url + uri2)).thenReturn(urlConnection2);
 
         syndFeed.setEntries(Arrays.asList(syndEntry1, syndEntry2));
-
-        when(connectionService.openConnection(url + uri)).thenReturn(extlibConnection);
-        when(extlibConnection.getData(any())).thenReturn(syndFeed);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        syndFeed.setFeedType("atom_1.0");
+        new SyndFeedOutput().output(syndFeed, new OutputStreamWriter(baos));
+        URLConnection urlConnectionFeed = mock(URLConnection.class);
+        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+        when(urlConnectionFeed.getInputStream()).thenReturn(bais);
+        when(connectionService.getConnection(url + uri)).thenReturn(urlConnectionFeed);
 
         extLib = createExtLib(extLibrary);
         HashMap<String, String> params = new HashMap<>();
         String type = RandomStringUtils.randomAlphabetic(10);
         params.put(ExtLib.PARAM_TYPE, type);
         params.put(ExtLib.REQUEST_P_NAME, this.uri);
+        bais.reset();
         extLib.action(ExtLib.ACTION_DOWNLOAD_ALL, params);
-        Thread.sleep(300);
+        Thread.sleep(3000);
         verify(bookService, times(1)).uploadBook(fileName1, isMock1);
         verify(bookService, times(1)).uploadBook(fileName2, isMock2);
         verifyNoMoreInteractions(bookService);
@@ -258,19 +262,20 @@ public class ExtLibTest {
 
     private ExtLib createExtLib(ExtLibrary extLibrary) {
         ExtLib extLib = new ExtLib(extLibrary);
-        ReflectionTestUtils.setField(extLib, "extLibConnectionService", connectionService);
+        ReflectionTestUtils.setField(extLib, "connection", connectionService);
         ReflectionTestUtils.setField(extLib, "bookService", bookService);
         ReflectionTestUtils.setField(extLib, "messengerService", mock(MessengerService.class));
         ReflectionTestUtils.setField(extLib, "userService", mock(ZUserService.class));
         ReflectionTestUtils.setField(extLib, "savedBookRepo", mock(SavedBookRepository.class));
+        ReflectionTestUtils.setField(extLib, "executor", MoreExecutors.newDirectExecutorService());
         return extLib;
     }
 
     @Test
     public void testDownloadAction() throws Exception {
         String uri = RandomStringUtils.randomAlphabetic(10);
-        connectionService = spy(ExtLibConnection.class);
-        extlibConnection = spy(connectionService.new ExtlibCon("http://" + RandomStringUtils.randomAlphabetic(10)));
+        connectionService =  spy(new ExtLibConnection(url, "", null, null, null, 0, null,
+                MoreExecutors.newDirectExecutorService()));
         extLib = createExtLib(extLibrary);
         URLConnection urlConnection = mock(URLConnection.class);
         String fileName = RandomStringUtils.randomAlphabetic(10);
@@ -280,8 +285,7 @@ public class ExtLibTest {
         Book book = new Book();
         book.setId(RandomUtils.nextLong(0, 1000));
         when(bookService.uploadBook(fileName, isMock)).thenReturn(book);
-        when(extlibConnection.getConnection()).thenReturn(urlConnection);
-        when(connectionService.openConnection(url + uri)).thenReturn(extlibConnection);
+        when(connectionService.getConnection(url + uri)).thenReturn(urlConnection);
         HashMap<String, String> params = new HashMap<>();
         String type = RandomStringUtils.randomAlphabetic(10);
         params.put(ExtLib.PARAM_TYPE, type);

@@ -67,3 +67,4 @@ web/app/*.js
 /web/dist/
 /web/dev/
 /web/node/
+/core/telegram.config
