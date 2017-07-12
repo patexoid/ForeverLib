@@ -1,5 +1,7 @@
 package com.patex.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -17,6 +19,7 @@ public class Subscription {
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JsonIgnoreProperties
     private ExtLibrary extLibrary;
 
     private String link;
