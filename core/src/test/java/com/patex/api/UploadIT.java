@@ -5,7 +5,9 @@ import com.patex.BookUploadInfo;
 import com.patex.entities.Author;
 import com.patex.entities.Book;
 import com.patex.entities.ZUser;
-import fb2.Fb2Creator;
+import com.patex.utils.Tuple;
+import fb2Generator.Fb2Creator;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,6 +25,8 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.stream.Stream;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -39,15 +43,15 @@ public class UploadIT {
     @Before
     public void setUp() throws IOException {
         httpClient = new HttpTestClient("http://localhost:8080");
-        httpClient.setCreds("testUser","simplePassword");
+        httpClient.setCreds("testUser", "simplePassword");
         try {
             httpClient.get("user/current", ZUser.class);
         } catch (HttpClientErrorException e) {
-            httpClient.setCreds(null,null);
+            httpClient.setCreds(null, null);
             httpClient.post("user/create", "{\"username\":\"testUser\", \"password\":\"simplePassword\"}",
                     MediaType.APPLICATION_JSON, ZUser.class);
         }
-        httpClient.setCreds("testUser","simplePassword");
+        httpClient.setCreds("testUser", "simplePassword");
     }
 
     @Test
@@ -318,5 +322,44 @@ public class UploadIT {
         Book updatedBook = responceBook.getBody();
         assertThat(updatedBook.getTitle(), equalTo(newTitle));
     }
+
+    @Test
+    public void duplicateCheck() throws IOException {
+        Random random = new Random();
+        Fb2Creator fb2Creator = new Fb2Creator(randomAlphanumeric(10)).
+                addAuthor(randomAlphanumeric(10), randomAlphanumeric(10), randomAlphanumeric(10)).
+                addContent(Stream.generate(() -> RandomStringUtils.randomAlphabetic(1 + random.nextInt(8))).
+                        limit(150).reduce((s, s2) -> s + " " + s2).get());
+        InputStream fbook1 = fb2Creator.getFbook();
+        InputStream fbook2 = fb2Creator.
+                addContent(Stream.generate(() -> RandomStringUtils.randomAlphabetic(1 + random.nextInt(8))).
+                        limit(120).reduce((s, s2) -> s + " " + s2).get()).
+                getFbook();
+
+        ResponseEntity<List<BookUploadInfo>> response = uploadBooks(
+                t(randomAlphanumeric(10) + ".fb2", fbook1),
+                t(randomAlphanumeric(10) + ".fb2", fbook2)
+        );
+        httpClient.get("book/duplicateCheck", String.class);
+        Book book1 = httpClient.get("book/" + response.getBody().get(0).getId(), Book.class);
+        Assert.assertTrue(book1.isDuplicate());
+        Book book2 = httpClient.get("book/" + response.getBody().get(1).getId(), Book.class);
+        Assert.assertTrue(!book2.isDuplicate());
+    }
+
+    public Tuple<String, InputStream> t(String _1, InputStream _2) {
+        return new Tuple<>(_1, _2);
+    }
+
+    private ResponseEntity<List<BookUploadInfo>> uploadBooks(Tuple<String, InputStream>... obj) {
+        Map<String, InputStream> files = new HashMap<>();
+        for (Tuple<String, InputStream> t : obj) {
+            files.put(t._1, t._2);
+        }
+        return httpClient.uploadFiles("book/upload",
+                "file", files, new ParameterizedTypeReference<List<BookUploadInfo>>() {
+                });
+    }
+
 }
 

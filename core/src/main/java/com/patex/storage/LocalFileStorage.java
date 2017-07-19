@@ -6,7 +6,12 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,8 +20,8 @@ import java.util.regex.Pattern;
 @Profile("fileStorage")
 public class LocalFileStorage implements FileStorage {
 
+    private static final Pattern DUPLICATE_FILENAME_PATTERN = Pattern.compile("([^\\\\.]+?)(?:_(\\\\d+)_)?\\.(.+)");
 
-    public static final Pattern DUPLICATE_FILENAME_PATTERN = Pattern.compile("(.*_)(\\d+)");
     @Value("${localStorage.folder}")
     public  String storageFolder;
 
@@ -34,10 +39,15 @@ public class LocalFileStorage implements FileStorage {
             if(matcher.matches()){
                 String prefix =matcher.group(1);
                 String suffix =matcher.group(2);
-                save(prefix+Integer.parseInt(suffix), fileContent);
-
+                String extension =matcher.group(3);
+                if(suffix!=null) {
+                    save(prefix+ "_"+ (Integer.parseInt(suffix) + 1) +"_."+ extension, fileContent);
+                } else {
+                    return save(prefix+"_1_."+extension, fileContent);
+                }
             } else {
-                return save(fileName+"_1", fileContent);
+                throw new LibException("Can't match file name " + fileName
+                        + " pattern " + DUPLICATE_FILENAME_PATTERN.pattern());
             }
         }
         try(FileOutputStream fos = new FileOutputStream(filePath)){

@@ -3,7 +3,7 @@ package com.patex;
 /**
  * Created by Alexey on 13.03.2016.
  */
-public class LibException extends Exception {
+public class LibException extends RuntimeException {
 
     public LibException() {
     }

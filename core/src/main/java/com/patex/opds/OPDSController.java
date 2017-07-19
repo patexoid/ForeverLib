@@ -107,7 +107,10 @@ public class OPDSController {
     public ModelAndView getAuthorBookAlphabet(@PathVariable(value = "id") long id) {
         Author bookAuthor = authorService.getAuthors(id);
         return createMav("Книги по алфавиту " + bookAuthor.getName(), bookAuthor, author ->
-                author.getBooks().stream().map(AuthorBook::getBook).map(BookEntry::new).
+                author.getBooks().stream().
+                        map(AuthorBook::getBook).
+                        filter(book -> !book.isDuplicate()).
+                        map(BookEntry::new).
                         collect(Collectors.toList()));
     }
 
@@ -118,6 +121,7 @@ public class OPDSController {
         return createMav("Книги по алфавиту " + bookAuthor.getName(), bookAuthor, author ->
                 author.getBooksNoSequence().stream().
                         map(AuthorBook::getBook).
+                        filter(book -> !book.isDuplicate()).
                         map(BookEntry::new).
                         collect(Collectors.toList()));
     }
@@ -128,7 +132,9 @@ public class OPDSController {
         Sequence sequence = sequenceService.getSequence(id);
         return createMav("Книги в серии " + sequence.getName(), sequence, seq ->
                 seq.getBookSequences().stream().
-                        sorted(Comparator.comparing(BookSequence::getSeqOrder)).map(BookSequence::getBook).
+                        sorted(Comparator.comparing(BookSequence::getSeqOrder)).
+                        map(BookSequence::getBook).
+                        filter(book -> !book.isDuplicate()).
                         map(BookEntry::new).
                         collect(Collectors.toList())
         );

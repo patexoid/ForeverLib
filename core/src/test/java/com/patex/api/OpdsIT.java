@@ -2,7 +2,7 @@ package com.patex.api;
 
 import com.patex.BookUploadInfo;
 import com.patex.entities.ZUser;
-import fb2.Fb2Creator;
+import fb2Generator.Fb2Creator;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

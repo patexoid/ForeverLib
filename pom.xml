@@ -4,16 +4,17 @@
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <properties>
-        <project.version>1.0-SNAPSHOT</project.version>
+        <project.version>0.34-SNAPSHOT</project.version>
     </properties>
 
     <groupId>com.patex.zombielib2</groupId>
     <artifactId>main</artifactId>
 
     <packaging>pom</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.35-SNAPSHOT</version>
 
     <modules>
+        <module>fb2generated</module>
         <module>core</module>
     </modules>
 
@@ -21,7 +22,6 @@
         <profile>
             <id>web</id>
             <modules>
-                <module>core</module>
                 <module>web</module>
             </modules>
         </profile>
