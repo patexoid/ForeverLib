@@ -15,6 +15,8 @@ import com.patex.storage.StorageService;
 import com.patex.utils.StreamU;
 import com.patex.utils.shingle.ShingleComparsion;
 import com.patex.utils.shingle.Shingleable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -50,6 +52,7 @@ import static org.springframework.transaction.annotation.Propagation.REQUIRES_NE
  */
 @Service
 public class BookService {
+    private static Logger log = LoggerFactory.getLogger(BookService.class);
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final BookRepository bookRepository;
@@ -179,10 +182,9 @@ public class BookService {
 
     @Transactional(propagation = REQUIRES_NEW, isolation = Isolation.SERIALIZABLE)
     private synchronized void checkForDuplicate() {
-
-        try {
-            Iterable<BookCheckQueue> queue = bookCheckQueueRepo.findAll();
-            for (BookCheckQueue bookCheckQueue : queue) {
+        Iterable<BookCheckQueue> queue = bookCheckQueueRepo.findAll();
+        for (BookCheckQueue bookCheckQueue : queue) {
+            try {
                 Book checkedBook = bookRepository.findOne(bookCheckQueue.getBook().getId());
                 if (!checkedBook.isDuplicate()) {
                     Set<Book> duplicates = findDuplications(checkedBook);
@@ -191,10 +193,12 @@ public class BookService {
                     }
                 }
                 bookCheckQueueRepo.delete(bookCheckQueue);
+            } catch (Exception e) {
+                log.error("Duplication check exception book id= " + bookCheckQueue.getBook().getId() +
+                        " title = " + bookCheckQueue.getBook().getTitle() + " exception=" + e.getMessage(), e);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+
     }
 
     private void markDuplications(Book checkedBook, Set<Book> duplicates) {
