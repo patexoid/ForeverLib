@@ -1,10 +1,14 @@
 package com.patex.parser;
 
 import com.patex.LibException;
-import com.patex.entities.*;
+import com.patex.entities.Author;
+import com.patex.entities.Book;
+import com.patex.entities.BookGenre;
+import com.patex.entities.BookSequence;
+import com.patex.entities.Genre;
+import com.patex.entities.Sequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -15,7 +19,9 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 
 @Service
 public class Fb2FileParser implements FileParser {
@@ -24,12 +30,12 @@ public class Fb2FileParser implements FileParser {
 
     private final XMLInputFactory factory;
 
-    public Fb2FileParser() {
-        factory = XMLInputFactory.newInstance();
-    }
-
-    @Autowired
     private ParserService parserService;
+
+    public Fb2FileParser(ParserService parserService) {
+        factory = XMLInputFactory.newInstance();
+        this.parserService = parserService;
+    }
 
     @PostConstruct
     public void register() {
@@ -43,9 +49,9 @@ public class Fb2FileParser implements FileParser {
 
 
     @Override
-    public Book parseFile(String fileName, InputStream file) throws LibException {
+    public Book parseFile(String fileName, InputStream is) throws LibException {
         try {
-            XMLEventReader reader = factory.createXMLEventReader(file);
+            XMLEventReader reader = factory.createXMLEventReader(is);
             while (reader.hasNext()) {
                 XMLEvent event = reader.nextEvent();
                 if (event.isStartElement() && "title-info".equals(event.asStartElement().getName().getLocalPart())) {
@@ -62,7 +68,7 @@ public class Fb2FileParser implements FileParser {
         Book book = new Book();
         while (reader.hasNext()) {
             XMLEvent event = reader.nextEvent();
-            if (event.isEndElement()&& "title-info".equals(event.asEndElement().getName().getLocalPart())) {
+            if (event.isEndElement() && "title-info".equals(event.asEndElement().getName().getLocalPart())) {
                 return book;
             } else if (event.isStartElement()) {
                 StartElement element = event.asStartElement();
@@ -137,5 +143,58 @@ public class Fb2FileParser implements FileParser {
             }
         }
         return null;
+    }
+
+    @Override
+    public Iterator<String> getContentIterator(String fileName, InputStream is) throws LibException {
+        try {
+            XMLEventReader reader = factory.createXMLEventReader(is);
+            return new Iterator<String>() {
+                private String next;
+
+                {
+                    while (reader.hasNext()) {
+                        XMLEvent event = reader.nextEvent();
+                        if (event.isStartElement() &&
+                                "body".equals(event.asStartElement().getName().getLocalPart())) {
+                            break;
+                        }
+                    }
+                    this.next = calcNext();
+                }
+
+                @Override
+                public boolean hasNext() {
+                    return next != null;
+                }
+
+                @Override
+                public String next() {
+                    String next = this.next;
+                    this.next = calcNext();
+                    return next;
+                }
+
+                private String calcNext() {
+                    try {
+                        while (reader.hasNext()) {
+                            XMLEvent event = reader.nextEvent();
+                            if (event.isEndElement() && "body".equals(event.asEndElement().getName().getLocalPart())) {
+                                return null;
+                            } else if (event.isStartElement() && "p".equals(event.asStartElement().getName().getLocalPart())) {
+                                return getText(reader, "p");
+                            }
+                        }
+                        reader.close();
+                        is.close();
+                    } catch (XMLStreamException | IOException e) {
+                        throw new LibException(e.getMessage(), e);
+                    }
+                    return null;
+                }
+            };
+        } catch (XMLStreamException e) {
+            throw new LibException(e.getMessage(), e);
+        }
     }
 }

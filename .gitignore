@@ -68,3 +68,6 @@ web/app/*.js
 /web/dev/
 /web/node/
 /core/telegram.config
+/fb2generated/src/main/
+!/fb2generated/src/main/
+/fb2generated/src/main/java/

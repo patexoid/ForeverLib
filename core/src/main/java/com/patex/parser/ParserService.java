@@ -6,28 +6,39 @@ import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Created by Alexey on 12.03.2016.
+ *
  */
 
 @Service
 public class ParserService {
 
-    private Map<String, FileParser> parserMap=new HashMap<>();
+    private Map<String, FileParser> parserMap = new HashMap<>();
 
-    public Book getBookInfo(String fileName, InputStream stream) throws LibException{
-        String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-        FileParser parser = parserMap.get(extension);
-        if(parser==null){
-            throw new LibException("unsupportd extension: "+extension);
-        }
+    public Book getBookInfo(String fileName, InputStream stream) throws LibException {
+        FileParser parser = getParser(fileName);
         return parser.parseFile(fileName, stream);
 
     }
 
-    public void registerParser(FileParser fileParser){
-        parserMap.put(fileParser.getExtension(),fileParser);
+    private FileParser getParser(String fileName) {
+        String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+        FileParser parser = parserMap.get(extension);
+        if (parser == null) {
+            throw new LibException("unsupportd extension: " + extension);
+        }
+        return parser;
+    }
+
+    public Iterator<String> getContentIterator(String fileName, InputStream is) throws LibException {
+        FileParser parser = getParser(fileName);
+        return parser.getContentIterator(fileName, is);
+    }
+
+    public void registerParser(FileParser fileParser) {
+        parserMap.put(fileParser.getExtension(), fileParser);
     }
 }

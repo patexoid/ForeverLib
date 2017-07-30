@@ -77,4 +77,10 @@ public class BookController {
         InputStreamResource isr = new InputStreamResource(inputStream);
         return new ResponseEntity<>(isr, respHeaders, HttpStatus.OK);
     }
+
+    @RequestMapping(value = "/duplicateCheck", method = RequestMethod.GET)
+    public @ResponseBody String duplicateCheck(){
+        bookService.checkForDuplicateSecured();
+        return "success";
+    }
 }

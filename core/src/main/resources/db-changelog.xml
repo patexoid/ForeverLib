@@ -75,4 +75,23 @@
             <column name="EXT_ID" type="VARCHAR(500)"/>
         </createTable>
     </changeSet>
+    <changeSet id="6" author="patex">
+        <addColumn tableName="BOOK" >
+            <column name="DUPLICATE" type="BOOLEAN(1)"/>
+        </addColumn>
+        <sql>
+            UPDATE BOOK SET DUPLICATE=false
+        </sql>
+        <createTable tableName="BOOK_CHECK_QUEUE">
+            <column autoIncrement="true" name="ID" type="BIGINT(19)">
+                <constraints primaryKey="true" primaryKeyName="BOOK_CHECK_QUEUE_ID"/>
+            </column>
+            <column name="BOOK_ID" type="BIGINT(19)">
+                <constraints foreignKeyName="BOOK_CHECK_QUEUE_BOOK_ID" references="BOOK(ID)"/>
+            </column>
+        </createTable>
+        <sql>
+            INSERT INTO BOOK_CHECK_QUEUE SELECT null,b.id from BOOK b
+        </sql>
+    </changeSet>
 </databaseChangeLog>

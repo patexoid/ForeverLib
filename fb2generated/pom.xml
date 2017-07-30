@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.patex.zombielib2</groupId>
+    <artifactId>fb2-generated</artifactId>
+    <version>0.1</version>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>jaxb2-maven-plugin</artifactId>
+                <version>2.2</version>
+                <executions>
+                    <execution>
+                        <id>xjc</id>
+                        <goals>
+                            <goal>xjc</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!-- The package of your generated sources -->
+                    <packageName>fb2</packageName>
+                    <xjbSources>
+                        <xjbSource>${project.build.sourceDirectory}/../resources/xsd/bindings.xjb</xjbSource>
+                    </xjbSources>
+                    <sources>
+                        <source>${project.build.sourceDirectory}/../resources/xsd/fb2</source>
+                    </sources>
+                    <outputDirectory>${project.build.sourceDirectory}</outputDirectory>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.sun.xsom</groupId>
+                        <artifactId>xsom</artifactId>
+                        <version>20110809</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.sun.codemodel</groupId>
+                        <artifactId>codemodel</artifactId>
+                        <version>2.6</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.sun.xml.txw2</groupId>
+                        <artifactId>txw2</artifactId>
+                        <version>20110809</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.sun.istack</groupId>
+                        <artifactId>maven-istack-commons-plugin</artifactId>
+                        <version>2.10</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.sun.istack</groupId>
+                        <artifactId>istack-commons-runtime</artifactId>
+                        <version>3.0.5</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.kohsuke.rngom</groupId>
+                        <artifactId>rngom</artifactId>
+                        <version>20100718</version>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>com.sun.xml.bind</groupId>
+                        <artifactId>jaxb-impl</artifactId>
+                        <version>2.2.11</version>
+                    </dependency>
+
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

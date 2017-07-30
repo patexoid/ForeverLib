@@ -2,8 +2,19 @@ package com.patex.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.patex.utils.BooleanJson;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Lob;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +45,10 @@ public class Book {
     @OneToMany(cascade = {CascadeType.PERSIST,}, fetch = FetchType.LAZY, mappedBy = "book")
     @JsonProperty(GENRES)
     private List<BookGenre> genres = new ArrayList<>();
+
+    @JsonSerialize(using=BooleanJson.Serializer.class)
+    @JsonDeserialize(using=BooleanJson.Deserializer.class)
+    private boolean duplicate = false;
 
     @Column(nullable = false)
     @JsonProperty
@@ -149,5 +164,13 @@ public class Book {
 
     public void setChecksum(byte[] checksum) {
         this.checksum = checksum;
+    }
+
+    public Boolean isDuplicate() {
+        return duplicate;
+    }
+
+    public void setDuplicate(Boolean duplicate) {
+        this.duplicate = duplicate;
     }
 }

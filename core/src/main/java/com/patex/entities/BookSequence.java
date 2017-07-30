@@ -7,7 +7,13 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -43,6 +49,11 @@ public class BookSequence {
     public BookSequence(int order, Sequence sequence) {
         this.seqOrder = order;
         this.sequence = sequence;
+    }
+
+    public BookSequence(int seqOrder, Sequence sequence, Book book) {
+        this(seqOrder, sequence);
+        this.book = book;
     }
 
     public BookSequence() {
