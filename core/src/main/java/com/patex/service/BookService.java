@@ -10,6 +10,8 @@ import com.patex.entities.BookRepository;
 import com.patex.entities.BookSequence;
 import com.patex.entities.FileResource;
 import com.patex.entities.Sequence;
+import com.patex.entities.ZUser;
+import com.patex.messaging.MessengerService;
 import com.patex.parser.ParserService;
 import com.patex.storage.StorageService;
 import com.patex.utils.StreamU;
@@ -34,6 +36,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -61,17 +64,22 @@ public class BookService {
     private final ParserService parserService;
     private final StorageService fileStorage;
     private final BookCheckQueueRepository bookCheckQueueRepo;
+    private final MessengerService messenger;
+    private final ZUserService userService;
 
     @Autowired
     public BookService(BookRepository bookRepository, SequenceService sequenceService,
                        AuthorService authorService, ParserService parserService, StorageService fileStorage,
-                       BookCheckQueueRepository bookCheckQueueRepo) {
+                       BookCheckQueueRepository bookCheckQueueRepo, MessengerService messenger,
+                       ZUserService userService) {
         this.bookRepository = bookRepository;
         this.sequenceService = sequenceService;
         this.authorService = authorService;
         this.parserService = parserService;
         this.fileStorage = fileStorage;
         this.bookCheckQueueRepo = bookCheckQueueRepo;
+        this.messenger = messenger;
+        this.userService = userService;
     }
 
     @Transactional(propagation = REQUIRES_NEW, isolation = Isolation.SERIALIZABLE)
@@ -120,7 +128,8 @@ public class BookService {
                 filter(authorBook -> !authorBook.getAuthor().getBooks().contains(authorBook)).
                 forEach(authorBook -> authorBook.getAuthor().getBooks().add(authorBook));
         bookCheckQueueRepo.save(new BookCheckQueue(book));
-        executor.execute(this::checkForDuplicate);
+        ZUser currentUser = userService.getCurrentUser();
+        executor.execute(() -> checkForDuplicate(currentUser));
         return save;
     }
 
@@ -177,25 +186,25 @@ public class BookService {
 
     @Secured(ADMIN_AUTHORITY)
     public void checkForDuplicateSecured() {
-        checkForDuplicate();
+        checkForDuplicate(userService.getCurrentUser());
     }
 
-    private synchronized void checkForDuplicate() {
+    private synchronized void checkForDuplicate(ZUser currentUser) {
         Iterable<BookCheckQueue> queue = bookCheckQueueRepo.findAll();
         for (BookCheckQueue bookCheckQueue : queue) {
-            checkForDuplicate(bookCheckQueue);
+            checkForDuplicate(bookCheckQueue, currentUser);
         }
 
     }
 
     @Transactional(propagation = REQUIRES_NEW, isolation = Isolation.SERIALIZABLE)
-    private void checkForDuplicate(BookCheckQueue bookCheckQueue) {
+    private void checkForDuplicate(BookCheckQueue bookCheckQueue, ZUser user) {
         try {
             Book checkedBook = bookRepository.findOne(bookCheckQueue.getBook().getId());
             if (!checkedBook.isDuplicate()) {
                 Set<Book> duplicates = findDuplications(checkedBook);
                 if (!duplicates.isEmpty()) {
-                    markDuplications(checkedBook, duplicates);
+                    markDuplications(checkedBook, duplicates, user);
                 }
             }
             bookCheckQueueRepo.delete(bookCheckQueue);
@@ -205,9 +214,10 @@ public class BookService {
         }
     }
 
-    private void markDuplications(Book checkedBook, Set<Book> duplicates) {
+    private void markDuplications(Book checkedBook, Set<Book> duplicates, ZUser user) {
+        duplicates= new HashSet<>(duplicates);
         duplicates.add(checkedBook);
-        Book primaryBook = duplicates.stream().sorted(Comparator.comparingInt(Book::getSize)).findFirst().get();
+        Book primaryBook = duplicates.stream().sorted(Comparator.comparingInt(book -> -book.getSize())).findFirst().get();
 
         List<Long> sequences = primaryBook.getSequences().stream().
                 map(BookSequence::getSequence).
@@ -232,6 +242,12 @@ public class BookService {
                             add(new BookSequence(bookSequence.getSeqOrder(), sequence, primaryBook));
                 }
             }
+        }
+        String message="Book:"+checkedBook.getTitle()+"\nPrimary: "+primaryBook.getTitle()+"\nDuplicates: " +
+                duplicates.stream().map(Book::getTitle).reduce((s, s2) -> s+", "+s2);
+        log.info(message);
+        if(user!=null) {
+            messenger.sendMessageToUser(message, user);
         }
         this.bookRepository.save(primaryBook);
     }
