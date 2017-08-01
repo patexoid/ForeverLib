@@ -42,9 +42,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Spliterators;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static com.patex.service.ZUserService.ADMIN_AUTHORITY;
 import static org.springframework.transaction.annotation.Propagation.REQUIRES_NEW;
@@ -121,6 +123,7 @@ public class BookService {
         FileResource fileResource = new FileResource(fileId);
         book.setFileResource(fileResource);
         book.setFileName(fileName);
+        book.setContentSize(getContentSize(new ByteArrayInputStream(byteArray),fileName ));
         book.setSize(byteArray.length);
         book.setChecksum(checksum);
         Book save = bookRepository.save(book);
@@ -185,7 +188,30 @@ public class BookService {
     }
 
     @Secured(ADMIN_AUTHORITY)
+    @Transactional(propagation = REQUIRES_NEW, isolation = Isolation.SERIALIZABLE)
+    public void updateContentSize() {
+        Iterable<Book> all = bookRepository.findAll();
+        for (Book book : all) {
+            try {
+                InputStream is = fileStorage.load(book.getFileResource().getFilePath());
+                book.setContentSize(getContentSize(is, book.getFileName()));
+                bookRepository.save(book);
+            } catch (Exception e) {
+                log.error("Error on contentSize calculation book:" +book.getId()+"title "+book.getTitle(), e);
+            }
+        }
+    }
+
+    private Integer getContentSize(InputStream is, String fileName) {
+        Iterator<String> it = parserService.getContentIterator(fileName, is);
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, 0), false).
+                map(String::length).
+                reduce((l1, l2) -> l1 + l2).orElse(0);
+    }
+
+    @Secured(ADMIN_AUTHORITY)
     public void checkForDuplicateSecured() {
+        updateContentSize();
         checkForDuplicate(userService.getCurrentUser());
     }
 
@@ -194,7 +220,6 @@ public class BookService {
         for (BookCheckQueue bookCheckQueue : queue) {
             checkForDuplicate(bookCheckQueue, currentUser);
         }
-
     }
 
     @Transactional(propagation = REQUIRES_NEW, isolation = Isolation.SERIALIZABLE)
@@ -257,6 +282,11 @@ public class BookService {
                 flatMap(a -> a.getBooks().stream().map(AuthorBook::getBook)).
                 filter(book -> !book.getId().equals(checkedBook.getId())).
                 filter(book -> !book.isDuplicate()).
+                filter(book -> {
+                    float min = (float)Math.min(book.getContentSize(), checkedBook.getContentSize());
+                    float max = (float)Math.min(book.getContentSize(), checkedBook.getContentSize());
+                return min/max>0.7f;
+                }).
                 collect(Collectors.toList());
 
         return new ShingleComparsion().findSimilar(checkedBook, sameAuthorBooks, ShingleableBook::new
@@ -276,7 +306,7 @@ public class BookService {
 
         @Override
         public int size() {
-            return book.getSize();
+            return book.getContentSize();
         }
 
         @Override
