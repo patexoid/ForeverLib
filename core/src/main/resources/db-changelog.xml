@@ -78,6 +78,7 @@
     <changeSet id="6" author="patex">
         <addColumn tableName="BOOK" >
             <column name="DUPLICATE" type="BOOLEAN(1)"/>
+            <column name="CONTENT_SIZE" type="INTEGER"/>
         </addColumn>
         <sql>
             UPDATE BOOK SET DUPLICATE=false

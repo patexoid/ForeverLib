@@ -62,6 +62,9 @@ public class Book {
     @JsonProperty
     private Integer size;
 
+    @JsonProperty
+    private Integer contentSize;
+
     @Column(nullable = false, updatable = false)
     @JsonIgnore
     private byte[] checksum;
@@ -172,5 +175,13 @@ public class Book {
 
     public void setDuplicate(Boolean duplicate) {
         this.duplicate = duplicate;
+    }
+
+    public Integer getContentSize() {
+        return contentSize;
+    }
+
+    public void setContentSize(Integer contentSize) {
+        this.contentSize = contentSize;
     }
 }
