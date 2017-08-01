@@ -180,25 +180,29 @@ public class BookService {
         checkForDuplicate();
     }
 
-    @Transactional(propagation = REQUIRES_NEW, isolation = Isolation.SERIALIZABLE)
     private synchronized void checkForDuplicate() {
         Iterable<BookCheckQueue> queue = bookCheckQueueRepo.findAll();
         for (BookCheckQueue bookCheckQueue : queue) {
-            try {
-                Book checkedBook = bookRepository.findOne(bookCheckQueue.getBook().getId());
-                if (!checkedBook.isDuplicate()) {
-                    Set<Book> duplicates = findDuplications(checkedBook);
-                    if (!duplicates.isEmpty()) {
-                        markDuplications(checkedBook, duplicates);
-                    }
-                }
-                bookCheckQueueRepo.delete(bookCheckQueue);
-            } catch (Exception e) {
-                log.error("Duplication check exception book id= " + bookCheckQueue.getBook().getId() +
-                        " title = " + bookCheckQueue.getBook().getTitle() + " exception=" + e.getMessage(), e);
-            }
+            checkForDuplicate(bookCheckQueue);
         }
 
+    }
+
+    @Transactional(propagation = REQUIRES_NEW, isolation = Isolation.SERIALIZABLE)
+    private void checkForDuplicate(BookCheckQueue bookCheckQueue) {
+        try {
+            Book checkedBook = bookRepository.findOne(bookCheckQueue.getBook().getId());
+            if (!checkedBook.isDuplicate()) {
+                Set<Book> duplicates = findDuplications(checkedBook);
+                if (!duplicates.isEmpty()) {
+                    markDuplications(checkedBook, duplicates);
+                }
+            }
+            bookCheckQueueRepo.delete(bookCheckQueue);
+        } catch (Exception e) {
+            log.error("Duplication check exception book id= " + bookCheckQueue.getBook().getId() +
+                    " title = " + bookCheckQueue.getBook().getTitle() + " exception=" + e.getMessage(), e);
+        }
     }
 
     private void markDuplications(Book checkedBook, Set<Book> duplicates) {
