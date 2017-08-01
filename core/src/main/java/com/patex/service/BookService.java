@@ -123,6 +123,7 @@ public class BookService {
         FileResource fileResource = new FileResource(fileId);
         book.setFileResource(fileResource);
         book.setFileName(fileName);
+        book.setContentSize(getContentSize(new ByteArrayInputStream(byteArray),fileName ));
         book.setSize(byteArray.length);
         book.setChecksum(checksum);
         Book save = bookRepository.save(book);
@@ -193,16 +194,19 @@ public class BookService {
         for (Book book : all) {
             try {
                 InputStream is = fileStorage.load(book.getFileResource().getFilePath());
-                Iterator<String> it = parserService.getContentIterator(book.getFileName(), is);
-                Optional<Integer> contentSize = StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, 0), false).
-                        map(String::length).
-                        reduce((l1, l2) -> l1 + l2);
-                book.setContentSize(contentSize.get());
+                book.setContentSize(getContentSize(is, book.getFileName()));
                 bookRepository.save(book);
             } catch (Exception e) {
                 log.error("Error on contentSize calculation book:" +book.getId()+"title "+book.getTitle(), e);
             }
         }
+    }
+
+    private Integer getContentSize(InputStream is, String fileName) {
+        Iterator<String> it = parserService.getContentIterator(fileName, is);
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, 0), false).
+                map(String::length).
+                reduce((l1, l2) -> l1 + l2).orElse(0);
     }
 
     @Secured(ADMIN_AUTHORITY)
