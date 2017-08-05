@@ -17,6 +17,7 @@ import com.patex.storage.StorageService;
 import com.patex.utils.StreamU;
 import com.patex.utils.shingle.ShingleComparsion;
 import com.patex.utils.shingle.Shingleable;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,12 +37,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.Spliterators;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -94,7 +93,7 @@ public class BookService {
                 filter(loaded -> Arrays.equals(checksum, loaded.getChecksum())).
                 findAny();
         if (sameBook.isPresent()) { //TODO if author or book has the same name
-            sameBook.get();
+            return sameBook.get();
         }
         List<AuthorBook> authorsBooks = book.getAuthorBooks().stream().
                 map(authorBook -> {
@@ -123,7 +122,7 @@ public class BookService {
         FileResource fileResource = new FileResource(fileId);
         book.setFileResource(fileResource);
         book.setFileName(fileName);
-        book.setContentSize(getContentSize(new ByteArrayInputStream(byteArray),fileName ));
+        book.setContentSize(getContentSize(new ByteArrayInputStream(byteArray), fileName));
         book.setSize(byteArray.length);
         book.setChecksum(checksum);
         Book save = bookRepository.save(book);
@@ -189,7 +188,7 @@ public class BookService {
 
     @Secured(ADMIN_AUTHORITY)
     @Transactional(propagation = REQUIRES_NEW, isolation = Isolation.SERIALIZABLE)
-    public void updateContentSize() {
+    void updateContentSize() {
         Iterable<Book> all = bookRepository.findAll();
         for (Book book : all) {
             try {
@@ -197,7 +196,7 @@ public class BookService {
                 book.setContentSize(getContentSize(is, book.getFileName()));
                 bookRepository.save(book);
             } catch (Exception e) {
-                log.error("Error on contentSize calculation book:" +book.getId()+"title "+book.getTitle(), e);
+                log.error("Error on contentSize calculation book:" + book.getId() + "title " + book.getTitle(), e);
             }
         }
     }
@@ -223,14 +222,12 @@ public class BookService {
     }
 
     @Transactional(propagation = REQUIRES_NEW, isolation = Isolation.SERIALIZABLE)
-    private void checkForDuplicate(BookCheckQueue bookCheckQueue, ZUser user) {
+    void checkForDuplicate(BookCheckQueue bookCheckQueue, ZUser user) {
         try {
             Book checkedBook = bookRepository.findOne(bookCheckQueue.getBook().getId());
             if (!checkedBook.isDuplicate()) {
-                Set<Book> duplicates = findDuplications(checkedBook);
-                if (!duplicates.isEmpty()) {
-                    markDuplications(checkedBook, duplicates, user);
-                }
+                findDuplications(checkedBook).
+                        ifPresent(book -> markDuplications(checkedBook, book, user));
             }
             bookCheckQueueRepo.delete(bookCheckQueue);
         } catch (Exception e) {
@@ -239,58 +236,61 @@ public class BookService {
         }
     }
 
-    private void markDuplications(Book checkedBook, Set<Book> duplicates, ZUser user) {
-        duplicates= new HashSet<>(duplicates);
-        duplicates.add(checkedBook);
-        Book primaryBook = duplicates.stream().sorted(Comparator.comparingInt(book -> -book.getSize())).findFirst().get();
+    private void markDuplications(Book first, Book second, ZUser user) {
+        Book primary, secondary;
+        if (first.getContentSize() > second.getContentSize()) {
+            primary = first;
+            secondary = second;
+        } else {
+            primary = second;
+            secondary = first;
+        }
 
-        List<Long> sequences = primaryBook.getSequences().stream().
+        List<Long> sequences = primary.getSequences().stream().
                 map(BookSequence::getSequence).
                 map(Sequence::getId).
                 collect(Collectors.toList());
-        List<Long> authors = primaryBook.getAuthorBooks().stream().map(AuthorBook::getAuthor).map(Author::getId).
+        List<Long> authors = primary.getAuthorBooks().stream().map(AuthorBook::getAuthor).map(Author::getId).
                 collect(Collectors.toList());
-        duplicates.remove(primaryBook);
-        for (Book duplicate : duplicates) {
-            duplicate.setDuplicate(true);
-            this.bookRepository.save(duplicate);
-            for (AuthorBook authorBook : duplicate.getAuthorBooks()) {
-                Author author = authorBook.getAuthor();
-                if (!authors.contains(author.getId())) {
-                    primaryBook.getAuthorBooks().add(new AuthorBook(author, primaryBook));
-                }
-            }
-            for (BookSequence bookSequence : duplicate.getSequences()) {
-                Sequence sequence = bookSequence.getSequence();
-                if (!sequences.contains(sequence.getId())) {
-                    primaryBook.getSequences().
-                            add(new BookSequence(bookSequence.getSeqOrder(), sequence, primaryBook));
-                }
+
+        secondary.setDuplicate(true);
+        this.bookRepository.save(secondary);
+        for (AuthorBook authorBook : secondary.getAuthorBooks()) {
+            Author author = authorBook.getAuthor();
+            if (!authors.contains(author.getId())) {
+                primary.getAuthorBooks().add(new AuthorBook(author, primary));
             }
         }
-        String message="Book:"+checkedBook.getTitle()+"\nPrimary: "+primaryBook.getTitle()+"\nDuplicates: " +
-                duplicates.stream().map(Book::getTitle).reduce((s, s2) -> s+", "+s2);
+        for (BookSequence bookSequence : secondary.getSequences()) {
+            Sequence sequence = bookSequence.getSequence();
+            if (!sequences.contains(sequence.getId())) {
+                primary.getSequences().
+                        add(new BookSequence(bookSequence.getSeqOrder(), sequence, primary));
+            }
+        }
+        String message = "Book:" + first.getTitle() + "\nPrimary: " + primary.getTitle() + "\nDuplicate: " +
+                secondary;
         log.info(message);
-        if(user!=null) {
+        if (user != null) {
             messenger.sendMessageToUser(message, user);
         }
-        this.bookRepository.save(primaryBook);
+        this.bookRepository.save(primary);
     }
 
-    private Set<Book> findDuplications(Book checkedBook) {
+    private Optional<Book> findDuplications(Book checkedBook) {
         List<Book> sameAuthorBooks = checkedBook.getAuthorBooks().stream().map(AuthorBook::getAuthor).
                 flatMap(a -> a.getBooks().stream().map(AuthorBook::getBook)).
                 filter(book -> !book.getId().equals(checkedBook.getId())).
                 filter(book -> !book.isDuplicate()).
                 filter(book -> {
-                    float min = (float)Math.min(book.getContentSize(), checkedBook.getContentSize());
-                    float max = (float)Math.min(book.getContentSize(), checkedBook.getContentSize());
-                return min/max>0.7f;
+                    float min = (float) Math.min(book.getContentSize(), checkedBook.getContentSize());
+                    float max = (float) Math.min(book.getContentSize(), checkedBook.getContentSize());
+                    return min / max > 0.7f;
                 }).
+                sorted(Comparator.comparing((book) -> StringUtils.getLevenshteinDistance(book.getTitle(), checkedBook.getTitle()))).
                 collect(Collectors.toList());
 
-        return new ShingleComparsion().findSimilar(checkedBook, sameAuthorBooks, ShingleableBook::new
-        );
+        return new ShingleComparsion().findSimilar(checkedBook, sameAuthorBooks, ShingleableBook::new);
     }
 
     private class ShingleableBook implements Shingleable, Closeable {
