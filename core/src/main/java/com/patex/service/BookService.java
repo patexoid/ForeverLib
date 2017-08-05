@@ -269,7 +269,7 @@ public class BookService {
             }
         }
         String message = "Book:" + first.getTitle() + "\nPrimary: " + primary.getTitle() + "\nDuplicate: " +
-                secondary;
+                secondary.getTitle();
         log.info(message);
         if (user != null) {
             messenger.sendMessageToUser(message, user);
