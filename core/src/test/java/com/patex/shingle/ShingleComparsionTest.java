@@ -10,8 +10,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -26,9 +26,7 @@ public class ShingleComparsionTest {
         List<String> content = Stream.generate(() -> RandomStringUtils.randomAlphabetic(1 + random.nextInt(8))).
                 limit(100).collect(Collectors.toList());
         List<String> sameContent = new ArrayList<>(content);
-        List<List<String>> similarContntents = Collections.singletonList(sameContent);
-        Set<List<String>> result = new ShingleComparsion().findSimilar(content, similarContntents, this::toShingleable);
-        Assert.assertTrue(result.containsAll(similarContntents));
+        checkSimilarity(content, sameContent);
     }
 
 
@@ -37,11 +35,15 @@ public class ShingleComparsionTest {
         Random random = new Random();
         List<String> content = Stream.generate(() -> RandomStringUtils.randomAlphabetic(1 + random.nextInt(8))).
                 limit(100).collect(Collectors.toList());
-        List<String> similarContent1 = new ArrayList<>(content);
-        similarContent1.add(0, RandomStringUtils.random(5));
-        List<List<String>> similarContntents = Collections.singletonList(similarContent1);
-        Set<List<String>> result = new ShingleComparsion().findSimilar(content, similarContntents, this::toShingleable);
-        Assert.assertTrue(result.containsAll(similarContntents));
+        List<String> similarContents = new ArrayList<>(content);
+        similarContents.add(0, RandomStringUtils.random(5));
+        checkSimilarity(content, similarContents);
+    }
+
+    private void checkSimilarity(List<String> content, List<String> similarContents) {
+        List<List<String>> similarContentents = Collections.singletonList(similarContents);
+        Optional<List<String>> result = new ShingleComparsion().findSimilar(content, similarContentents, this::toShingleable);
+        Assert.assertTrue(similarContents.equals(result.orElse(Collections.emptyList())));
     }
 
     @Test
@@ -50,12 +52,9 @@ public class ShingleComparsionTest {
         List<String> content = Stream.generate(() -> RandomStringUtils.randomAlphabetic(1 + random.nextInt(8))).
                 limit(100).collect(Collectors.toList());
 
-        List<String> similarContent2 = new ArrayList<>(content);
-        similarContent2.add(RandomStringUtils.random(5));
-
-        List<List<String>> similarContntents = Collections.singletonList(similarContent2);
-        Set<List<String>> result = new ShingleComparsion().findSimilar(content, similarContntents, this::toShingleable);
-        Assert.assertTrue(result.containsAll(similarContntents));
+        List<String> similarContent = new ArrayList<>(content);
+        similarContent.add(RandomStringUtils.random(5));
+        checkSimilarity(content, similarContent);
     }
 
     @Test
@@ -63,11 +62,10 @@ public class ShingleComparsionTest {
         Random random = new Random();
         List<String> content = Stream.generate(() -> RandomStringUtils.randomAlphabetic(1 + random.nextInt(8))).
                 limit(100).collect(Collectors.toList());
-        List<String> similarContent3 = new ArrayList<>(content);
-        similarContent3.add(content.size() / 2, RandomStringUtils.random(5));
-        List<List<String>> similarContntents = Collections.singletonList(similarContent3);
-        Set<List<String>> result = new ShingleComparsion().findSimilar(content, similarContntents, this::toShingleable);
-        Assert.assertTrue(result.containsAll(similarContntents));
+        List<String> similarContent = new ArrayList<>(content);
+        similarContent.add(content.size() / 2, RandomStringUtils.random(5));
+
+        checkSimilarity(content, similarContent);
     }
 
     @Test
@@ -78,8 +76,8 @@ public class ShingleComparsionTest {
         List<String> other = Stream.generate(() -> RandomStringUtils.randomAlphabetic(1 + random.nextInt(8))).
                 limit(100).collect(Collectors.toList());
         List<List<String>> similarContntents = Collections.singletonList(other);
-        Set<List<String>> result = new ShingleComparsion().findSimilar(content, similarContntents, this::toShingleable);
-        Assert.assertTrue(result.isEmpty());
+        Optional<List<String>> result = new ShingleComparsion().findSimilar(content, similarContntents, this::toShingleable);
+        Assert.assertFalse(result.isPresent());
     }
 
 
