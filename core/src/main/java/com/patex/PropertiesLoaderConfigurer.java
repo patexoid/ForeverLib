@@ -12,7 +12,7 @@ import org.springframework.web.context.support.StandardServletEnvironment;
 import java.util.Map;
 
 @Component
-@Profile("test")
+@Profile("trace")
 public class PropertiesLoaderConfigurer
         extends PropertySourcesPlaceholderConfigurer {
 

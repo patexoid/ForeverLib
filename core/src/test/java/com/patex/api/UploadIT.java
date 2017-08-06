@@ -342,9 +342,14 @@ public class UploadIT {
         );
         httpClient.get("book/duplicateCheck", String.class);
         Book book1 = httpClient.get("book/" + response.getBody().get(0).getId(), Book.class);
-        Assert.assertTrue(book1.isDuplicate());
         Book book2 = httpClient.get("book/" + response.getBody().get(1).getId(), Book.class);
-        Assert.assertTrue(!book2.isDuplicate());
+        if (book1.getContentSize() > book2.getContentSize()) {
+            Assert.assertTrue(book2.isDuplicate());
+            Assert.assertTrue(!book1.isDuplicate());
+        } else {
+            Assert.assertTrue(book1.isDuplicate());
+            Assert.assertTrue(!book2.isDuplicate());
+        }
     }
 
     public Tuple<String, InputStream> t(String _1, InputStream _2) {
