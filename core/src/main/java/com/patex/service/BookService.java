@@ -67,12 +67,13 @@ public class BookService {
     private final BookCheckQueueRepository bookCheckQueueRepo;
     private final MessengerService messenger;
     private final ZUserService userService;
+    private final TransactionService transactionService;
 
     @Autowired
     public BookService(BookRepository bookRepository, SequenceService sequenceService,
                        AuthorService authorService, ParserService parserService, StorageService fileStorage,
                        BookCheckQueueRepository bookCheckQueueRepo, MessengerService messenger,
-                       ZUserService userService) {
+                       ZUserService userService, TransactionService transactionService) {
         this.bookRepository = bookRepository;
         this.sequenceService = sequenceService;
         this.authorService = authorService;
@@ -81,6 +82,7 @@ public class BookService {
         this.bookCheckQueueRepo = bookCheckQueueRepo;
         this.messenger = messenger;
         this.userService = userService;
+        this.transactionService = transactionService;
     }
 
     @Transactional(propagation = REQUIRES_NEW, isolation = Isolation.SERIALIZABLE)
@@ -187,14 +189,15 @@ public class BookService {
     }
 
     @Secured(ADMIN_AUTHORITY)
-    @Transactional(propagation = REQUIRES_NEW, isolation = Isolation.SERIALIZABLE)
-    void updateContentSize() {
+    private void updateContentSize() {
         Iterable<Book> all = bookRepository.findAll();
         for (Book book : all) {
             try {
+                if(book.getContentSize()==null) {
                 InputStream is = fileStorage.load(book.getFileResource().getFilePath());
                 book.setContentSize(getContentSize(is, book.getFileName()));
                 bookRepository.save(book);
+                }
             } catch (Exception e) {
                 log.error("Error on contentSize calculation book:" + book.getId() + "title " + book.getTitle(), e);
             }
@@ -210,29 +213,31 @@ public class BookService {
 
     @Secured(ADMIN_AUTHORITY)
     public void checkForDuplicateSecured() {
-        updateContentSize();
+        transactionService.newTransaction(this::updateContentSize);
         checkForDuplicate(userService.getCurrentUser());
     }
 
     private synchronized void checkForDuplicate(ZUser currentUser) {
         Iterable<BookCheckQueue> queue = bookCheckQueueRepo.findAll();
         for (BookCheckQueue bookCheckQueue : queue) {
-            checkForDuplicate(bookCheckQueue, currentUser);
+            transactionService.newTransaction(()->checkForDuplicate(bookCheckQueue, currentUser));
         }
     }
 
-    @Transactional(propagation = REQUIRES_NEW, isolation = Isolation.SERIALIZABLE)
-    void checkForDuplicate(BookCheckQueue bookCheckQueue, ZUser user) {
+    private void checkForDuplicate(BookCheckQueue bookCheckQueue, ZUser user) {
+        Book checkedBook = bookRepository.findOne(bookCheckQueue.getBook().getId());
         try {
-            Book checkedBook = bookRepository.findOne(bookCheckQueue.getBook().getId());
             if (!checkedBook.isDuplicate()) {
                 findDuplications(checkedBook).
                         ifPresent(book -> markDuplications(checkedBook, book, user));
             }
-            bookCheckQueueRepo.delete(bookCheckQueue);
+            bookCheckQueueRepo.delete(bookCheckQueue.getId());
         } catch (Exception e) {
-            log.error("Duplication check exception book id= " + bookCheckQueue.getBook().getId() +
-                    " title = " + bookCheckQueue.getBook().getTitle() + " exception=" + e.getMessage(), e);
+            log.error("Duplication check exception book " +
+                    " id= " + checkedBook.getId() +
+                    " title = " + checkedBook.getTitle() +
+                    " filename" + checkedBook.getFileName() +
+                    " exception=" + e.getMessage(), e);
         }
     }
 
@@ -289,8 +294,11 @@ public class BookService {
                 }).
                 sorted(Comparator.comparing((book) -> StringUtils.getLevenshteinDistance(book.getTitle(), checkedBook.getTitle()))).
                 collect(Collectors.toList());
-
-        return new ShingleComparsion().findSimilar(checkedBook, sameAuthorBooks, ShingleableBook::new);
+        if(sameAuthorBooks.isEmpty()){
+            return Optional.empty();
+        } else {
+            return new ShingleComparsion().findSimilar(checkedBook, sameAuthorBooks, ShingleableBook::new);
+        }
     }
 
     private class ShingleableBook implements Shingleable, Closeable {
