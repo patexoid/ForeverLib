@@ -22,7 +22,7 @@ public class Author {
     @Column(nullable = false)
     private String name;
 
-    @OneToMany(cascade = {CascadeType.PERSIST}, fetch = FetchType.LAZY, mappedBy = "author")
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, fetch = FetchType.LAZY, mappedBy = "author")
     @JsonIgnore
     private List<AuthorBook> books = new ArrayList<>();
 

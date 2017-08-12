@@ -27,7 +27,7 @@ public class Sequence {
     @JsonProperty
     private String name;
 
-    @OneToMany(cascade = {CascadeType.PERSIST}, fetch = FetchType.EAGER, mappedBy = "sequence")
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, fetch = FetchType.EAGER, mappedBy = "sequence")
     @JsonProperty(BOOK_SEQUENCES)
     private List<BookSequence> bookSequences = new ArrayList<>();
 
