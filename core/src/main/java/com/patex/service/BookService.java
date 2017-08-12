@@ -40,6 +40,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Spliterators;
 import java.util.concurrent.ExecutorService;
@@ -248,6 +249,7 @@ public class BookService {
 
         List<Long> sequences = primary.getSequences().stream().
                 map(BookSequence::getSequence).
+                filter(Objects::nonNull).//todo delete later
                 map(Sequence::getId).
                 collect(Collectors.toList());
         List<Long> authors = primary.getAuthorBooks().stream().map(AuthorBook::getAuthor).map(Author::getId).

@@ -34,15 +34,15 @@ public class Book {
     @GeneratedValue
     private Long id;
 
-    @OneToMany(cascade = {CascadeType.PERSIST}, fetch = FetchType.LAZY, mappedBy = "book")
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, fetch = FetchType.LAZY, mappedBy = "book")
     @JsonProperty(AUTHORS_BOOKS)
     private List<AuthorBook> authorBooks = new ArrayList<>();
 
-    @OneToMany(cascade = {CascadeType.PERSIST}, fetch = FetchType.LAZY, mappedBy = "book")
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, fetch = FetchType.LAZY, mappedBy = "book")
     @JsonProperty(SEQUENCES)
     private List<BookSequence> sequences = new ArrayList<>();
 
-    @OneToMany(cascade = {CascadeType.PERSIST,}, fetch = FetchType.LAZY, mappedBy = "book")
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, fetch = FetchType.LAZY, mappedBy = "book")
     @JsonProperty(GENRES)
     private List<BookGenre> genres = new ArrayList<>();
 

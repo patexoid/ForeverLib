@@ -48,7 +48,7 @@ public class Shingler implements Iterable<ShingleHash> {
     private void prepare() {
         int shingleSize = config.shingleSize();
         while (shingleable.hasNext() && shingleWords.size() < shingleSize) {
-            readNextPack(0, st -> {
+            readNextPack(1, st -> {
                 while (shingleWords.size() < shingleSize && st.hasMoreTokens()) {
                     String token = st.nextToken();
                     if (!config.skipWord(token)) {
@@ -63,12 +63,12 @@ public class Shingler implements Iterable<ShingleHash> {
         }
     }
 
-    private void readNextPack(int shingleCount, Function<StringTokenizer, Integer> consumer) {
+    private void readNextPack(int shingleCount, Function<StringTokenizer, Integer> f) {
         int i = 0;
-        do {
+        while (shingleable.hasNext() && i < shingleCount) {
             StringTokenizer st = new StringTokenizer(shingleable.next(), config.getDelimiters());
-            i += consumer.apply(st);
-        } while (shingleable.hasNext() && i < shingleCount);
+            i += f.apply(st);
+        }
     }
 
     private int readNext(StringTokenizer st) {
@@ -162,16 +162,21 @@ public class Shingler implements Iterable<ShingleHash> {
     }
 
     private class ShingleHashIterator implements Iterator<ShingleHash> {
-        int position = 0;
+        int position = 1;
+        ShingleHash next;
+
+        public ShingleHashIterator() {
+            if(shinglesList.isEmpty()){
+                readNextPack();
+            }
+            if(!shinglesList.isEmpty()){
+                next = shinglesList.get(0);
+            }
+        }
 
         @Override
         public boolean hasNext() {
-            rwLock.readLock().lock();
-            try {
-                return position < shinglesList.size() || shingleable.hasNext();
-            } finally {
-                rwLock.readLock().unlock();
-            }
+            return next!=null;
         }
 
         @Override
@@ -190,7 +195,13 @@ public class Shingler implements Iterable<ShingleHash> {
                         rwLock.readLock().lock();
                     }
                 }
-                return shinglesList.get(position++);
+                ShingleHash next0=next;
+                if(position >= shinglesList.size()){
+                    next=null;
+                } else {
+                    next = shinglesList.get(position++);
+                }
+                return next0;
             } finally {
                 rwLock.readLock().unlock();
             }
