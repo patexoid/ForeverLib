@@ -121,8 +121,11 @@ public class DuplicateHandler {
 
     @EventListener
     public void onBookCreation(BookCreationEvent event) {
-        executor.execute(() ->
-                transactionService.transactionRequired(() -> scheduleCheck(event)));
+        executor.execute(() -> {
+                transactionService.transactionRequired(() -> scheduleCheck(event));
+                lock.release();
+                log.trace("scheduleCheck start");
+        });
     }
 
     private void scheduleCheck(BookCreationEvent event) {
@@ -150,8 +153,7 @@ public class DuplicateHandler {
                 bookCheckQueueRepo.save(bookCheckQueue);
             }
         }
-        lock.release();
-        log.trace("scheduleCheck start");
+
     }
 
     private void addCheckTask(BookCheckQueue bookCheckQueue) {

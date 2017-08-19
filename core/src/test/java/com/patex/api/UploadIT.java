@@ -324,7 +324,7 @@ public class UploadIT {
     }
 
     @SuppressWarnings("ConstantConditions")
-    @Test
+    @Test(timeout = 10000)
     public void duplicateCheck() throws IOException {
         Random random = new Random();
         Fb2Creator fb2Creator = new Fb2Creator(randomAlphanumeric(10)).
