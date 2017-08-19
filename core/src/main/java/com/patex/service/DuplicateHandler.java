@@ -151,7 +151,7 @@ public class DuplicateHandler {
             }
         }
         lock.release();
-        log.trace("scheduleCheck run");
+        log.trace("scheduleCheck start");
     }
 
     private void addCheckTask(BookCheckQueue bookCheckQueue) {
@@ -163,6 +163,7 @@ public class DuplicateHandler {
     private void checkForDuplicate(BookCheckQueue bookCheckQueue) {
         Book first = bookService.getBook(bookCheckQueue.getBook1().getId());
         Book second = bookService.getBook(bookCheckQueue.getBook2().getId());
+        log.trace("START scheduleCheck book1={} book2={}");
         try {
             if (shingleMatcher.isSimilar(first, second)) {
                 markDuplications(first, second, bookCheckQueue.getUser());
