@@ -11,4 +11,5 @@ import org.springframework.stereotype.Repository;
 public interface BookCheckQueueRepository extends CrudRepository<BookCheckQueue, Long> {
 
 
+    boolean existsByBook1EqualsAndBook2Equals(Book book1, Book book2);
 }

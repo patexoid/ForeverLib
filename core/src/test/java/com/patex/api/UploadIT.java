@@ -323,7 +323,8 @@ public class UploadIT {
         assertThat(updatedBook.getTitle(), equalTo(newTitle));
     }
 
-    @Test
+    @SuppressWarnings("ConstantConditions")
+    @Test(timeout = 10000)
     public void duplicateCheck() throws IOException {
         Random random = new Random();
         Fb2Creator fb2Creator = new Fb2Creator(randomAlphanumeric(10)).
@@ -333,14 +334,14 @@ public class UploadIT {
         InputStream fbook1 = fb2Creator.getFbook();
         InputStream fbook2 = fb2Creator.
                 addContent(Stream.generate(() -> RandomStringUtils.randomAlphabetic(1 + random.nextInt(8))).
-                        limit(120).reduce((s, s2) -> s + " " + s2).get()).
+                        limit(20).reduce((s, s2) -> s + " " + s2).get()).
                 getFbook();
 
         ResponseEntity<List<BookUploadInfo>> response = uploadBooks(
                 t(randomAlphanumeric(10) + ".fb2", fbook1),
                 t(randomAlphanumeric(10) + ".fb2", fbook2)
         );
-        httpClient.get("book/duplicateCheck", String.class);
+        httpClient.get("book/waitForDuplicateCheck", String.class);
         Book book1 = httpClient.get("book/" + response.getBody().get(0).getId(), Book.class);
         Book book2 = httpClient.get("book/" + response.getBody().get(1).getId(), Book.class);
         if (book1.getContentSize() > book2.getContentSize()) {
@@ -356,7 +357,8 @@ public class UploadIT {
         return new Tuple<>(_1, _2);
     }
 
-    private ResponseEntity<List<BookUploadInfo>> uploadBooks(Tuple<String, InputStream>... obj) {
+    @SafeVarargs
+    private final ResponseEntity<List<BookUploadInfo>> uploadBooks(Tuple<String, InputStream>... obj) {
         Map<String, InputStream> files = new HashMap<>();
         for (Tuple<String, InputStream> t : obj) {
             files.put(t._1, t._2);
