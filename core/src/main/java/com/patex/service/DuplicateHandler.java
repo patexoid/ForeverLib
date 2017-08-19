@@ -53,7 +53,7 @@ public class DuplicateHandler {
 
 
     private final AtomicInteger count = new AtomicInteger(0);
-    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
+    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()+1,
             r -> {
                 Thread thread = new Thread(r);
                 thread.setName("DuplicateHandler-" + count.getAndIncrement());
