@@ -53,12 +53,11 @@ public class DuplicateHandler {
 
 
     private final AtomicInteger count = new AtomicInteger(0);
-    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()+1,
+    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
             r -> {
                 Thread thread = new Thread(r);
                 thread.setName("DuplicateHandler-" + count.getAndIncrement());
                 thread.setDaemon(true);
-                thread.setPriority(Thread.MIN_PRIORITY);
                 thread.setUncaughtExceptionHandler((t, e) -> {
                     log.error(e.getMessage(), e);
                 });
@@ -77,8 +76,8 @@ public class DuplicateHandler {
         this.messenger = messenger;
         this.fileStorage = fileStorage;
         this.parserService = parserService;
-
-        executor.execute(() -> {
+        Thread scheduler = new Thread(() -> {
+            //noinspection InfiniteLoopStatement
             while (true) {
                 try {
                     lock.acquire();
@@ -91,6 +90,9 @@ public class DuplicateHandler {
                 }
             }
         });
+        scheduler.setName("duplicate handler scheduler");
+        scheduler.setDaemon(true);
+        scheduler.start();
     }
 
     @Secured(ADMIN_AUTHORITY)
