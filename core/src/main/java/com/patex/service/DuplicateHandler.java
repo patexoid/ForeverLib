@@ -86,6 +86,8 @@ public class DuplicateHandler {
                 }
                 Iterable<BookCheckQueue> checkQueue = bookCheckQueueRepo.findAll();
                 for (BookCheckQueue bookCheckQueue : checkQueue) {
+                    log.trace("scheduleCheck book1={} book2={}",
+                            bookCheckQueue.getBook1().getTitle(),bookCheckQueue.getBook2().getTitle());
                     addCheckTask(bookCheckQueue);
                 }
             }
@@ -98,7 +100,9 @@ public class DuplicateHandler {
     @Secured(ADMIN_AUTHORITY)
     public void waitForFinish() {
         while (true) {
-            if (bookCheckQueueRepo.count() == 0) {
+            long count = bookCheckQueueRepo.count();
+            log.trace("duplicateCheck count:"+count);
+            if (count == 0) {
                 return;
             }
             try {
@@ -157,6 +161,8 @@ public class DuplicateHandler {
             if (shingleMatcher.isSimilar(first, second)) {
                 markDuplications(first, second, bookCheckQueue.getUser());
             }
+            log.trace("DONE scheduleCheck book1={} book2={}",
+                    bookCheckQueue.getBook1().getTitle(),bookCheckQueue.getBook2().getTitle());
             bookCheckQueueRepo.delete(bookCheckQueue.getId());
 
         } catch (Exception e) {
