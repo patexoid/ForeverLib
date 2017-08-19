@@ -1,16 +1,14 @@
 package com.patex.shingle;
 
-import com.patex.utils.shingle.ShingleComparsion;
+import com.patex.utils.shingle.ShingleMatcher;
 import com.patex.utils.shingle.Shingleable;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -41,9 +39,8 @@ public class ShingleComparsionTest {
     }
 
     private void checkSimilarity(List<String> content, List<String> similarContents) {
-        List<List<String>> similarContentents = Collections.singletonList(similarContents);
-        Optional<List<String>> result = new ShingleComparsion().findSimilar(content, similarContentents, this::toShingleable);
-        Assert.assertTrue(similarContents.equals(result.orElse(Collections.emptyList())));
+        ShingleMatcher<List<String>, List<String>> shingleMatcher = new ShingleMatcher<>(this::toShingleable, o -> o);
+        Assert.assertTrue(shingleMatcher.isSimilar(content, similarContents));
     }
 
     @Test
@@ -75,9 +72,8 @@ public class ShingleComparsionTest {
                 limit(100).collect(Collectors.toList());
         List<String> other = Stream.generate(() -> RandomStringUtils.randomAlphabetic(1 + random.nextInt(8))).
                 limit(100).collect(Collectors.toList());
-        List<List<String>> similarContntents = Collections.singletonList(other);
-        Optional<List<String>> result = new ShingleComparsion().findSimilar(content, similarContntents, this::toShingleable);
-        Assert.assertFalse(result.isPresent());
+        ShingleMatcher<List<String>, List<String>> shingleMatcher = new ShingleMatcher<>(this::toShingleable, o -> o);
+        Assert.assertFalse(shingleMatcher.isSimilar(content, other));
     }
 
 

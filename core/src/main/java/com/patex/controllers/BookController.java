@@ -4,6 +4,7 @@ import com.patex.BookUploadInfo;
 import com.patex.LibException;
 import com.patex.entities.Book;
 import com.patex.service.BookService;
+import com.patex.service.DuplicateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,8 @@ public class BookController {
     @Autowired
     private BookService bookService;
 
+    @Autowired
+    private DuplicateHandler duplicateHandler;
 
     @RequestMapping(value = "/{id}" , method = RequestMethod.GET)
     public @ResponseBody Book getBook(@PathVariable(value = "id") long id) {
@@ -78,9 +81,17 @@ public class BookController {
         return new ResponseEntity<>(isr, respHeaders, HttpStatus.OK);
     }
 
-    @RequestMapping(value = "/duplicateCheck", method = RequestMethod.GET)
+    @RequestMapping(value = "/waitForDuplicateCheck", method = RequestMethod.GET)
     public @ResponseBody String duplicateCheck(){
-        bookService.checkForDuplicateSecured();
+        duplicateHandler.waitForFinish();
         return "success";
     }
+
+    @RequestMapping(value = "/duplicateCheckForExisted", method = RequestMethod.GET)
+    public @ResponseBody String duplicateCheckForExisted(){
+        bookService.prepareExisted();
+        duplicateHandler.waitForFinish();
+        return "success";
+    }
+
 }
