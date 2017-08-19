@@ -80,9 +80,11 @@ public class DuplicateHandler {
             //noinspection InfiniteLoopStatement
             while (true) {
                 try {
+                    log.trace("scheduler wait");
                     lock.acquire();
+                    log.trace("scheduleCheck run");
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    log.error(e.getMessage(),e);
                 }
                 Iterable<BookCheckQueue> checkQueue = bookCheckQueueRepo.findAll();
                 for (BookCheckQueue bookCheckQueue : checkQueue) {
@@ -94,6 +96,9 @@ public class DuplicateHandler {
         });
         scheduler.setName("duplicate handler scheduler");
         scheduler.setDaemon(true);
+        scheduler.setUncaughtExceptionHandler((t, e) -> {
+            log.error(e.getMessage(), e);
+        });
         scheduler.start();
     }
 
@@ -146,6 +151,7 @@ public class DuplicateHandler {
             }
         }
         lock.release();
+        log.trace("scheduleCheck run");
     }
 
     private void addCheckTask(BookCheckQueue bookCheckQueue) {
