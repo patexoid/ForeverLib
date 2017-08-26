@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static com.patex.service.ZUserService.ADMIN_AUTHORITY;
+import static com.patex.service.ZUserService.USER;
 import static org.springframework.transaction.annotation.Propagation.REQUIRES_NEW;
 
 /**
@@ -73,6 +74,7 @@ public class BookService {
     }
 
     @Transactional(propagation = REQUIRES_NEW, isolation = Isolation.SERIALIZABLE)
+    @Secured(USER)
     public synchronized Book uploadBook(String fileName, InputStream is) throws LibException {
         Book result = transactionService.newTransaction(() -> {
             byte[] byteArray = loadFromStream(is);
@@ -211,7 +213,9 @@ public class BookService {
         updateContentSize();
         Iterable<Book> books = bookRepository.findAll();
         for (Book book : books) {
-            publisher.publishEvent(new BookCreationEvent(book, userService.getCurrentUser()));
+            if (!book.isDuplicate()) {
+                publisher.publishEvent(new BookCreationEvent(book, userService.getCurrentUser()));
+            }
         }
     }
 }

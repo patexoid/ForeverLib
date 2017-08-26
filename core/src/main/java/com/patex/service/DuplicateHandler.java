@@ -18,10 +18,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,7 +33,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -52,53 +53,49 @@ public class DuplicateHandler {
     private final ShingleMatcher<Book, Long> shingleMatcher = new ShingleMatcher<>(ShingleableBook::new, Book::getId);
 
 
-    private final AtomicInteger count = new AtomicInteger(0);
-    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
-            r -> {
-                Thread thread = new Thread(r);
-                thread.setName("DuplicateHandler-" + count.getAndIncrement());
-                thread.setDaemon(true);
-                thread.setUncaughtExceptionHandler((t, e) -> {
-                    log.error(e.getMessage(), e);
-                });
-                return thread;
-            });
+    private static final AtomicInteger count = new AtomicInteger(0);
 
-    private final Semaphore lock = new Semaphore(1);
+    private final ExecutorService executor;
 
     @Autowired
     public DuplicateHandler(BookCheckQueueRepository bookCheckQueueRepo, TransactionService transactionService,
                             BookService bookService, MessengerService messenger, StorageService fileStorage,
-                            ParserService parserService) {
+                            ParserService parserService,
+                            @Value("${duplicateCheckThreadCount:0}") int threadCount) {
         this.bookCheckQueueRepo = bookCheckQueueRepo;
         this.transactionService = transactionService;
         this.bookService = bookService;
         this.messenger = messenger;
         this.fileStorage = fileStorage;
         this.parserService = parserService;
+
+        if (threadCount == 0) {
+            int availableProcessors = Runtime.getRuntime().availableProcessors();
+            threadCount = availableProcessors > 1 ? availableProcessors / 2 : 1;
+        }
+        executor = Executors.newFixedThreadPool(threadCount,
+                r -> {
+                    Thread thread = new Thread(r);
+                    thread.setName("DuplicateHandler-" + count.getAndIncrement());
+                    thread.setDaemon(true);
+                    thread.setUncaughtExceptionHandler((t, e) -> log.error(e.getMessage(), e));
+                    return thread;
+                });
+    }
+
+    @PostConstruct
+    public void postConstruct() {
         Thread scheduler = new Thread(() -> {
-            //noinspection InfiniteLoopStatement
-            while (true) {
-                try {
-                    log.trace("scheduler wait");
-                    lock.acquire();
-                    log.trace("scheduleCheck run");
-                } catch (InterruptedException e) {
-                    log.error(e.getMessage(),e);
-                }
-                Iterable<BookCheckQueue> checkQueue = bookCheckQueueRepo.findAll();
-                for (BookCheckQueue bookCheckQueue : checkQueue) {
-                    log.trace("scheduleCheck book1={} book2={}",
-                            bookCheckQueue.getBook1().getTitle(),bookCheckQueue.getBook2().getTitle());
-                    addCheckTask(bookCheckQueue);
-                }
+            Iterable<BookCheckQueue> checkQueue = bookCheckQueueRepo.findAll();
+            for (BookCheckQueue bookCheckQueue : checkQueue) {
+                log.trace("scheduleCheck book1={} book2={} id={}",
+                        bookCheckQueue.getBook1().getTitle(), bookCheckQueue.getBook2().getTitle(), bookCheckQueue.getId());
+                addCheckTask(bookCheckQueue);
             }
         });
-        scheduler.setName("duplicate handler scheduler");
+        scheduler.setName("initital duplicate handler scheduler");
         scheduler.setDaemon(true);
-        scheduler.setUncaughtExceptionHandler((t, e) -> {
-            log.error(e.getMessage(), e);
-        });
+        scheduler.setUncaughtExceptionHandler((t, e) -> log.error(e.getMessage(), e));
         scheduler.start();
     }
 
@@ -106,7 +103,7 @@ public class DuplicateHandler {
     public void waitForFinish() {
         while (true) {
             long count = bookCheckQueueRepo.count();
-            log.trace("duplicateCheck count:"+count);
+            log.trace("duplicateCheck count:" + count);
             if (count == 0) {
                 return;
             }
@@ -122,15 +119,16 @@ public class DuplicateHandler {
     @EventListener
     public void onBookCreation(BookCreationEvent event) {
         executor.execute(() -> {
-                transactionService.transactionRequired(() -> scheduleCheck(event));
-                lock.release();
-                log.trace("scheduleCheck start");
+            List<BookCheckQueue> bookCheckQueues = transactionService.transactionRequired(() -> scheduleCheck(event));
+            for (BookCheckQueue bookCheck : bookCheckQueues) {
+                addCheckTask(bookCheck);
+            }
         });
     }
 
-    private void scheduleCheck(BookCreationEvent event) {
+    private List<BookCheckQueue> scheduleCheck(BookCreationEvent event) {
         Book newBook = bookService.getBook(event.getBook().getId());
-         List<Book> sameAuthorsBooks = newBook.getAuthorBooks().stream().map(AuthorBook::getAuthor).
+        List<BookCheckQueue> bookCheckQueues = newBook.getAuthorBooks().stream().map(AuthorBook::getAuthor).
                 flatMap(a -> a.getBooks().stream().map(AuthorBook::getBook)).
                 filter(book -> !book.getId().equals(newBook.getId())).
                 filter(book -> !book.isDuplicate()).
@@ -140,38 +138,36 @@ public class DuplicateHandler {
                     return min / max > 0.7f;
                 }).
                 sorted(Comparator.comparing((book) -> StringUtils.getLevenshteinDistance(book.getTitle(), newBook.getTitle()))).
-                collect(Collectors.toList());
-        for (Book sameAuthorsBook : sameAuthorsBooks) {
-            BookCheckQueue bookCheckQueue;
-            if (newBook.getId() > sameAuthorsBook.getId()) {
-                bookCheckQueue = new BookCheckQueue(sameAuthorsBook, newBook, event.getUser());
-            } else {
-                bookCheckQueue = new BookCheckQueue(newBook, sameAuthorsBook, event.getUser());
-            }
-            if (!bookCheckQueueRepo.
-                    existsByBook1EqualsAndBook2Equals(bookCheckQueue.getBook1(), bookCheckQueue.getBook2())) {
-                bookCheckQueueRepo.save(bookCheckQueue);
-            }
-        }
+                map(sameAuthorsBook -> {
+                    if (newBook.getId() > sameAuthorsBook.getId()) {
+                        return new BookCheckQueue(sameAuthorsBook, newBook, event.getUser());
+                    } else {
+                        return new BookCheckQueue(newBook, sameAuthorsBook, event.getUser());
+                    }
+                }).
+                filter(bcq -> !bookCheckQueueRepo.
+                        existsByBook1EqualsAndBook2Equals(bcq.getBook1(), bcq.getBook2())).collect(Collectors.toList());
+
+        bookCheckQueueRepo.save(bookCheckQueues);
+        return bookCheckQueues;
 
     }
 
     private void addCheckTask(BookCheckQueue bookCheckQueue) {
-        executor.execute(() -> {
-            transactionService.newTransaction(() -> checkForDuplicate(bookCheckQueue));
-        });
+        executor.execute(() -> transactionService.newTransaction(() -> checkForDuplicate(bookCheckQueue)));
     }
 
     private void checkForDuplicate(BookCheckQueue bookCheckQueue) {
         Book first = bookService.getBook(bookCheckQueue.getBook1().getId());
         Book second = bookService.getBook(bookCheckQueue.getBook2().getId());
-        log.trace("START scheduleCheck book1={} book2={}");
+        log.trace("START scheduleCheck book1={} book2={}",
+                bookCheckQueue.getBook1().getTitle(), bookCheckQueue.getBook2().getTitle(), bookCheckQueue.getId());
         try {
             if (shingleMatcher.isSimilar(first, second)) {
                 markDuplications(first, second, bookCheckQueue.getUser());
             }
-            log.trace("DONE scheduleCheck book1={} book2={}",
-                    bookCheckQueue.getBook1().getTitle(),bookCheckQueue.getBook2().getTitle());
+            log.trace("DONE scheduleCheck book1={} book2={} id={}",
+                    bookCheckQueue.getBook1().getTitle(), bookCheckQueue.getBook2().getTitle(), bookCheckQueue.getId());
             bookCheckQueueRepo.delete(bookCheckQueue.getId());
 
         } catch (Exception e) {
