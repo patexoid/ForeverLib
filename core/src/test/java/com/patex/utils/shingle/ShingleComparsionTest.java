@@ -1,7 +1,5 @@
-package com.patex.shingle;
+package com.patex.utils.shingle;
 
-import com.patex.utils.shingle.ShingleMatcher;
-import com.patex.utils.shingle.Shingleable;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Assert;
 import org.junit.Test;

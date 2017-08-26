@@ -27,4 +27,10 @@ public class TransactionService {
     public void transactionRequired(Runnable run){
         run.run();
     }
+
+    @Transactional(propagation = REQUIRES_NEW, isolation = Isolation.SERIALIZABLE)
+    public <T> T transactionRequired(Supplier<T> supplier){
+        return supplier.get();
+    }
+
 }

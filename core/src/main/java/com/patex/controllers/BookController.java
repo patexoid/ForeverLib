@@ -14,8 +14,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -42,8 +48,7 @@ public class BookController {
     }
 
     @RequestMapping(method = RequestMethod.GET)
-    public @ResponseBody
-    Page<Book> getBooks(Pageable pageable) {
+    public @ResponseBody Page<Book> getBooks(Pageable pageable) {
         return bookService.getBooks(pageable);
     }
 
@@ -51,14 +56,16 @@ public class BookController {
     public @ResponseBody List<BookUploadInfo> handleFileUpload(@RequestParam("file") MultipartFile[] files)
             throws LibException, IOException {
 
-        return Arrays.stream(files).map( file->{
+        return Arrays.stream(files).map(file -> {
                     try {
                         Book book = bookService.uploadBook(file.getOriginalFilename(), file.getInputStream());
-                        return new BookUploadInfo(book.getId(),file.getOriginalFilename(), BookUploadInfo.Status.Success);
+                        return new BookUploadInfo(book.getId(), file.getOriginalFilename(), BookUploadInfo.Status.Success);
+                    } catch (AccessDeniedException e) {
+                        throw e;
                     } catch (Exception e) {
-                        log.error("unable to parse {}",file.getOriginalFilename());
-                        log.warn(e.getMessage(),e);
-                        return new BookUploadInfo(-1,file.getOriginalFilename(), BookUploadInfo.Status.Failed);
+                        log.error("unable to parse {}", file.getOriginalFilename());
+                        log.warn(e.getMessage(), e);
+                        return new BookUploadInfo(-1, file.getOriginalFilename(), BookUploadInfo.Status.Failed);
                     }
                 }
         ).collect(Collectors.toList());
@@ -70,12 +77,12 @@ public class BookController {
     }
 
     @RequestMapping(value = "/loadFile/{id}", method = RequestMethod.GET)
-    public ResponseEntity<InputStreamResource> downloadBook(@PathVariable("id") int bookId) throws LibException{
+    public ResponseEntity<InputStreamResource> downloadBook(@PathVariable("id") int bookId) throws LibException {
 
         Book book = bookService.getBook(bookId);
-        InputStream inputStream= bookService.getBookInputStream(book);
+        InputStream inputStream = bookService.getBookInputStream(book);
         HttpHeaders respHeaders = new HttpHeaders();
-        respHeaders.setContentLength(book.getSize() );
+        respHeaders.setContentLength(book.getSize());
         respHeaders.setContentDispositionFormData("attachment", book.getFileName());
         InputStreamResource isr = new InputStreamResource(inputStream);
         return new ResponseEntity<>(isr, respHeaders, HttpStatus.OK);

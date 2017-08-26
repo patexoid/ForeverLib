@@ -6,7 +6,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -17,14 +16,14 @@ import java.util.function.Function;
 /**
  *
  */
-public class Shingler implements Iterable<ShingleHash> {
+public class Shingler implements Iterable<byte[]> {
 
     private static final int PACK_SIZE = 100;
     private final Shingleable shingleable;
     private final MessageDigest digest;
 
-    private final Set<ShingleHash> shingles = new HashSet<>();
-    private final List<ShingleHash> shinglesList = new ArrayList<>();
+    private final Byte16HashSet shingles ;
+    private final List<byte[]> shinglesList = new ArrayList<>();
     private final ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     private final ShinglerConfig config = new ShinglerConfig();
@@ -33,6 +32,7 @@ public class Shingler implements Iterable<ShingleHash> {
 
      Shingler(Shingleable shingleable) throws LibException {
         this.shingleable = shingleable;
+        shingles=new Byte16HashSet(shingleable.size()/config.averageWordLength()/2);//some words will be skipped,(2 is magic number)
         try {
             digest = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException e) {
@@ -76,7 +76,7 @@ public class Shingler implements Iterable<ShingleHash> {
         while (st.hasMoreTokens()) {
             String token = st.nextToken();
             if (!config.skipWord(token)) {
-                ShingleHash shingleHash = new ShingleHash(digest.digest(shingleWords.toString().getBytes()));
+                byte[] shingleHash = this.digest.digest(shingleWords.toString().getBytes());
                 shingles.add(shingleHash);
                 shinglesList.add(shingleHash);
                 shingleWords.remove(0);
@@ -88,7 +88,7 @@ public class Shingler implements Iterable<ShingleHash> {
     }
 
     @Override
-    public Iterator<ShingleHash> iterator() {
+    public Iterator<byte[]> iterator() {
         return new ShingleHashIterator();
     }
 
@@ -103,7 +103,7 @@ public class Shingler implements Iterable<ShingleHash> {
             bigger = this;
         }
         int notmatch = smaller.shingleable.size() / config.averageWordLength() / 5;
-        for (ShingleHash shingleHash : smaller) {
+        for (byte[] shingleHash : smaller) {
             if (!bigger.contains(shingleHash)) {
                 notmatch--;
                 if (notmatch < 0) {
@@ -114,15 +114,27 @@ public class Shingler implements Iterable<ShingleHash> {
         return true;
     }
 
-    private boolean contains(ShingleHash shingleHash) {
+    private boolean contains(byte[] shingleHash) {
         if (shingles.contains(shingleHash)) {
             return true;
         } else {
-            while (shingleable.hasNext()) {
-                readNextPack();
-                if (shingles.contains(shingleHash)) {
-                    return true;
+            rwLock.readLock().lock();
+            try {
+                while (shingleable.hasNext()) {
+                    rwLock.readLock().unlock();
+                    rwLock.writeLock().lock();
+                    try {
+                        readNextPack();
+                    } finally {
+                        rwLock.writeLock().unlock();
+                        rwLock.readLock().lock();
+                    }
+                    if (shingles.contains(shingleHash)) {
+                        return true;
+                    }
                 }
+            } finally {
+                rwLock.readLock().unlock();
             }
         }
         return false;
@@ -132,7 +144,7 @@ public class Shingler implements Iterable<ShingleHash> {
     //TODO make interface and support multi language
     private static class ShinglerConfig {
 
-        private static Set<String> SKIP_WORDS = new HashSet<>(Arrays.asList(
+        private static Set<String> SKIP_WORDS = new java.util.HashSet<>(Arrays.asList(
                 "это", "как", "так", "и", "в", "над", "к", "до", "не", "на", "но",
                 "за", "то", "с", "ли", "а", "во", "от", "со", "для", "о", "же", "ну",
                 "вы", "что", "кто'", "он", "она", " "));
@@ -161,26 +173,26 @@ public class Shingler implements Iterable<ShingleHash> {
 
     }
 
-    private class ShingleHashIterator implements Iterator<ShingleHash> {
+    private class ShingleHashIterator implements Iterator<byte[]> {
         int position = 1;
-        ShingleHash next;
+        byte[] next;
 
         public ShingleHashIterator() {
-            if(shinglesList.isEmpty()){
+            if (shinglesList.isEmpty()) {
                 readNextPack();
             }
-            if(!shinglesList.isEmpty()){
+            if (!shinglesList.isEmpty()) {
                 next = shinglesList.get(0);
             }
         }
 
         @Override
         public boolean hasNext() {
-            return next!=null;
+            return next != null;
         }
 
         @Override
-        public ShingleHash next() {
+        public byte[] next() {
             rwLock.readLock().lock();
             try {
                 if (position >= shinglesList.size()) {
@@ -195,9 +207,9 @@ public class Shingler implements Iterable<ShingleHash> {
                         rwLock.readLock().lock();
                     }
                 }
-                ShingleHash next0=next;
-                if(position >= shinglesList.size()){
-                    next=null;
+                byte[] next0 = next;
+                if (position >= shinglesList.size()) {
+                    next = null;
                 } else {
                     next = shinglesList.get(position++);
                 }
