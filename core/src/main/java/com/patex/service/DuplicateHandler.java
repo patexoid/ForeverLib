@@ -1,6 +1,7 @@
 package com.patex.service;
 
 
+import com.patex.LibException;
 import com.patex.entities.Author;
 import com.patex.entities.AuthorBook;
 import com.patex.entities.Book;
@@ -12,6 +13,7 @@ import com.patex.entities.ZUser;
 import com.patex.messaging.MessengerService;
 import com.patex.parser.ParserService;
 import com.patex.storage.StorageService;
+import com.patex.utils.BlockingExecutor;
 import com.patex.utils.shingle.ShingleMatcher;
 import com.patex.utils.shingle.Shingleable;
 import org.apache.commons.lang3.StringUtils;
@@ -20,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
 
@@ -33,7 +36,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadFactory;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static com.patex.service.ZUserService.ADMIN_AUTHORITY;
@@ -43,7 +48,6 @@ public class DuplicateHandler {
 
     private static Logger log = LoggerFactory.getLogger(DuplicateHandler.class);
 
-
     private final BookCheckQueueRepository bookCheckQueueRepo;
     private final TransactionService transactionService;
     private final BookService bookService;
@@ -51,11 +55,10 @@ public class DuplicateHandler {
     private final StorageService fileStorage;
     private final ParserService parserService;
     private final ShingleMatcher<Book, Long> shingleMatcher = new ShingleMatcher<>(ShingleableBook::new, Book::getId);
+    private final ExecutorService scheduleExecutor;
 
-
-    private static final AtomicInteger count = new AtomicInteger(0);
-
-    private final ExecutorService executor;
+    private final Semaphore lock = new Semaphore(0);
+    private int threadCount;
 
     @Autowired
     public DuplicateHandler(BookCheckQueueRepository bookCheckQueueRepo, TransactionService transactionService,
@@ -71,32 +74,58 @@ public class DuplicateHandler {
 
         if (threadCount == 0) {
             int availableProcessors = Runtime.getRuntime().availableProcessors();
-            threadCount = availableProcessors > 1 ? availableProcessors / 2 : 1;
+            this.threadCount = threadCount;
+            this.threadCount = availableProcessors > 1 ? availableProcessors / 2 : 1;
         }
-        executor = Executors.newFixedThreadPool(threadCount,
-                r -> {
-                    Thread thread = new Thread(r);
-                    thread.setName("DuplicateHandler-" + count.getAndIncrement());
-                    thread.setDaemon(true);
-                    thread.setUncaughtExceptionHandler((t, e) -> log.error(e.getMessage(), e));
-                    return thread;
-                });
+        scheduleExecutor = Executors.newSingleThreadExecutor(createThreadFactory(() -> "scheduleExecutor"));
+    }
+
+    private ThreadFactory createThreadFactory(Supplier<String> supplier) {
+        return r -> {
+            Thread thread = new Thread(r);
+            thread.setName(supplier.get());
+            thread.setDaemon(true);
+            thread.setUncaughtExceptionHandler((t, e) -> log.error(e.getMessage(), e));
+            return thread;
+        };
     }
 
     @PostConstruct
     public void postConstruct() {
         Thread scheduler = new Thread(() -> {
-            Iterable<BookCheckQueue> checkQueue = bookCheckQueueRepo.findAll();
-            for (BookCheckQueue bookCheckQueue : checkQueue) {
-                log.trace("scheduleCheck book1={} book2={} id={}",
-                        bookCheckQueue.getBook1().getTitle(), bookCheckQueue.getBook2().getTitle(), bookCheckQueue.getId());
-                addCheckTask(bookCheckQueue);
+            try {
+                infiniteQueue();
+            } catch (InterruptedException e) {
+                log.error(e.getMessage(), e);
             }
+
         });
-        scheduler.setName("initital duplicate handler scheduler");
+        scheduler.setName("Duplicate handler scheduler");
         scheduler.setDaemon(true);
         scheduler.setUncaughtExceptionHandler((t, e) -> log.error(e.getMessage(), e));
         scheduler.start();
+    }
+
+    private void infiniteQueue() throws InterruptedException {
+        long lastId = 0;
+        int excutorQueueSize = threadCount * 5;
+        int pageSize = threadCount * 10;
+        BlockingExecutor<BookCheckQueue, BookCheckQueue> be =
+                new BlockingExecutor<>(threadCount, excutorQueueSize,
+                        bcq -> transactionService.transactionRequired(() -> checkForDuplicate(bcq))
+                );
+        //noinspection InfiniteLoopStatement
+        while (true) {
+            List<BookCheckQueue> checkQueue = bookCheckQueueRepo.
+                    findAllByIdGreaterThanOrderByIdAsc(new PageRequest(0, pageSize), lastId).getContent();
+            if (checkQueue.isEmpty()) {
+                lock.acquire();
+                lock.drainPermits();
+            } else {
+                lastId = checkQueue.get(checkQueue.size()-1).getId();
+                be.submitAll(checkQueue);
+            }
+        }
     }
 
     @Secured(ADMIN_AUTHORITY)
@@ -118,11 +147,9 @@ public class DuplicateHandler {
 
     @EventListener
     public void onBookCreation(BookCreationEvent event) {
-        executor.execute(() -> {
-            List<BookCheckQueue> bookCheckQueues = transactionService.transactionRequired(() -> scheduleCheck(event));
-            for (BookCheckQueue bookCheck : bookCheckQueues) {
-                addCheckTask(bookCheck);
-            }
+        scheduleExecutor.execute(() -> {
+            if (!transactionService.transactionRequired(() -> scheduleCheck(event)).isEmpty())
+                lock.release();
         });
     }
 
@@ -153,31 +180,23 @@ public class DuplicateHandler {
 
     }
 
-    private void addCheckTask(BookCheckQueue bookCheckQueue) {
-        executor.execute(() -> transactionService.newTransaction(() -> checkForDuplicate(bookCheckQueue)));
-    }
-
-    private void checkForDuplicate(BookCheckQueue bookCheckQueue) {
-        Book first = bookService.getBook(bookCheckQueue.getBook1().getId());
-        Book second = bookService.getBook(bookCheckQueue.getBook2().getId());
-        log.trace("START scheduleCheck book1={} book2={}",
-                bookCheckQueue.getBook1().getTitle(), bookCheckQueue.getBook2().getTitle(), bookCheckQueue.getId());
+    private BookCheckQueue checkForDuplicate(BookCheckQueue bookCheckQueue) {
         try {
+            Book first = bookService.getBook(bookCheckQueue.getBook1().getId());
+            Book second = bookService.getBook(bookCheckQueue.getBook2().getId());
             if (shingleMatcher.isSimilar(first, second)) {
                 markDuplications(first, second, bookCheckQueue.getUser());
             }
-            log.trace("DONE scheduleCheck book1={} book2={} id={}",
-                    bookCheckQueue.getBook1().getTitle(), bookCheckQueue.getBook2().getTitle(), bookCheckQueue.getId());
             bookCheckQueueRepo.delete(bookCheckQueue.getId());
-
+            return bookCheckQueue;
         } catch (Exception e) {
-            log.error("Duplication check exception book " +
-                    " first.id= " + first.getId() +
-                    " first.title = " + first.getTitle() +
-                    " first.filename" + first.getFileName() +
-                    "\n second.id= " + second.getId() +
-                    " second.title = " + second.getTitle() +
-                    " second.filename" + second.getFileName() +
+            throw new LibException("Duplication check exception book " +
+                    " first.id= " + bookCheckQueue.getBook1().getId() +
+                    " first.title = " + bookCheckQueue.getBook1().getTitle() +
+                    " first.filename" + bookCheckQueue.getBook1().getFileName() +
+                    "\n second.id= " + bookCheckQueue.getBook2().getId() +
+                    " second.title = " + bookCheckQueue.getBook2().getTitle() +
+                    " second.filename" + bookCheckQueue.getBook2().getFileName() +
                     " exception=" + e.getMessage(), e);
         }
     }
@@ -258,4 +277,6 @@ public class DuplicateHandler {
             }
         }
     }
+
+
 }
