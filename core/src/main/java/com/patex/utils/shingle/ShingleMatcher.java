@@ -13,7 +13,7 @@ import java.util.function.Function;
 public class ShingleMatcher<T, ID> {
 
     private final Cache<ID, Shingler> cache = CacheBuilder.newBuilder().maximumSize(100)
-            .expireAfterAccess(0, TimeUnit.HOURS).build();
+            .expireAfterAccess(1, TimeUnit.HOURS).build();
     private final Function<T, Shingleable> mapFunc;
     private final Function<T, ID> idFunc;
 
