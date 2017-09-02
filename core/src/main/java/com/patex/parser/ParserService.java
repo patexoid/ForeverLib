@@ -2,6 +2,7 @@ package com.patex.parser;
 
 import com.patex.LibException;
 import com.patex.entities.Book;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
@@ -17,6 +18,14 @@ import java.util.Map;
 public class ParserService {
 
     private Map<String, FileParser> parserMap = new HashMap<>();
+
+
+    @Autowired
+    public ParserService(FileParser... parsers) {
+        for (FileParser parser : parsers) {
+            parserMap.put(parser.getExtension(), parser);
+        }
+    }
 
     public Book getBookInfo(String fileName, InputStream stream) throws LibException {
         FileParser parser = getParser(fileName);
@@ -38,7 +47,4 @@ public class ParserService {
         return parser.getContentIterator(fileName, is);
     }
 
-    public void registerParser(FileParser fileParser) {
-        parserMap.put(fileParser.getExtension(), fileParser);
-    }
 }

@@ -3,10 +3,9 @@ package com.patex.parser;
 import com.patex.LibException;
 import com.patex.entities.Book;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.util.CloseableIterator;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,17 +19,9 @@ import java.util.zip.ZipInputStream;
 @Service
 public class ZipFileParser implements FileParser {
 
+    @Autowired()
+    @Lazy
     private ParserService parserService;
-
-    @Autowired
-    public ZipFileParser(ParserService parserService) {
-        this.parserService = parserService;
-    }
-
-    @PostConstruct
-    public void register() {
-        parserService.registerParser(this);
-    }
 
     @Override
     public String getExtension() {
@@ -65,7 +56,7 @@ public class ZipFileParser implements FileParser {
                 try {
                     zis.close();
                 } catch (IOException e) {
-                   throw new LibException(e.getMessage(), e);
+                    throw new LibException(e.getMessage(), e);
                 }
             }
 

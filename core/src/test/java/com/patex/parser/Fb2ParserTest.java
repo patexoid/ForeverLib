@@ -17,8 +17,7 @@ public class Fb2ParserTest {
 
     @Test
     public void testFb2BookParser() throws Exception {
-        Fb2FileParser fb2FileParser = new Fb2FileParser(new ParserService());
-        fb2FileParser.register();
+        Fb2FileParser fb2FileParser = new Fb2FileParser();
         InputStream resourceAsStream = getClass().getResourceAsStream("/parserTest.fb2");
         Book book = fb2FileParser.parseFile("parserTest.fb2", resourceAsStream);
         assertEquals(book.getAuthorBooks().get(0).getAuthor().getName(), "Третьевенко Первый Вторович");
@@ -35,8 +34,7 @@ public class Fb2ParserTest {
     @SuppressWarnings("ConstantConditions")
     @Test
     public void testFb2Content() throws Exception {
-        ParserService parserService = new ParserService();
-        new Fb2FileParser(parserService).register();
+        ParserService parserService = new ParserService(new Fb2FileParser());
 
         Random random = new Random();
         String content1 = Stream.generate(() -> RandomStringUtils.randomAlphabetic(1 + random.nextInt(8))).

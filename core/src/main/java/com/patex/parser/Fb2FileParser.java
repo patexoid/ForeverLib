@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
@@ -30,16 +29,8 @@ public class Fb2FileParser implements FileParser {
 
     private final XMLInputFactory factory;
 
-    private ParserService parserService;
-
-    public Fb2FileParser(ParserService parserService) {
+    public Fb2FileParser() {
         factory = XMLInputFactory.newInstance();
-        this.parserService = parserService;
-    }
-
-    @PostConstruct
-    public void register() {
-        parserService.registerParser(this);
     }
 
     @Override
