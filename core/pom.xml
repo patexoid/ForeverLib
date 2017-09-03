@@ -10,7 +10,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.5.2.RELEASE</version>
+        <version>1.5.6.RELEASE</version>
     </parent>
 
     <build>
@@ -128,7 +128,7 @@
         <dependency>
             <groupId>com.rometools</groupId>
             <artifactId>rome</artifactId>
-            <version>1.7.2</version>
+            <version>1.7.4</version>
         </dependency>
         <!--<dependency>-->
         <!--<groupId>org.springframework.boot</groupId>-->
@@ -138,6 +138,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.vaadin.external.google</groupId>
+                    <artifactId>android-json</artifactId>
+                </exclusion>
+            </exclusions>
             <scope>test</scope>
         </dependency>
 
@@ -152,7 +158,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.4</version>
+            <version>3.6</version>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
@@ -169,7 +175,7 @@
         <dependency>
             <groupId>org.telegram</groupId>
             <artifactId>telegrambots</artifactId>
-            <version>3.0.1</version>
+            <version>3.3</version>
         </dependency>
         <dependency>
             <groupId>com.patex.zombielib2</groupId>

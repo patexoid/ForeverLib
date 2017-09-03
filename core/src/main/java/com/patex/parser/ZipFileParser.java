@@ -64,6 +64,9 @@ public class ZipFileParser implements FileParser {
             public void close() {
                 try {
                     zis.close();
+                    if(iterator instanceof Closeable){
+                        ((Closeable) iterator).close();
+                    }
                 } catch (IOException e) {
                    throw new LibException(e.getMessage(), e);
                 }
@@ -81,7 +84,4 @@ public class ZipFileParser implements FileParser {
         };
     }
 
-    interface CloseableIterator extends Iterator<String>, Closeable {
-
-    }
 }

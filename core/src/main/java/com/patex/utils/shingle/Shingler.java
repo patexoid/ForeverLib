@@ -2,6 +2,8 @@ package com.patex.utils.shingle;
 
 import com.patex.LibException;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -16,28 +18,33 @@ import java.util.function.Function;
 /**
  *
  */
-public class Shingler implements Iterable<byte[]> {
+public class Shingler implements Iterable<byte[]>, Closeable {
 
     private static final int PACK_SIZE = 100;
-    private final Shingleable shingleable;
-    private final MessageDigest digest;
+    private static final MessageDigest digest;
 
-    private final Byte16HashSet shingles ;
-    private final List<byte[]> shinglesList = new ArrayList<>();
-    private final ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
-
-    private final ShinglerConfig config = new ShinglerConfig();
-
-    private List<String> shingleWords = new ArrayList<>(config.shingleSize());
-
-     Shingler(Shingleable shingleable) throws LibException {
-        this.shingleable = shingleable;
-        shingles=new Byte16HashSet(shingleable.size()/config.averageWordLength()/2);//some words will be skipped,(2 is magic number)
+    static {
         try {
             digest = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException e) {
             throw new LibException(e.getMessage(), e);
         }
+    }
+
+    private final ShinglerConfig config = new ShinglerConfig();
+
+    private final Byte16HashSet shingles;
+    private final List<byte[]> shinglesList = new ArrayList<>();
+    private final ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
+    private final List<String> shingleWords = new ArrayList<>(config.shingleSize());
+
+    private Shingleable shingleable;
+    private int size;
+
+    Shingler(Shingleable shingleable) throws LibException {
+        this.shingleable = shingleable;
+        size = shingleable.size() / config.averageWordLength();
+        shingles = new Byte16HashSet(size / 2);//some words will be skipped,(2 is magic number)
         prepare();
     }
 
@@ -47,7 +54,7 @@ public class Shingler implements Iterable<byte[]> {
 
     private void prepare() {
         int shingleSize = config.shingleSize();
-        while (shingleable.hasNext() && shingleWords.size() < shingleSize) {
+        while (isLoading() && shingleWords.size() < shingleSize) {
             readNextPack(1, st -> {
                 while (shingleWords.size() < shingleSize && st.hasMoreTokens()) {
                     String token = st.nextToken();
@@ -63,12 +70,23 @@ public class Shingler implements Iterable<byte[]> {
         }
     }
 
+    private boolean isLoading() {
+        return shingleable != null;
+    }
+
+    private void closeIfRequiered() {
+        if (isLoading() && !shingleable.hasNext()) {
+            close();
+        }
+    }
+
     private void readNextPack(int shingleCount, Function<StringTokenizer, Integer> f) {
         int i = 0;
         while (shingleable.hasNext() && i < shingleCount) {
             StringTokenizer st = new StringTokenizer(shingleable.next(), config.getDelimiters());
             i += f.apply(st);
         }
+        closeIfRequiered();
     }
 
     private int readNext(StringTokenizer st) {
@@ -95,14 +113,14 @@ public class Shingler implements Iterable<byte[]> {
 
     public boolean isSimilar(Shingler other) {
         Shingler bigger, smaller;
-        if (other.shingleable.size() > this.shingleable.size()) {
+        if (other.size > this.size) {
             bigger = other;
             smaller = this;
         } else {
             smaller = other;
             bigger = this;
         }
-        int notmatch = smaller.shingleable.size() / config.averageWordLength() / 5;
+        int notmatch = smaller.size / 5;
         for (byte[] shingleHash : smaller) {
             if (!bigger.contains(shingleHash)) {
                 notmatch--;
@@ -120,7 +138,7 @@ public class Shingler implements Iterable<byte[]> {
         } else {
             rwLock.readLock().lock();
             try {
-                while (shingleable.hasNext()) {
+                while (isLoading()) {
                     rwLock.readLock().unlock();
                     rwLock.writeLock().lock();
                     try {
@@ -140,6 +158,16 @@ public class Shingler implements Iterable<byte[]> {
         return false;
     }
 
+    @Override
+    public void close() {
+        try {
+            if (shingleable != null)
+                shingleable.close();
+            shingleable = null;
+        } catch (IOException e) {
+            throw new LibException(e);
+        }
+    }
 
     //TODO make interface and support multi language
     private static class ShinglerConfig {
@@ -199,7 +227,7 @@ public class Shingler implements Iterable<byte[]> {
                     rwLock.readLock().unlock();
                     rwLock.writeLock().lock();
                     try {
-                        if (position >= shinglesList.size()) {
+                        if (isLoading() && position >= shinglesList.size()) {
                             readNextPack();
                         }
                     } finally {

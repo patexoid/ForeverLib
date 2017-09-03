@@ -4,6 +4,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -91,6 +92,11 @@ public class ShingleComparsionTest {
             @Override
             public String next() {
                 return iterator.next();
+            }
+
+            @Override
+            public void close() throws IOException {
+
             }
         };
     }
