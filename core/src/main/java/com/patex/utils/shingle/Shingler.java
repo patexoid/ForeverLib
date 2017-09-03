@@ -21,9 +21,9 @@ import java.util.function.Function;
 public class Shingler implements Iterable<byte[]>, Closeable {
 
     private static final int PACK_SIZE = 100;
-    private static final MessageDigest digest;
+    private final MessageDigest digest;
 
-    static {
+    {
         try {
             digest = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException e) {
