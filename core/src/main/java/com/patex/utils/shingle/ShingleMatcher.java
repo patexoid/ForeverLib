@@ -12,8 +12,11 @@ import java.util.function.Function;
  */
 public class ShingleMatcher<T, ID> {
 
-    private final Cache<ID, Shingler> cache = CacheBuilder.newBuilder().maximumSize(100)
-            .expireAfterAccess(1, TimeUnit.HOURS).build();
+    private final Cache<ID, Shingler> cache =
+            CacheBuilder.newBuilder().
+                    removalListener(n -> ((Shingler)n.getValue()).close()).
+                    maximumSize(100).
+                    expireAfterAccess(1, TimeUnit.HOURS).build();
     private final Function<T, Shingleable> mapFunc;
     private final Function<T, ID> idFunc;
 
@@ -54,5 +57,9 @@ public class ShingleMatcher<T, ID> {
         } finally {
             rwLock.readLock().unlock();
         }
+    }
+
+    public void invalidate(T obj) {
+        cache.invalidate(idFunc.apply(obj));
     }
 }

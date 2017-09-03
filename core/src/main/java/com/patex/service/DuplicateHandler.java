@@ -184,7 +184,9 @@ public class DuplicateHandler {
         try {
             Book first = bookService.getBook(bookCheckQueue.getBook1().getId());
             Book second = bookService.getBook(bookCheckQueue.getBook2().getId());
-            if (shingleMatcher.isSimilar(first, second)) {
+            if (first.isDuplicate()||
+                    second.isDuplicate()||
+                    shingleMatcher.isSimilar(first, second)) {
                 markDuplications(first, second, bookCheckQueue.getUser());
             }
             bookCheckQueueRepo.delete(bookCheckQueue.getId());
@@ -221,6 +223,7 @@ public class DuplicateHandler {
 
         secondary.setDuplicate(true);
         this.bookService.updateBook(secondary);
+        shingleMatcher.invalidate(secondary);
         for (AuthorBook authorBook : secondary.getAuthorBooks()) {
             Author author = authorBook.getAuthor();
             if (!authors.contains(author.getId())) {
@@ -243,9 +246,9 @@ public class DuplicateHandler {
         this.bookService.updateBook(primary);
     }
 
-    private class ShingleableBook implements Shingleable, Closeable {
+    private class ShingleableBook implements Shingleable {
         private final Book book;
-        private final Iterator<String> contentIterator;
+        private Iterator<String> contentIterator;
         private InputStream is;
 
         ShingleableBook(Book book) {
@@ -261,7 +264,15 @@ public class DuplicateHandler {
 
         @Override
         public boolean hasNext() {
-            return contentIterator.hasNext();
+            boolean hasNext = contentIterator.hasNext();
+            if(!hasNext){
+                try {
+                    close();
+                } catch (IOException e) {
+                    log.error(e.getMessage(),e);
+                }
+            }
+            return hasNext;
         }
 
         @Override

@@ -140,7 +140,7 @@ public class Fb2FileParser implements FileParser {
     public Iterator<String> getContentIterator(String fileName, InputStream is) throws LibException {
         try {
             XMLEventReader reader = factory.createXMLEventReader(is);
-            return new Iterator<String>() {
+            return new CloseableIterator()  {
                 private String next;
 
                 {
@@ -182,6 +182,16 @@ public class Fb2FileParser implements FileParser {
                         throw new LibException(e.getMessage(), e);
                     }
                     return null;
+                }
+
+                @Override
+                public void close() throws IOException {
+                    try {
+                        reader.close();
+                    } catch (XMLStreamException e) {
+                        throw new IOException(e);
+                    }
+                    is.close();
                 }
             };
         } catch (XMLStreamException e) {
