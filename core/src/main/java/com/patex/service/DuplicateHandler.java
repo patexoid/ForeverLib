@@ -14,6 +14,7 @@ import com.patex.messaging.MessengerService;
 import com.patex.parser.ParserService;
 import com.patex.storage.StorageService;
 import com.patex.utils.BlockingExecutor;
+import com.patex.utils.StreamU;
 import com.patex.utils.shingle.ShingleMatcher;
 import com.patex.utils.shingle.Shingleable;
 import org.apache.commons.lang3.StringUtils;
@@ -71,7 +72,7 @@ public class DuplicateHandler {
         this.messenger = messenger;
         this.fileStorage = fileStorage;
         this.parserService = parserService;
-
+        this.threadCount = threadCount;
         if (threadCount == 0) {
             int availableProcessors = Runtime.getRuntime().availableProcessors();
             this.threadCount = threadCount;
@@ -122,7 +123,7 @@ public class DuplicateHandler {
                 lock.acquire();
                 lock.drainPermits();
             } else {
-                lastId = checkQueue.get(checkQueue.size()-1).getId();
+                lastId = checkQueue.get(checkQueue.size() - 1).getId();
                 be.submitAll(checkQueue);
             }
         }
@@ -148,7 +149,7 @@ public class DuplicateHandler {
     @EventListener
     public void onBookCreation(BookCreationEvent event) {
         scheduleExecutor.execute(() -> {
-            if (!transactionService.transactionRequired(() -> scheduleCheck(event)).isEmpty())
+            if (!transactionService.newTransaction(() -> scheduleCheck(event)).isEmpty())
                 lock.release();
         });
     }
@@ -158,6 +159,7 @@ public class DuplicateHandler {
         List<BookCheckQueue> bookCheckQueues = newBook.getAuthorBooks().stream().map(AuthorBook::getAuthor).
                 flatMap(a -> a.getBooks().stream().map(AuthorBook::getBook)).
                 filter(book -> !book.getId().equals(newBook.getId())).
+                filter(StreamU.distinctByKey(Book::getId)).
                 filter(book -> !book.isDuplicate()).
                 filter(book -> {
                     float min = (float) Math.min(book.getContentSize(), newBook.getContentSize());
@@ -175,7 +177,7 @@ public class DuplicateHandler {
                 filter(bcq -> !bookCheckQueueRepo.
                         existsByBook1EqualsAndBook2Equals(bcq.getBook1(), bcq.getBook2())).collect(Collectors.toList());
 
-        bookCheckQueueRepo.save(bookCheckQueues);
+        bookCheckQueues.forEach(bookCheckQueueRepo::saveAndFlush);
         return bookCheckQueues;
 
     }
@@ -184,10 +186,10 @@ public class DuplicateHandler {
         try {
             Book first = bookService.getBook(bookCheckQueue.getBook1().getId());
             Book second = bookService.getBook(bookCheckQueue.getBook2().getId());
-            if (first.isDuplicate()||
-                    second.isDuplicate()||
+            if (!first.isDuplicate() && !second.isDuplicate() &&
                     shingleMatcher.isSimilar(first, second)) {
                 markDuplications(first, second, bookCheckQueue.getUser());
+                log.trace("duplicate id=" + bookCheckQueue.getId());
             }
             bookCheckQueueRepo.delete(bookCheckQueue.getId());
             return bookCheckQueue;
@@ -265,11 +267,11 @@ public class DuplicateHandler {
         @Override
         public boolean hasNext() {
             boolean hasNext = contentIterator.hasNext();
-            if(!hasNext){
+            if (!hasNext) {
                 try {
                     close();
                 } catch (IOException e) {
-                    log.error(e.getMessage(),e);
+                    log.error(e.getMessage(), e);
                 }
             }
             return hasNext;

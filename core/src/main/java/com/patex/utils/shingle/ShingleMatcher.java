@@ -14,9 +14,9 @@ public class ShingleMatcher<T, ID> {
 
     private final Cache<ID, Shingler> cache =
             CacheBuilder.newBuilder().
-                    removalListener(n -> ((Shingler)n.getValue()).close()).
                     maximumSize(100).
-                    expireAfterAccess(1, TimeUnit.HOURS).build();
+                    softValues().
+                    expireAfterAccess(10, TimeUnit.MINUTES).build();
     private final Function<T, Shingleable> mapFunc;
     private final Function<T, ID> idFunc;
 
@@ -27,12 +27,44 @@ public class ShingleMatcher<T, ID> {
         this.idFunc = idFunc;
     }
 
-    public boolean isSimilar(T primary, T secondary) {
-        Shingler primaryShingler = getShigler(primary);
-        Shingler secondaryShingler = getShigler(secondary);
-        return primaryShingler.isSimilar(secondaryShingler);
+    public boolean isSimilar(T first, T second) {
+        Shingler firstS = getShigler(first);
+        Shingler secondS = getShigler(second);
+        boolean similar = isSimilar(firstS, secondS);
+
+        checkIsLoaded(first);
+        checkIsLoaded(second);
+        return similar;
     }
 
+    private void checkIsLoaded(T t) {
+        Shingler shigler = getShigler(t);
+        if (shigler instanceof LazyShingler && !((LazyShingler) shigler).isLoading()) {
+            cache.put(idFunc.apply(t),
+                    new LoadedShingler(((LazyShingler) shigler).getShingles(), shigler.size()));
+        }
+    }
+
+    private boolean isSimilar(Shingler first, Shingler second) {
+        Shingler bigger, smaller;
+        if (first.size() > second.size()) {
+            bigger = first;
+            smaller = second;
+        } else {
+            smaller = first;
+            bigger = second;
+        }
+        int notmatch = smaller.size() / 5;
+        for (byte[] shingleHash : smaller) {
+            if (!bigger.contains(shingleHash)) {
+                notmatch--;
+                if (notmatch < 0) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 
     private Shingler getShigler(T t) {
         ID id = idFunc.apply(t);
@@ -45,7 +77,7 @@ public class ShingleMatcher<T, ID> {
                 try {
                     shingler = cache.getIfPresent(id);
                     if (shingler == null) {
-                        shingler = new Shingler(mapFunc.apply(t));
+                        shingler = new LazyShingler(mapFunc.apply(t));
                         cache.put(id, shingler);
                     }
                 } finally {

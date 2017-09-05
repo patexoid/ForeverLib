@@ -113,4 +113,10 @@
             UPDATE BOOK SET DUPLICATE=false
         </sql>
     </changeSet>
+    <changeSet id="8" author="patex">
+        <addUniqueConstraint columnNames="BOOK1_ID, BOOK2_ID"
+                             tableName="BOOK_CHECK_QUEUE"
+                             constraintName="uk_BOOK_CHECK_QUEUE_BOOKS"/>
+
+    </changeSet>
 </databaseChangeLog>
