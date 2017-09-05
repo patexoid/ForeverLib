@@ -16,4 +16,6 @@ public interface BookCheckQueueRepository extends CrudRepository<BookCheckQueue,
     Page<BookCheckQueue> findAllByIdGreaterThanOrderByIdAsc(Pageable pageable, Long id);
 
     boolean existsByBook1EqualsAndBook2Equals(Book book1, Book book2);
+
+    BookCheckQueue saveAndFlush(BookCheckQueue bcq);
 }

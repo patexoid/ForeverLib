@@ -210,7 +210,7 @@ public class BookService {
 
     @Secured(ADMIN_AUTHORITY)
     public void prepareExisted() {
-        updateContentSize();
+//        updateContentSize();
         Iterable<Book> books = bookRepository.findAll();
         for (Book book : books) {
             if (!book.isDuplicate()) {
