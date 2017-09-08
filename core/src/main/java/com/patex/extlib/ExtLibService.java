@@ -1,6 +1,7 @@
 package com.patex.extlib;
 
 import com.patex.LibException;
+import com.patex.entities.ZUser;
 import com.patex.opds.OPDSEntryI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,10 +39,10 @@ public class ExtLibService {
     }
 
 
-    public String actionExtLibData(long libId, String action, Map<String, String> params) throws LibException {
+    public String actionExtLibData(long libId, String action, Map<String, String> params, ZUser user) throws LibException {
         log.trace("{} libid:{} params:{}", action, libId, params);
         ExtLib extLib = extLibFactory.getExtLib(libId);
-        return extLib.action(action, params);
+        return extLib.action(action, params, user);
     }
 
     @Scheduled(cron = "0 00 12 * * *")

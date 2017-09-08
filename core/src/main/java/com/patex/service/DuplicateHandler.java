@@ -24,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -41,8 +40,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import static com.patex.service.ZUserService.ADMIN_AUTHORITY;
 
 @Component
 public class DuplicateHandler {
@@ -129,7 +126,6 @@ public class DuplicateHandler {
         }
     }
 
-    @Secured(ADMIN_AUTHORITY)
     public void waitForFinish() {
         while (true) {
             long count = bookCheckQueueRepo.count();

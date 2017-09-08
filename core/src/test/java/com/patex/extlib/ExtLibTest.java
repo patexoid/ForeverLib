@@ -4,18 +4,18 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.patex.entities.Book;
 import com.patex.entities.ExtLibrary;
 import com.patex.entities.SavedBookRepository;
+import com.patex.entities.ZUser;
 import com.patex.messaging.MessengerService;
 import com.patex.opds.OPDSEntryI;
 import com.patex.opds.OPDSLink;
 import com.patex.service.BookService;
-import com.patex.service.ZUserService;
 import com.rometools.rome.feed.synd.SyndContentImpl;
 import com.rometools.rome.feed.synd.SyndEntryImpl;
 import com.rometools.rome.feed.synd.SyndFeedImpl;
 import com.rometools.rome.feed.synd.SyndLinkImpl;
 import com.rometools.rome.io.SyndFeedOutput;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
+import org.apache.commons.text.RandomStringGenerator;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -51,13 +51,17 @@ public class ExtLibTest {
     private SyndContentImpl syndContent;
     private SyndEntryImpl syndEntry;
     private ExtLibrary extLibrary;
+    private RandomStringGenerator rsg = new RandomStringGenerator.Builder()
+            .withinRange('a', 'z').build();
+
 
     @Before
+
     public void setUp() throws Exception {
 
-        url = "http://" + RandomStringUtils.randomAlphabetic(10);
-        uri = RandomStringUtils.randomAlphabetic(10);
-        opdsPath = RandomStringUtils.randomAlphabetic(10);
+        url = "http://" + rsg.generate(10);
+        uri = rsg.generate(10);
+        opdsPath = rsg.generate(10);
 
         extLibrary = new ExtLibrary();
         extLibrary.setUrl(url);
@@ -67,20 +71,20 @@ public class ExtLibTest {
         extLib = createExtLib(extLibrary);
 
         syndFeed = new SyndFeedImpl();
-        syndFeed.setTitle(RandomStringUtils.randomAlphabetic(10));
+        syndFeed.setTitle(rsg.generate(10));
         syndEntry = new SyndEntryImpl();
-        syndEntry.setUri(RandomStringUtils.randomAlphabetic(10));
-        syndEntry.setTitle(RandomStringUtils.randomAlphabetic(10));
+        syndEntry.setUri(rsg.generate(10));
+        syndEntry.setTitle(rsg.generate(10));
 
         syndLink = new SyndLinkImpl();
         syndLink.setType("profile=opds-catalog");
-        syndLink.setHref(RandomStringUtils.randomAlphabetic(10));
-        syndLink.setRel(RandomStringUtils.randomAlphabetic(10));
+        syndLink.setHref(rsg.generate(10));
+        syndLink.setRel(rsg.generate(10));
         syndEntry.setLinks(Collections.singletonList(syndLink));
 
         syndContent = new SyndContentImpl();
-        syndContent.setType(RandomStringUtils.randomAlphabetic(10));
-        syndContent.setValue(RandomStringUtils.randomAlphabetic(10));
+        syndContent.setType(rsg.generate(10));
+        syndContent.setValue(rsg.generate(10));
         syndContent.setMode("xml");
         syndEntry.setContents(Collections.singletonList(syndContent));
 
@@ -112,8 +116,8 @@ public class ExtLibTest {
     public void testGetDataFeedWithFB2() throws Exception {
         SyndLinkImpl syndLink = new SyndLinkImpl();
         syndLink.setType("application/fb2");
-        syndLink.setHref(RandomStringUtils.randomAlphabetic(10));
-        syndLink.setRel(RandomStringUtils.randomAlphabetic(10));
+        syndLink.setHref(rsg.generate(10));
+        syndLink.setRel(rsg.generate(10));
         syndEntry.setLinks(Collections.singletonList(syndLink));
 
         HashMap<String, String> map = new HashMap<>();
@@ -140,7 +144,7 @@ public class ExtLibTest {
 
         SyndLinkImpl syndLinkNext = new SyndLinkImpl();
         syndLinkNext.setRel(ExtLib.REL_NEXT);
-        syndLinkNext.setHref(RandomStringUtils.randomAlphabetic(10));
+        syndLinkNext.setHref(rsg.generate(10));
         syndLinkNext.setType("profile=opds-catalog");
         syndFeed.setLinks(Collections.singletonList(syndLinkNext));
 
@@ -176,66 +180,66 @@ public class ExtLibTest {
 
     @Test
     public void testDownloadAllAction() throws Exception {
-        String uri1 = "book1_" + RandomStringUtils.randomAlphabetic(10);
-        String uri2 = "book2_" + RandomStringUtils.randomAlphabetic(10);
+        String uri1 = "book1_" + rsg.generate(10);
+        String uri2 = "book2_" + rsg.generate(10);
 
 
         SyndEntryImpl syndEntry1 = new SyndEntryImpl();
-        syndEntry1.setUri(RandomStringUtils.randomAlphabetic(10));
-        syndEntry1.setTitle("First:" + RandomStringUtils.randomAlphabetic(10));
+        syndEntry1.setUri(rsg.generate(10));
+        syndEntry1.setTitle("First:" + rsg.generate(10));
 
         SyndLinkImpl syndLink1 = new SyndLinkImpl();
         syndLink1.setType(ExtLib.FB2_TYPE);
         syndLink1.setHref(uri1);
-        syndLink1.setRel(RandomStringUtils.randomAlphabetic(10));
+        syndLink1.setRel(rsg.generate(10));
         syndEntry1.setLinks(Collections.singletonList(syndLink1));
 
         SyndContentImpl syndContent1 = new SyndContentImpl();
-        syndContent1.setType(RandomStringUtils.randomAlphabetic(10));
-        syndContent1.setValue(RandomStringUtils.randomAlphabetic(10));
+        syndContent1.setType(rsg.generate(10));
+        syndContent1.setValue(rsg.generate(10));
         syndContent1.setMode("xml");
         syndEntry1.setContents(Collections.singletonList(syndContent1));
 
 
         SyndEntryImpl syndEntry2 = new SyndEntryImpl();
-        syndEntry2.setUri(RandomStringUtils.randomAlphabetic(10));
-        syndEntry2.setTitle("Second:" + RandomStringUtils.randomAlphabetic(10));
+        syndEntry2.setUri(rsg.generate(10));
+        syndEntry2.setTitle("Second:" + rsg.generate(10));
 
         SyndLinkImpl syndLink2 = new SyndLinkImpl();
         syndLink2.setType(ExtLib.FB2_TYPE);
         syndLink2.setHref(uri2);
-        syndLink2.setRel(RandomStringUtils.randomAlphabetic(10));
+        syndLink2.setRel(rsg.generate(10));
         syndEntry2.setLinks(Collections.singletonList(syndLink2));
 
         SyndContentImpl syndContent2 = new SyndContentImpl();
-        syndContent2.setType(RandomStringUtils.randomAlphabetic(10));
-        syndContent2.setValue(RandomStringUtils.randomAlphabetic(10));
+        syndContent2.setType(rsg.generate(10));
+        syndContent2.setValue(rsg.generate(10));
         syndContent2.setMode("xml");
         syndEntry2.setContents(Collections.singletonList(syndContent2));
 
         connectionService =
                 spy(new ExtLibConnection(url, "", null, null, null, 0, null,
                         MoreExecutors.newDirectExecutorService()));
-        extLib.connection=connectionService;
+        extLib.connection = connectionService;
         URLConnection urlConnection1 = mock(URLConnection.class);
-        String fileName1 = RandomStringUtils.randomAlphabetic(10);
+        String fileName1 = rsg.generate(10);
         when(urlConnection1.getHeaderField("Content-Disposition")).thenReturn("attachment; filename=\"" + fileName1 + "\"");
         InputStream isMock1 = mock(InputStream.class);
         when(urlConnection1.getInputStream()).thenReturn(isMock1);
         Book book1 = new Book();
         book1.setId(RandomUtils.nextLong(0, 1000));
-        when(bookService.uploadBook(fileName1, isMock1)).thenReturn(book1);
+        when(bookService.uploadBook(eq(fileName1), eq(isMock1), any(ZUser.class))).thenReturn(book1);
         when(connectionService.getConnection(url + uri1)).thenReturn(urlConnection1);
 
 
         URLConnection urlConnection2 = mock(URLConnection.class);
-        String fileName2 = RandomStringUtils.randomAlphabetic(10);
+        String fileName2 = rsg.generate(10);
         when(urlConnection2.getHeaderField("Content-Disposition")).thenReturn("attachment; filename=\"" + fileName2 + "\"");
         InputStream isMock2 = mock(InputStream.class);
         when(urlConnection2.getInputStream()).thenReturn(isMock2);
         Book book2 = new Book();
         book2.setId(RandomUtils.nextLong(0, 1000));
-        when(bookService.uploadBook(fileName2, isMock2)).thenReturn(book2);
+        when(bookService.uploadBook(eq(fileName2), eq(isMock2), any(ZUser.class))).thenReturn(book2);
         when(connectionService.getConnection(url + uri2)).thenReturn(urlConnection2);
 
         syndFeed.setEntries(Arrays.asList(syndEntry1, syndEntry2));
@@ -249,14 +253,15 @@ public class ExtLibTest {
 
         extLib = createExtLib(extLibrary);
         HashMap<String, String> params = new HashMap<>();
-        String type = RandomStringUtils.randomAlphabetic(10);
+        String type = rsg.generate(10);
         params.put(ExtLib.PARAM_TYPE, type);
         params.put(ExtLib.REQUEST_P_NAME, this.uri);
         bais.reset();
-        extLib.action(ExtLib.ACTION_DOWNLOAD_ALL, params);
+        ZUser user = new ZUser();
+        extLib.action(ExtLib.ACTION_DOWNLOAD_ALL, params, user);
         Thread.sleep(3000);
-        verify(bookService, times(1)).uploadBook(fileName1, isMock1);
-        verify(bookService, times(1)).uploadBook(fileName2, isMock2);
+        verify(bookService, times(1)).uploadBook(fileName1, isMock1, user);
+        verify(bookService, times(1)).uploadBook(fileName2, isMock2, user);
         verifyNoMoreInteractions(bookService);
     }
 
@@ -265,7 +270,6 @@ public class ExtLibTest {
         ReflectionTestUtils.setField(extLib, "connection", connectionService);
         ReflectionTestUtils.setField(extLib, "bookService", bookService);
         ReflectionTestUtils.setField(extLib, "messengerService", mock(MessengerService.class));
-        ReflectionTestUtils.setField(extLib, "userService", mock(ZUserService.class));
         ReflectionTestUtils.setField(extLib, "savedBookRepo", mock(SavedBookRepository.class));
         ReflectionTestUtils.setField(extLib, "executor", MoreExecutors.newDirectExecutorService());
         return extLib;
@@ -273,25 +277,26 @@ public class ExtLibTest {
 
     @Test
     public void testDownloadAction() throws Exception {
-        String uri = RandomStringUtils.randomAlphabetic(10);
-        connectionService =  spy(new ExtLibConnection(url, "", null, null, null, 0, null,
+        String uri = rsg.generate(10);
+        connectionService = spy(new ExtLibConnection(url, "", null, null, null, 0, null,
                 MoreExecutors.newDirectExecutorService()));
         extLib = createExtLib(extLibrary);
         URLConnection urlConnection = mock(URLConnection.class);
-        String fileName = RandomStringUtils.randomAlphabetic(10);
+        String fileName = rsg.generate(10);
         when(urlConnection.getHeaderField("Content-Disposition")).thenReturn("attachment; filename=\"" + fileName + "\"");
         InputStream isMock = mock(InputStream.class);
         when(urlConnection.getInputStream()).thenReturn(isMock);
         Book book = new Book();
         book.setId(RandomUtils.nextLong(0, 1000));
-        when(bookService.uploadBook(fileName, isMock)).thenReturn(book);
+        ZUser user = new ZUser();
+        when(bookService.uploadBook(fileName, isMock, user)).thenReturn(book);
         when(connectionService.getConnection(url + uri)).thenReturn(urlConnection);
         HashMap<String, String> params = new HashMap<>();
-        String type = RandomStringUtils.randomAlphabetic(10);
+        String type = rsg.generate(10);
         params.put(ExtLib.PARAM_TYPE, type);
         params.put(ExtLib.REQUEST_P_NAME, uri);
-        extLib.action(ExtLib.ACTION_DOWNLOAD, params);
-        verify(bookService, only()).uploadBook(fileName, isMock);
+        extLib.action(ExtLib.ACTION_DOWNLOAD, params, user);
+        verify(bookService, only()).uploadBook(fileName, isMock, user);
     }
 
     private void checkLync(SyndLinkImpl syndLink, OPDSLink link) {

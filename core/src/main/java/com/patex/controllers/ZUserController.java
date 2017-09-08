@@ -5,6 +5,7 @@ import com.patex.entities.ZUser;
 import com.patex.entities.ZUserConfig;
 import com.patex.service.ZUserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
@@ -18,6 +19,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import static com.patex.service.ZUserService.USER;
+
 /**
  * Created by Alexey on 25.03.2017.
  */
@@ -30,6 +33,7 @@ public class ZUserController {
 
 
     @RequestMapping(method = RequestMethod.POST)
+    @Secured(USER)
     public ZUser save(ZUser user) {
         return userDetailsService.save(user);
     }
@@ -43,6 +47,7 @@ public class ZUserController {
 
 
     @RequestMapping(value = "/updatePassword", method = RequestMethod.POST)
+    @Secured(USER)
     public void updatePassword(@RequestParam("old") String oldPassword, @RequestParam("new") String newPassword)
             throws LibException {
         userDetailsService.updatePassword(oldPassword, newPassword);
@@ -63,6 +68,7 @@ public class ZUserController {
     }
 
     @RequestMapping(value = "/updateConfig", method = RequestMethod.GET)
+    @Secured(USER)
     public void updateUserConfig(ZUserConfig newConfig) {
         userDetailsService.updateUserConfig(newConfig);
     }
