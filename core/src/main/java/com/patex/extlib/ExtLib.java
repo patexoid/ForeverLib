@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -76,8 +75,6 @@ public class ExtLib {
     private static Logger log = LoggerFactory.getLogger(ExtLibrary.class);
     private final Cache<String, Book> bookCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
     private final ExtLibrary extLibrary;
-    @Autowired
-    ZUserService userService;
 
     ExecutorService executor = Executors.newCachedThreadPool(r -> {
         AtomicInteger count = new AtomicInteger();
@@ -86,7 +83,7 @@ public class ExtLib {
         thread.setDaemon(true);
         return thread;
     });
-
+    ExtLibConnection connection;
     @Autowired
     private MessengerService messengerService;
     @Autowired
@@ -98,8 +95,6 @@ public class ExtLib {
     @Autowired
 
     private BookService bookService;
-
-    ExtLibConnection connection;
 
     public ExtLib(ExtLibrary extLibrary) {
         this.extLibrary = extLibrary;
@@ -174,18 +169,16 @@ public class ExtLib {
         return connection.getData(uri, function);
     }
 
-    @Secured(ZUserService.USER)
-    public String action(String action, Map<String, String> params) throws LibException {
+    public String action(String action, Map<String, String> params, ZUser user) throws LibException {
         if (ACTION_DOWNLOAD.equals(action)) {
-            Book book = downloadFromExtLib(params.get(PARAM_TYPE), params.get(REQUEST_P_NAME));
+            Book book = downloadFromExtLib(params.get(PARAM_TYPE), params.get(REQUEST_P_NAME), user);
             return "/book/loadFile/" + book.getId();
         } else if (ACTION_DOWNLOAD_ALL.equals(action)) {
             String uri = params.get(REQUEST_P_NAME);
-            ZUser user = userService.getCurrentUser();
             executor.execute(() -> downloadAll(user, uri));
             return ExtLibOPDSEntry.mapToUri("?", uri);
         } else if (ACTION_SUBSCRIBE.equals(action)) {
-            return addSubscription(params.get(REQUEST_P_NAME));
+            return addSubscription(params.get(REQUEST_P_NAME), user);
         } else if (ACTION_UNSUBSCRIBE.equals(action)) {
             return deleteSubscription(params.get("id"), params.get(REQUEST_P_NAME));
         }
@@ -200,11 +193,10 @@ public class ExtLib {
         return ExtLibOPDSEntry.mapToUri("?", uri);
     }
 
-    private String addSubscription(String uri) throws LibException {
+    private String addSubscription(String uri, ZUser user) throws LibException {
         Predicate<Subscription> uriFilter = subscription -> uri.equals(subscription.getLink());
         if (extLibrary.getSubscriptions().stream().
                 noneMatch(uriFilter)) {
-            ZUser user = userService.getCurrentUser();
             Subscription saved = subscriptionRepo.save(new Subscription(extLibrary, uri, user));
             extLibrary.getSubscriptions().add(saved);
             executor.execute(() -> checkSubscription(saved));
@@ -228,7 +220,7 @@ public class ExtLib {
 
     public void downloadAll(ZUser user, String uri) {
         try {
-            downloadAll(getEntries(uri)).ifPresent(
+            downloadAll(getEntries(uri), user).ifPresent(
                     result -> messengerService.sendMessageToUser("Download " + result.getResultMessage(), user)
             );
         } catch (LibException e) {
@@ -236,11 +228,11 @@ public class ExtLib {
         }
     }
 
-    private Optional<DownloadAllResult> downloadAll(List<OPDSEntryI> entryStream) {
-        return entryStream.stream().map(this::download).reduce(DownloadAllResult::concat);
+    private Optional<DownloadAllResult> downloadAll(List<OPDSEntryI> entryStream, ZUser user) {
+        return entryStream.stream().map(entry -> download(entry, user)).reduce(DownloadAllResult::concat);
     }
 
-    private DownloadAllResult download(OPDSEntryI entry) {
+    private DownloadAllResult download(OPDSEntryI entry, ZUser user) {
         List<OPDSLink> links = entry.getLinks().stream().
                 filter(link -> link.getType().contains(FB2_TYPE)).collect(Collectors.toList());
         List<String> authors = entry.getAuthors().orElse(Collections.emptyList()).stream().
@@ -255,7 +247,7 @@ public class ExtLib {
             return DownloadAllResult.empty(authors, entry.getTitle());
         } else {
             try {
-                Book book = downloadFromExtLib("fb2", extractExtUri(links.get(0).getHref()).orElse(""));
+                Book book = downloadFromExtLib("fb2", extractExtUri(links.get(0).getHref()).orElse(""), user);
                 return DownloadAllResult.success(authors, book);
             } catch (LibException e) {
                 log.error(e.getMessage(), e);
@@ -264,15 +256,15 @@ public class ExtLib {
         }
     }
 
-    private Book downloadFromExtLib(String type, String uri) throws LibException {
+    private Book downloadFromExtLib(String type, String uri, ZUser user) throws LibException {
         try {
-            return bookCache.get(uri,() ->  connection.getData(uri, conn -> downloadBook(type, uri, conn)));
+            return bookCache.get(uri, () -> connection.getData(uri, conn -> downloadBook(type, uri, conn, user)));
         } catch (ExecutionException e) {
-            throw new LibException(e.getMessage(),e);
+            throw new LibException(e.getMessage(), e);
         }
     }
 
-    private Book downloadBook(String type, String uri, URLConnection conn) throws LibException, IOException {
+    private Book downloadBook(String type, String uri, URLConnection conn, ZUser user) throws LibException, IOException {
         String contentDisposition = conn.getHeaderField("Content-Disposition");
         String fileName;
         if (contentDisposition != null) {
@@ -286,7 +278,7 @@ public class ExtLib {
         } else {
             fileName = UUID.randomUUID().toString() + "." + type;
         }
-        Book book = bookService.uploadBook(fileName, conn.getInputStream());
+        Book book = bookService.uploadBook(fileName, conn.getInputStream(), user);
         savedBookRepo.save(new SavedBook(extLibrary, uri));
         return book;
     }
@@ -312,7 +304,7 @@ public class ExtLib {
                             filter(Optional::isPresent).map(Optional::get).noneMatch(saved::contains)
                     ).collect(Collectors.toList());
 
-            downloadAll(newEntries).
+            downloadAll(newEntries, subscription.getUser()).
                     filter(DownloadAllResult::hasResult).
                     ifPresent(
                             result -> messengerService.

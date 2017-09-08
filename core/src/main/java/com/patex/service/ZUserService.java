@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -31,10 +30,8 @@ public class ZUserService implements UserDetailsService {
     public static final String GUEST = "GUEST";
     public static final String USER = "ROLE_USER";
     public static final String ADMIN_AUTHORITY = "ROLE_ADMIN";
-    private final ZUser anonim = new ZUser("anonimus", true);
-
     private static Logger log = LoggerFactory.getLogger(ZUserService.class);
-
+    private final ZUser anonim = new ZUser("anonimus", true);
     @Autowired
     private ZUserRepository userRepo;
 
@@ -60,7 +57,6 @@ public class ZUserService implements UserDetailsService {
         return anonim;
     }
 
-    @Secured(USER)
     public ZUser save(ZUser user) {
         ZUser currentUser = getCurrentUser();
         if (currentUser.getUsername().equals(user.getUsername()) ||
@@ -75,7 +71,7 @@ public class ZUserService implements UserDetailsService {
 
     public ZUser createUser(ZUser user) {
         user.getAuthorities().add(new ZUserAuthority(user, USER));
-        if(getByRole(ADMIN_AUTHORITY).isEmpty()){
+        if (getByRole(ADMIN_AUTHORITY).isEmpty()) {
             user.getAuthorities().add(new ZUserAuthority(user, ADMIN_AUTHORITY));
         }
         user.setEnabled(true);
@@ -83,7 +79,6 @@ public class ZUserService implements UserDetailsService {
         return userRepo.save(user);
     }
 
-    @Secured(USER)
     public void updatePassword(String oldPassword, String newPassword) throws LibException {
         ZUser currentUser = getCurrentUser();
         if (currentUser == anonim) {
@@ -97,14 +92,12 @@ public class ZUserService implements UserDetailsService {
         userRepo.save(user);
     }
 
-    @Secured(USER)
     public void updateUserConfig(ZUserConfig newConfig) {
         updateUserConfig(getCurrentUser(), newConfig);
     }
 
 
-    @Secured(USER)
-    public void updateUserConfig(ZUser user, ZUserConfig newConfig) {
+    private void updateUserConfig(ZUser user, ZUserConfig newConfig) {
 
         ZUserConfig userConfig = user.getUserConfig();
         if (userConfig == null) {

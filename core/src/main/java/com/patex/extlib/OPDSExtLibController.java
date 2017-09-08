@@ -3,7 +3,9 @@ package com.patex.extlib;
 import com.patex.LibException;
 import com.patex.opds.OPDSController;
 import com.patex.opds.SaveLatest;
+import com.patex.service.ZUserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,13 +16,14 @@ import javax.annotation.PostConstruct;
 import java.util.Map;
 
 import static com.patex.opds.OPDSController.*;
+import static com.patex.service.ZUserService.USER;
 
 /**
  *
  */
 @Controller
-@RequestMapping(ExtLibController.OPDS_EXT_LIB)
-public class ExtLibController {
+@RequestMapping(OPDSExtLibController.OPDS_EXT_LIB)
+public class OPDSExtLibController {
 
     private static final String EXT_LIB = "extLib";
     static final String OPDS_EXT_LIB = "/" + PREFIX + "/" + EXT_LIB;
@@ -29,11 +32,15 @@ public class ExtLibController {
     private ExtLibService extLibService;
 
     @Autowired
-    private OPDSController opdsController2;
+    private OPDSController opdsController;
+
+
+    @Autowired
+    private ZUserService userService;
 
     @PostConstruct
     public void setUp() {
-        opdsController2.addRoot(createEntry("root:libraries", "Библиотеки", OPDS_EXT_LIB));
+        opdsController.addRoot(createEntry("root:libraries", "Библиотеки", OPDS_EXT_LIB));
     }
 
     @RequestMapping(produces = APPLICATION_ATOM_XML)
@@ -50,11 +57,12 @@ public class ExtLibController {
     }
 
     @RequestMapping(value = "{id}/action/{action}")
+    @Secured(USER)
     public String actionExtLibData(@PathVariable(value = "id") long id,
                                    @PathVariable(value = "action") String action,
                                    @RequestParam(required = false) Map<String, String> requestParams) throws LibException {
 
-        String redirect = extLibService.actionExtLibData(id, action, requestParams);
+        String redirect = extLibService.actionExtLibData(id, action, requestParams, userService.getCurrentUser());
         return "redirect:" + redirect;
     }
 

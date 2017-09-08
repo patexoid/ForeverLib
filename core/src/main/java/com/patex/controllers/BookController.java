@@ -5,6 +5,7 @@ import com.patex.LibException;
 import com.patex.entities.Book;
 import com.patex.service.BookService;
 import com.patex.service.DuplicateHandler;
+import com.patex.service.ZUserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,6 +32,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.patex.service.ZUserService.ADMIN_AUTHORITY;
+import static com.patex.service.ZUserService.USER;
+
 @Controller
 @RequestMapping("/book")
 public class BookController {
@@ -42,6 +47,9 @@ public class BookController {
     @Autowired
     private DuplicateHandler duplicateHandler;
 
+    @Autowired
+    private ZUserService userService;
+
     @RequestMapping(value = "/{id}" , method = RequestMethod.GET)
     public @ResponseBody Book getBook(@PathVariable(value = "id") long id) {
         return bookService.getBook(id);
@@ -53,12 +61,14 @@ public class BookController {
     }
 
     @RequestMapping(method = RequestMethod.POST, value = "/upload")
+    @Secured(USER)
     public @ResponseBody List<BookUploadInfo> handleFileUpload(@RequestParam("file") MultipartFile[] files)
             throws LibException, IOException {
 
         return Arrays.stream(files).map(file -> {
                     try {
-                        Book book = bookService.uploadBook(file.getOriginalFilename(), file.getInputStream());
+                        Book book = bookService.uploadBook(file.getOriginalFilename(), file.getInputStream(),
+                                userService.getCurrentUser());
                         return new BookUploadInfo(book.getId(), file.getOriginalFilename(), BookUploadInfo.Status.Success);
                     } catch (AccessDeniedException e) {
                         throw e;
@@ -89,14 +99,16 @@ public class BookController {
     }
 
     @RequestMapping(value = "/waitForDuplicateCheck", method = RequestMethod.GET)
+    @Secured(ADMIN_AUTHORITY)
     public @ResponseBody String duplicateCheck(){
         duplicateHandler.waitForFinish();
         return "success";
     }
 
     @RequestMapping(value = "/duplicateCheckForExisted", method = RequestMethod.GET)
+    @Secured(ADMIN_AUTHORITY)
     public @ResponseBody String duplicateCheckForExisted(){
-        bookService.prepareExisted();
+        bookService.prepareExisted(userService.getCurrentUser());
         duplicateHandler.waitForFinish();
         return "success";
     }
