@@ -11,16 +11,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -158,6 +162,34 @@ public class OPDSController {
         return latestURIComponent.getLatestForCurrentUser();
     }
 
+    @ExceptionHandler(Exception.class)
+    public ModelAndView handleError(HttpServletRequest req, Exception ex) {
+        ModelAndView mav = new ModelAndView();
+        mav.addObject("exception", ex);
+        mav.addObject("url", req.getRequestURL());
+        mav.setViewName("error");
+        return createMav("Error", Collections.singletonList(new OPDSEntryI() {
+            @Override
+            public String getId() {
+                return "Error";
+            }
+
+            @Override
+            public String getTitle() {
+                return ex.getMessage();
+            }
+
+            @Override
+            public List<OPDSLink> getLinks() {
+                return Collections.emptyList();
+            }
+
+            @Override
+            public Optional<List<String>> getContent() {
+                return Optional.of(Collections.singletonList(ex.getMessage()));
+            }
+        }));
+    }
 
     public static OPDSEntryI createEntry(String id, String title, String... hrefs) {
         List<OPDSLink> links = Arrays.stream(hrefs).
