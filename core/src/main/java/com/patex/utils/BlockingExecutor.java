@@ -3,70 +3,38 @@ package com.patex.utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
-public class BlockingExecutor<T, R> {
+public class BlockingExecutor {
 
     private static Logger log = LoggerFactory.getLogger(BlockingExecutor.class);
 
-    private final BlockingQueue<Tuple<T, CompletableFuture<R>>> queue;
+    private final BlockingQueue<Runnable> queue;
+    private final ThreadPoolExecutor executor;
 
-    public BlockingExecutor(int threadCount, int queueSize, Function<T, R> task) {
+
+    public BlockingExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, int queueSize, ThreadFactory threadFactory) {
         queue = new LinkedBlockingQueue<>(queueSize);
-
-        AtomicInteger count = new AtomicInteger(0);
-        ThreadFactory threadFactory = r -> {
-            Thread thread = new Thread(r);
-            thread.setName("DuplicateHandler-" + count.getAndIncrement());
-            thread.setDaemon(true);
-            thread.setUncaughtExceptionHandler((t, e) -> log.error("We have a problem: " + e.getMessage(), e));
-            return thread;
+        executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, unit, new LinkedBlockingQueue<>(queueSize), threadFactory){
+            @Override
+            protected void beforeExecute(Thread t, Runnable r) {
+                queue.poll();
+                super.beforeExecute(t, r);
+            }
         };
-
-        ExecutorService executor = Executors.newFixedThreadPool(threadCount, threadFactory);
-
-        for (int i = 0; i < threadCount; i++) {
-            executor.execute(() -> {
-                //noinspection InfiniteLoopStatement
-                while (true) {
-                    try {
-                        Tuple<T, CompletableFuture<R>> tuple = queue.take();
-                        CompletableFuture<R> cFuture = tuple._2;
-                        T t = tuple._1;
-                        try {
-                            cFuture.complete(task.apply(t));
-                        } catch (Exception e) {
-                            cFuture.completeExceptionally(e);
-                        }
-                    } catch (InterruptedException e) {
-                        log.error(e.getMessage(), e);
-                    }
-                }
-            });
-        }
     }
 
-    public CompletableFuture<R> submit(T t) {
+    public void execute(Runnable command) {
         try {
-            CompletableFuture<R> future = new CompletableFuture<>();
-            queue.put(new Tuple<>(t, future));
-            return future;
+            queue.put(command);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            log.error(e.getMessage(), e);
         }
-    }
-
-    public Collection<CompletableFuture<R>> submitAll(Collection<T> objs) {
-        return objs.stream().map(this::submit).collect(Collectors.toList());
+        executor.execute(command);
     }
 
 }

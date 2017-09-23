@@ -38,6 +38,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -57,6 +58,7 @@ public class DuplicateHandler {
 
     private final Semaphore lock = new Semaphore(0);
     private int threadCount;
+    private BlockingExecutor blockingExecutor;
 
     @Autowired
     public DuplicateHandler(BookCheckQueueRepository bookCheckQueueRepo, TransactionService transactionService,
@@ -76,6 +78,10 @@ public class DuplicateHandler {
             this.threadCount = availableProcessors > 1 ? availableProcessors / 2 : 1;
         }
         scheduleExecutor = Executors.newSingleThreadExecutor(createThreadFactory(() -> "scheduleExecutor"));
+        blockingExecutor = new BlockingExecutor(this.threadCount, this.threadCount * 5, 1,
+                TimeUnit.MINUTES, this.threadCount * 5,
+                createThreadFactory(() -> "checkForDuplicate-"));
+
     }
 
     private ThreadFactory createThreadFactory(Supplier<String> supplier) {
@@ -92,7 +98,7 @@ public class DuplicateHandler {
     public void postConstruct() {
         Thread scheduler = new Thread(() -> {
             try {
-                infiniteQueue();
+                taskScheduler();
             } catch (InterruptedException e) {
                 log.error(e.getMessage(), e);
             }
@@ -104,14 +110,9 @@ public class DuplicateHandler {
         scheduler.start();
     }
 
-    private void infiniteQueue() throws InterruptedException {
+    private void taskScheduler() throws InterruptedException {
         long lastId = 0;
-        int excutorQueueSize = threadCount * 5;
         int pageSize = threadCount * 10;
-        BlockingExecutor<BookCheckQueue, BookCheckQueue> be =
-                new BlockingExecutor<>(threadCount, excutorQueueSize,
-                        bcq -> transactionService.transactionRequired(() -> checkForDuplicate(bcq))
-                );
         //noinspection InfiniteLoopStatement
         while (true) {
             List<BookCheckQueue> checkQueue = bookCheckQueueRepo.
@@ -121,7 +122,10 @@ public class DuplicateHandler {
                 lock.drainPermits();
             } else {
                 lastId = checkQueue.get(checkQueue.size() - 1).getId();
-                be.submitAll(checkQueue);
+                for (BookCheckQueue bcq : checkQueue) {
+                    blockingExecutor.execute(
+                            () -> transactionService.transactionRequired(() -> checkForDuplicate(bcq)));
+                }
             }
         }
     }

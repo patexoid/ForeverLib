@@ -158,7 +158,6 @@ public class OPDSController {
         return latestURIComponent.getLatestForCurrentUser();
     }
 
-
     public static OPDSEntryI createEntry(String id, String title, String... hrefs) {
         List<OPDSLink> links = Arrays.stream(hrefs).
                 map(s -> new OPDSLink(s, OPDSLink.OPDS_CATALOG)).collect(Collectors.toList());
