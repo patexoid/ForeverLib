@@ -12,7 +12,9 @@
         <profile>
             <id>prod</id>
             <activation>
-                <activeByDefault/>
+                <activeByDefault>
+                    true
+                </activeByDefault>
             </activation>
             <properties>
                 <nmpArgument>run build</nmpArgument>
@@ -33,7 +35,7 @@
             <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
-                <version>1.0</version>
+                <version>1.5</version>
                 <configuration>
                     <nodeVersion>v6.9.4</nodeVersion>
                     <npmVersion>3.10.10</npmVersion>
