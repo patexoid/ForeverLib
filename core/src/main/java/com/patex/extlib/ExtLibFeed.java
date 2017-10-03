@@ -1,7 +1,7 @@
 package com.patex.extlib;
 
-import com.patex.opds.OPDSEntryI;
-import com.patex.opds.OPDSLink;
+import com.patex.opds.converters.OPDSEntryI;
+import com.patex.opds.converters.OPDSLink;
 
 import java.util.List;
 import java.util.stream.Collectors;

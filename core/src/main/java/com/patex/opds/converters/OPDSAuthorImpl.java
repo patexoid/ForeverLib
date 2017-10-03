@@ -1,4 +1,4 @@
-package com.patex.opds;
+package com.patex.opds.converters;
 
 import com.patex.entities.Author;
 

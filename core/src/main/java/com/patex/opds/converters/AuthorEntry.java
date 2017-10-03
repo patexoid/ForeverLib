@@ -1,10 +1,15 @@
-package com.patex.opds;
+package com.patex.opds.converters;
 
 import com.patex.entities.Author;
+import com.patex.entities.AuthorBook;
+import com.patex.entities.Book;
+import com.patex.opds.OPDSContent;
 import com.patex.utils.LinkUtils;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -16,8 +21,9 @@ public class AuthorEntry implements OPDSEntryI {
 
     private final String id;
     private final String title;
-    private final List<String> content;
+    private final List<OPDSContent> content;
     private final List<OPDSLink> links;
+    private final Date date;
 
 
     public AuthorEntry(Author author) {
@@ -25,13 +31,16 @@ public class AuthorEntry implements OPDSEntryI {
         title = author.getName();
         String descr = author.getDescr();
         if (author.getDescr() != null) {
-            content = Arrays.stream(descr.split("\n")).collect(Collectors.toList());
+            content = Arrays.stream(descr.split("\n")).map(OPDSContent::new).collect(Collectors.toList());
         } else {
             content = null;
         }
         links = Collections.singletonList(
                 new OPDSLink(LinkUtils.makeURL("opds", "author", author.getId()), OPDSLink.OPDS_CATALOG)
         );
+        date = author.getBooks().stream().map(AuthorBook::getBook).
+                map(Book::getCreated).max(Instant::compareTo).map(Date::from).orElse(null);
+
     }
 
     @Override
@@ -45,12 +54,17 @@ public class AuthorEntry implements OPDSEntryI {
     }
 
     @Override
-    public Optional<List<String>> getContent() {
-        return Optional.of(content);
+    public Optional<List<OPDSContent>> getContent() {
+        return Optional.ofNullable(content);
     }
 
     @Override
     public List<OPDSLink> getLinks() {
         return links;
+    }
+
+    @Override
+    public Date getUpdated() {
+        return date;
     }
 }

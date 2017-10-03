@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -112,6 +113,7 @@ public class BookService {
             book.setContentSize(getContentSize(new ByteArrayInputStream(byteArray), fileName));
             book.setSize(byteArray.length);
             book.setChecksum(checksum);
+            book.setCreated(Instant.now());
             Book save = bookRepository.save(book);
             book.getAuthorBooks().stream().
                     filter(authorBook -> !authorBook.getAuthor().getBooks().contains(authorBook)).

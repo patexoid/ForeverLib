@@ -11,10 +11,10 @@ import com.patex.entities.Subscription;
 import com.patex.entities.SubscriptionRepository;
 import com.patex.entities.ZUser;
 import com.patex.messaging.MessengerService;
-import com.patex.opds.OPDSAuthor;
-import com.patex.opds.OPDSEntryI;
-import com.patex.opds.OPDSEntryImpl;
-import com.patex.opds.OPDSLink;
+import com.patex.opds.converters.OPDSAuthor;
+import com.patex.opds.converters.OPDSEntryI;
+import com.patex.opds.converters.OPDSEntryImpl;
+import com.patex.opds.converters.OPDSLink;
 import com.patex.service.BookService;
 import com.patex.service.ZUserService;
 import com.rometools.rome.feed.synd.SyndFeed;
@@ -52,8 +52,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.patex.opds.OPDSLink.FB2;
-import static com.patex.opds.OPDSLink.OPDS_CATALOG;
+import static com.patex.opds.converters.OPDSLink.FB2;
+import static com.patex.opds.converters.OPDSLink.OPDS_CATALOG;
 
 /**
  *

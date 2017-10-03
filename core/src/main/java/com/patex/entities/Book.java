@@ -15,6 +15,7 @@ import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,6 +65,9 @@ public class Book {
 
     @JsonProperty
     private Integer contentSize;
+
+    @JsonIgnore
+    private Instant created;
 
     @Column(nullable = false, updatable = false)
     @JsonIgnore
@@ -183,5 +187,13 @@ public class Book {
 
     public void setContentSize(Integer contentSize) {
         this.contentSize = contentSize;
+    }
+
+    public Instant getCreated() {
+        return created;
+    }
+
+    public void setCreated(Instant created) {
+        this.created = created;
     }
 }

@@ -1,4 +1,4 @@
-package com.patex.opds;
+package com.patex.opds.latest;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -31,7 +31,7 @@ public class AuthorController {
     public
     @ResponseBody
     Page<Author> getAuthors(Pageable pageable, @RequestParam(required = false) String prefix) {
-        log.trace("prefix:[] page:{} of {}",prefix,pageable.getPageNumber(),pageable.getPageSize());
+        log.trace("prefix:{} page:{} of {}",prefix,pageable.getPageNumber(),pageable.getPageSize());
         return authorService.getAuthors(pageable, prefix);
     }
 

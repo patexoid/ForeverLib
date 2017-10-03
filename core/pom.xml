@@ -6,7 +6,7 @@
 
     <groupId>com.patex.zombielib2</groupId>
     <artifactId>core</artifactId>
-    <version>0.35</version>
+    <version>0.36</version>
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -188,6 +188,15 @@
             <artifactId>fb2-generated</artifactId>
             <version>0.1</version>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <!--TODO DELETE IT IN FUTURE if hiberante 5.2.0 or later will be used
+            required to support java.time.Instant as column support
+            -->
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-java8</artifactId>
+            <version>5.0.2.Final</version>
         </dependency>
     </dependencies>
 

@@ -1,4 +1,4 @@
-package com.patex.opds;
+package com.patex.opds.latest;
 
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
@@ -16,7 +16,7 @@ public class LatestURIAspect {
     @Autowired
     private LatestURIComponent latestURIComponent;
 
-    @AfterReturning(pointcut = "@annotation(com.patex.opds.SaveLatest)", returning = "view")
+    @AfterReturning(pointcut = "@annotation(com.patex.opds.latest.SaveLatest)", returning = "view")
     public void afterMethod(ModelAndView view) {
         latestURIComponent.afterMethod(view);
     }
