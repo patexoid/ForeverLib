@@ -1,5 +1,9 @@
 package com.patex.opds;
 
+import com.patex.opds.converters.OPDSAuthor;
+import com.patex.opds.converters.OPDSEntryI;
+import com.patex.opds.converters.OPDSLink;
+import com.rometools.rome.feed.atom.Content;
 import com.rometools.rome.feed.atom.Entry;
 import com.rometools.rome.feed.atom.Feed;
 import com.rometools.rome.feed.atom.Link;
@@ -19,9 +23,13 @@ import java.util.stream.Collectors;
 public class OpdsView extends AbstractAtomFeedView {
 
     public static final String OPDS_VIEW = "opdsView";
-    public static final String TITLE = "Title";
     public static final String ENTRIES = "Entries";
-    public static final String LINKS = "LINKS";
+    public static final String OPDS_METADATA="opdsMetaData";
+
+
+    public OpdsView() {
+        setFeedType("opds.atom_1.0");
+    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -33,8 +41,19 @@ public class OpdsView extends AbstractAtomFeedView {
     private Entry toEntry(OPDSEntryI opdsEntryI) {
         Entry entry = new Entry();
         entry.setId(String.valueOf(opdsEntryI.getId()));
-        opdsEntryI.getUpdated().ifPresent(entry::setUpdated);
+        if(opdsEntryI.getUpdated()!=null) {
+            entry.setUpdated(opdsEntryI.getUpdated());
+        }
         entry.setTitle(opdsEntryI.getTitle());
+        opdsEntryI.getContent().ifPresent(contents -> {
+            entry.setContents(contents.stream().map(s -> {
+                Content content = new Content();
+                content.setValue(s.getValue());
+                content.setType(s.getType());
+                content.setSrc(s.getSrc());
+                return content;
+            }).collect(Collectors.toList()));
+        });
         entry.setOtherLinks(opdsEntryI.getLinks().stream().map(this::toLink).collect(Collectors.toList()));
         opdsEntryI.getAuthors().ifPresent(opdsAuthors ->
                 entry.setAuthors(opdsAuthors.stream().map(this::toPerson).collect(Collectors.toList())));
@@ -59,12 +78,12 @@ public class OpdsView extends AbstractAtomFeedView {
     @Override
     protected void buildFeedMetadata(Map<String, Object> model, Feed feed, HttpServletRequest request) {
         super.buildFeedMetadata(model, feed, request);
-        String title = (String) model.get(TITLE);
-        feed.setTitle(title);
-        feed.setId(title);
-//        feed.setUpdated(Date.from(Instant.now()));
+        OPDSMetadata  metadata = (OPDSMetadata) model.get(OPDS_METADATA);
+        feed.setTitle(metadata.getTitle());
+        feed.setId(metadata.getId());
+        feed.setUpdated(metadata.getUpdated());
         feed.setIcon("favicon.ico");
         //noinspection unchecked
-        feed.setOtherLinks((List<Link>) model.get(LINKS));
+        feed.setOtherLinks(metadata.getOtherLinks());
     }
 }

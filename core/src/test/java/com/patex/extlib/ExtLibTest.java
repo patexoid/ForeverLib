@@ -6,8 +6,9 @@ import com.patex.entities.ExtLibrary;
 import com.patex.entities.SavedBookRepository;
 import com.patex.entities.ZUser;
 import com.patex.messaging.MessengerService;
-import com.patex.opds.OPDSEntryI;
-import com.patex.opds.OPDSLink;
+import com.patex.opds.OPDSContent;
+import com.patex.opds.converters.OPDSEntryI;
+import com.patex.opds.converters.OPDSLink;
 import com.patex.service.BookService;
 import com.rometools.rome.feed.synd.SyndContentImpl;
 import com.rometools.rome.feed.synd.SyndEntryImpl;
@@ -108,7 +109,7 @@ public class ExtLibTest {
         checkLync(syndLink, link);
 
         assertThat("entry contents size", entry.getContent().get(), hasSize(1));
-        String content = entry.getContent().get().get(0);
+        OPDSContent content = entry.getContent().get().get(0);
         checkContent(syndContent, content);
     }
 
@@ -135,8 +136,7 @@ public class ExtLibTest {
         assertEquals("Link Rel", syndLink.getRel(), link.getRel());
 
         assertThat("entry contents size", entry.getContent().get(), hasSize(1));
-        String content = entry.getContent().get().get(0);
-        checkContent(syndContent, content);
+        checkContent(syndContent, entry.getContent().get().get(0));
     }
 
     @Test
@@ -162,8 +162,7 @@ public class ExtLibTest {
         checkLync(syndLink, link);
 
         assertThat("entry contents size", entry.getContent().get(), hasSize(1));
-        String content = entry.getContent().get().get(0);
-        checkContent(syndContent, content);
+        checkContent(syndContent, entry.getContent().get().get(0));
 
         OPDSEntryI nextEntry = data.getEntries().get(1);
         assertEquals("Entry next Title", "Next", nextEntry.getTitle());
@@ -304,10 +303,10 @@ public class ExtLibTest {
         assertEquals("Link Rel", syndLink.getRel(), link.getRel());
     }
 
-    private void checkContent(SyndContentImpl syndContent, String content) {
-//        assertEquals("Content Type", syndContent.getType(), content.getType());
-        assertEquals("Content Value", syndContent.getValue(), content);
-//        assertEquals("Content Mode", syndContent.getMode(), content.getMode());
+    private void checkContent(SyndContentImpl syndContent, OPDSContent content) {
+        assertEquals("Content Type", syndContent.getType(), content.getType());
+        assertEquals("Content Value", syndContent.getValue(), content.getValue());
+//        assertEquals("Content Mode", syndContent.getMode(), content.getSrc());
     }
 
     private void checkSyndEntry(SyndEntryImpl syndEntry, OPDSEntryI entry) {

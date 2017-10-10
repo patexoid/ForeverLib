@@ -4,6 +4,15 @@ import com.patex.entities.Author;
 import com.patex.entities.AuthorBook;
 import com.patex.entities.BookSequence;
 import com.patex.entities.Sequence;
+import com.patex.opds.converters.AuthorEntry;
+import com.patex.opds.converters.BookEntry;
+import com.patex.opds.converters.ExpandedAuthorEntry;
+import com.patex.opds.converters.OPDSEntryI;
+import com.patex.opds.converters.OPDSEntryImpl;
+import com.patex.opds.converters.OPDSLink;
+import com.patex.opds.converters.SequenceEntry;
+import com.patex.opds.latest.LatestURIComponent;
+import com.patex.opds.latest.SaveLatest;
 import com.patex.service.AuthorService;
 import com.patex.service.SequenceService;
 import com.patex.utils.LinkUtils;
@@ -20,7 +29,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -31,7 +42,7 @@ public class OPDSController {
 
     public static final String PREFIX = "opds";
     private static final String AUTHORSINDEX = "authorsindex";
-    public static final String APPLICATION_ATOM_XML = "application/atom+xml";
+    public static final String APPLICATION_ATOM_XML = "application/atom+xml;charset=UTF-8";
     private static Logger log = LoggerFactory.getLogger(OPDSController.class);
 
     private static final int EXPAND_FOR_AUTHORS_COUNT = 3;
@@ -176,24 +187,41 @@ public class OPDSController {
             public List<OPDSLink> getLinks() {
                 return links;
             }
+
+            @Override
+            public Date getUpdated() {
+                return null;
+            }
         };
     }
 
 
-    public static <E> ModelAndView createMav(String title, E e, Function<E, List<OPDSEntryI>> func) {
+    public static <E> ModelAndView createMav(String title, E e, Function<E, List<OPDSEntryI>> func, Date updated) {
         ModelAndView mav = new ModelAndView();
         mav.setViewName(OpdsView.OPDS_VIEW);
         if (e != null) {
             List<OPDSEntryI> entries = func.apply(e);
             mav.addObject(OpdsView.ENTRIES, entries);
+            if (updated == null) {
+                updated= entries.stream().map(OPDSEntryI::getUpdated).filter(Objects::nonNull).
+                        max(Date::compareTo).orElse(null);
+            }
         } else {
             log.warn("empty obj:" + title);
         }
-        mav.addObject(OpdsView.TITLE, title);
+        mav.addObject(OpdsView.OPDS_METADATA, new OPDSMetadata(title, title, updated));
         return mav;
+    }
+
+    public static <E> ModelAndView createMav(String title, E e, Function<E, List<OPDSEntryI>> func) {
+        return createMav(title, e, func, null);
     }
 
     public static ModelAndView createMav(String title, List<OPDSEntryI> entries) {
         return createMav(title, entries, e -> e);
+    }
+
+    public static ModelAndView createMav(String title, List<OPDSEntryI> entries, Date updated) {
+        return createMav(title, entries, e -> e, updated);
     }
 }

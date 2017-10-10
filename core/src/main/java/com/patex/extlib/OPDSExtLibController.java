@@ -2,7 +2,7 @@ package com.patex.extlib;
 
 import com.patex.LibException;
 import com.patex.opds.OPDSController;
-import com.patex.opds.SaveLatest;
+import com.patex.opds.latest.SaveLatest;
 import com.patex.service.ZUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;

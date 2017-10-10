@@ -119,4 +119,12 @@
                              constraintName="uk_BOOK_CHECK_QUEUE_BOOKS"/>
 
     </changeSet>
+    <changeSet id="9" author="patex">
+        <addColumn tableName="BOOK">
+            <column name="CREATED" type="DATETIME" />
+        </addColumn>
+        <sql>
+            UPDATE BOOK SET CREATED=NOW()
+        </sql>
+    </changeSet>
 </databaseChangeLog>

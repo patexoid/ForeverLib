@@ -1,9 +1,9 @@
 package com.patex.extlib;
 
-import com.patex.opds.OPDSAuthor;
-import com.patex.opds.OPDSEntryI;
-import com.patex.opds.OPDSLink;
-import com.rometools.rome.feed.synd.SyndContent;
+import com.patex.opds.converters.OPDSAuthor;
+import com.patex.opds.OPDSContent;
+import com.patex.opds.converters.OPDSEntryI;
+import com.patex.opds.converters.OPDSLink;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndLink;
 import org.slf4j.Logger;
@@ -18,7 +18,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.patex.opds.OPDSLink.FB2;
+import static com.patex.opds.converters.OPDSLink.FB2;
 
 /**
  *
@@ -38,8 +38,8 @@ public class ExtLibOPDSEntry implements OPDSEntryI {
     private final String id;
     private final String title;
     private final List<OPDSLink> links;
-    private final Optional<Date> updated;
-    private final Optional<List<String>> content;
+    private final Date updated;
+    private final Optional<List<OPDSContent>> content;
     private final Optional<List<OPDSAuthor>> authors;
 
 
@@ -48,9 +48,9 @@ public class ExtLibOPDSEntry implements OPDSEntryI {
         title = syndEntry.getTitle();
         links = syndEntry.getLinks().stream().
                 map(ExtLibOPDSEntry::mapLink).filter(Objects::nonNull).collect(Collectors.toList());
-        updated = Optional.ofNullable(syndEntry.getUpdatedDate());
+        updated = syndEntry.getUpdatedDate();
         content = Optional.of(syndEntry.getContents().stream().
-                map(SyndContent::getValue).collect(Collectors.toList()));
+                map(sc -> new OPDSContent(sc.getType(), sc.getValue(), null)).collect(Collectors.toList()));
 
         List<OPDSAuthor> authors = syndEntry.getAuthors().stream().
                 map(person -> new ExtLibAuthor(person.getName(), "")).collect(Collectors.toList());
@@ -87,12 +87,12 @@ public class ExtLibOPDSEntry implements OPDSEntryI {
     }
 
     @Override
-    public Optional<Date> getUpdated() {
+    public Date getUpdated() {
         return updated;
     }
 
     @Override
-    public Optional<List<String>> getContent() {
+    public Optional<List<OPDSContent>> getContent() {
         return content;
     }
 

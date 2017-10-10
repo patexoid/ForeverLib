@@ -1,4 +1,4 @@
-package com.patex.opds;
+package com.patex.opds.latest;
 
 import com.patex.entities.ZUser;
 import com.patex.service.ZUserService;

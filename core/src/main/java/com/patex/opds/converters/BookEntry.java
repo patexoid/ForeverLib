@@ -1,10 +1,10 @@
-package com.patex.opds;
+package com.patex.opds.converters;
 
 import com.patex.entities.AuthorBook;
 import com.patex.entities.Book;
+import com.patex.opds.OPDSContent;
 import com.patex.utils.LinkUtils;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -22,21 +22,22 @@ public class BookEntry implements OPDSEntryI {
     private final Date updated;
     private final String title;
     private final List<OPDSAuthor> authors;
-    private final List<String> content;
+    private final List<OPDSContent> content;
     private final List<OPDSLink> links;
 
     public BookEntry(Book book) {
         id = "book:" + book.getId();
-        updated = Date.from(Instant.now());
+        updated = Date.from(book.getCreated());
         title = book.getTitle();
         authors = book.getAuthorBooks().stream().map(AuthorBook::getAuthor).map(OPDSAuthorImpl::new).
                 collect(Collectors.toList());
         // TODO entry.setCategories();
 
-        List<String> content0 = new ArrayList<>();
-        content0.add(book.getDescr());
+        List<OPDSContent> content0 = new ArrayList<>();
+        content0.add(new OPDSContent(book.getDescr()));
         content0.addAll(book.getSequences().stream().
                 map(bs -> " Серия:" + bs.getSequence().getName() + " #" + bs.getSeqOrder()).
+                map(OPDSContent::new).
                 collect(Collectors.toList()));
         content = Collections.unmodifiableList(content0);
         links = Collections.singletonList(
@@ -49,8 +50,8 @@ public class BookEntry implements OPDSEntryI {
     }
 
     @Override
-    public Optional<Date> getUpdated() {
-        return Optional.ofNullable(updated);
+    public Date getUpdated() {
+        return updated;
     }
 
     @Override
@@ -63,7 +64,7 @@ public class BookEntry implements OPDSEntryI {
     }
 
     @Override
-    public Optional<List<String>> getContent() {
+    public Optional<List<OPDSContent>> getContent() {
         return Optional.ofNullable(content);
     }
 

@@ -1,4 +1,6 @@
-package com.patex.opds;
+package com.patex.opds.converters;
+
+import com.patex.opds.OPDSContent;
 
 import java.util.Date;
 import java.util.List;
@@ -11,13 +13,11 @@ public interface OPDSEntryI {
 
     String getId();
 
-    default Optional<Date> getUpdated() {
-        return Optional.empty();
-    }
+    Date getUpdated();
 
     String getTitle();
 
-    default Optional<List<String>> getContent() {
+    default Optional<List<OPDSContent>> getContent() {
         return Optional.empty();
     }
 

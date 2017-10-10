@@ -2,7 +2,7 @@ package com.patex.extlib;
 
 import com.patex.LibException;
 import com.patex.entities.ZUser;
-import com.patex.opds.OPDSEntryI;
+import com.patex.opds.converters.OPDSEntryI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

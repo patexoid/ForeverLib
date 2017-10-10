@@ -1,6 +1,6 @@
 package com.patex.extlib;
 
-import com.patex.opds.OPDSAuthor;
+import com.patex.opds.converters.OPDSAuthor;
 
 /**
  * Created by Alexey on 18.06.2017.
