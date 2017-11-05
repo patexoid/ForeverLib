@@ -4,6 +4,7 @@ import com.patex.opds.converters.OPDSAuthor;
 import com.patex.opds.OPDSContent;
 import com.patex.opds.converters.OPDSEntryI;
 import com.patex.opds.converters.OPDSLink;
+import com.patex.utils.Res;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndLink;
 import org.slf4j.Logger;
@@ -36,7 +37,7 @@ public class ExtLibOPDSEntry implements OPDSEntryI {
 
 
     private final String id;
-    private final String title;
+    private final Res title;
     private final List<OPDSLink> links;
     private final Date updated;
     private final Optional<List<OPDSContent>> content;
@@ -45,7 +46,7 @@ public class ExtLibOPDSEntry implements OPDSEntryI {
 
     public ExtLibOPDSEntry(SyndEntry syndEntry) {
         id = syndEntry.getUri();
-        title = syndEntry.getTitle();
+        title = new Res("opds.first.value",syndEntry.getTitle());
         links = syndEntry.getLinks().stream().
                 map(ExtLibOPDSEntry::mapLink).filter(Objects::nonNull).collect(Collectors.toList());
         updated = syndEntry.getUpdatedDate();
@@ -102,7 +103,7 @@ public class ExtLibOPDSEntry implements OPDSEntryI {
     }
 
     @Override
-    public String getTitle() {
+    public Res getTitle() {
         return title;
     }
 

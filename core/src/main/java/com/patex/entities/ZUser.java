@@ -34,7 +34,7 @@ public class ZUser implements UserDetails, CredentialsContainer {
 
     @OneToMany(fetch = FetchType.EAGER, cascade = {CascadeType.ALL}, mappedBy = "user")
     @Fetch(value = FetchMode.SUBSELECT)
-    private List<ZUserAuthority> authorities=new ArrayList<>();
+    private List<ZUserAuthority> authorities = new ArrayList<>();
 
     @OneToOne(fetch = FetchType.EAGER, cascade = {CascadeType.ALL}, mappedBy = "user")
     @JsonIgnore
@@ -59,22 +59,22 @@ public class ZUser implements UserDetails, CredentialsContainer {
         return password;
     }
 
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     @Override
     public String getUsername() {
         return username;
     }
 
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     @Override
     public boolean isEnabled() {
         return enabled;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public void setEnabled(boolean enabled) {
@@ -108,4 +108,5 @@ public class ZUser implements UserDetails, CredentialsContainer {
     public void setUserConfig(ZUserConfig userConfig) {
         this.userConfig = userConfig;
     }
+
 }

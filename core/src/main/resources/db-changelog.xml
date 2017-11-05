@@ -127,4 +127,13 @@
             UPDATE BOOK SET CREATED=NOW()
         </sql>
     </changeSet>
+
+    <changeSet id="10" author="patex">
+        <addColumn tableName="ZUSER_CONFIG">
+            <column name="lang" type="VARCHAR(2)" />
+        </addColumn>
+        <sql>
+            UPDATE ZUSER_CONFIG SET lang='en'
+        </sql>
+    </changeSet>
 </databaseChangeLog>

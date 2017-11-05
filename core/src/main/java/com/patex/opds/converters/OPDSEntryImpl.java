@@ -1,6 +1,7 @@
 package com.patex.opds.converters;
 
 import com.patex.opds.OPDSContent;
+import com.patex.utils.Res;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,12 +18,12 @@ public class OPDSEntryImpl implements OPDSEntryI {
 
     private final String id;
     private final Date updated;
-    private final String title;
+    private final Res title;
     private final Optional<List<OPDSContent>> content;
     private final List<OPDSLink> links;
 
 
-    public OPDSEntryImpl(String id, String title, OPDSLink link) {
+    public OPDSEntryImpl(String id, Res title, OPDSLink link) {
         this.id = id;
         this.title = title;
         this.links = Collections.singletonList(link);
@@ -30,7 +31,7 @@ public class OPDSEntryImpl implements OPDSEntryI {
         content = Optional.empty();
     }
 
-    public OPDSEntryImpl(String id, Date updated, String title, String content, OPDSLink link) {
+    public OPDSEntryImpl(String id, Date updated, Res title, String content, OPDSLink link) {
         this.id = id;
         this.updated = updated;
         this.title = title;
@@ -38,7 +39,7 @@ public class OPDSEntryImpl implements OPDSEntryI {
         this.links = Collections.singletonList(link);
     }
 
-    public OPDSEntryImpl(String id, Date updated, String title, List<String> content, String... links) {
+    public OPDSEntryImpl(String id, Date updated, Res title, List<String> content, String... links) {
         this.id = id;
         this.updated = updated;
         this.title = title;
@@ -51,7 +52,7 @@ public class OPDSEntryImpl implements OPDSEntryI {
                 collect(Collectors.toList());
     }
 
-    public OPDSEntryImpl(String id, Date updated, String title, String content, String... links) {
+    public OPDSEntryImpl(String id, Date updated, Res title, String content, String... links) {
         this.id = id;
         this.updated = updated;
         this.title = title;
@@ -64,6 +65,32 @@ public class OPDSEntryImpl implements OPDSEntryI {
                 collect(Collectors.toList());
     }
 
+
+    public OPDSEntryImpl(String id, Res title, String content, String... links) {
+        this.id = id;
+        this.updated=null;
+        this.title = title;
+        if (content == null) {
+            this.content = Optional.empty();
+        } else {
+            this.content = Optional.of(Collections.singletonList(new OPDSContent(content)));
+        }
+        this.links = Arrays.stream(links).map(s -> new OPDSLink(s, OPDSLink.OPDS_CATALOG)).
+                collect(Collectors.toList());
+    }
+
+    public OPDSEntryImpl(String id, Date updated, Res title, OPDSContent content, String... links) {
+        this.id = id;
+        this.updated = updated;
+        this.title = title;
+        if(content==null){
+            this.content = Optional.empty();
+        } else {
+            this.content = Optional.of(Collections.singletonList(content));
+        }
+        this.links = Arrays.stream(links).map(s -> new OPDSLink(s, OPDSLink.OPDS_CATALOG)).
+                collect(Collectors.toList());
+    }
     @Override
     public String getId() {
         return id;
@@ -75,7 +102,7 @@ public class OPDSEntryImpl implements OPDSEntryI {
     }
 
     @Override
-    public String getTitle() {
+    public Res getTitle() {
         return title;
     }
 

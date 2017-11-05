@@ -5,6 +5,7 @@ import com.patex.entities.BookSequence;
 import com.patex.entities.Sequence;
 import com.patex.opds.OPDSContent;
 import com.patex.utils.LinkUtils;
+import com.patex.utils.Res;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -18,7 +19,7 @@ import java.util.Optional;
 public class SequenceEntry implements OPDSEntryI {
 
     private final String id;
-    private final String title;
+    private final Res title;
     private final List<OPDSContent> content;
     private final List<OPDSLink> links;
     private final Date date;
@@ -26,7 +27,7 @@ public class SequenceEntry implements OPDSEntryI {
     public SequenceEntry(Sequence sequence) {
 
         id = "sequence:" + sequence.getId();
-        title = sequence.getName();
+        title = new Res("opds.first.value",sequence.getName());
         content = Collections.
                 singletonList(new OPDSContent("Количество книг в серии: " + sequence.getBookSequences().size()));
         links = Collections.singletonList(
@@ -42,7 +43,7 @@ public class SequenceEntry implements OPDSEntryI {
     }
 
     @Override
-    public String getTitle() {
+    public Res getTitle() {
         return title;
     }
 

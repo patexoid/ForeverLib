@@ -1,5 +1,9 @@
 package com.patex.opds;
 
+import com.patex.service.Resources;
+
+import java.util.Locale;
+
 public class OPDSContent {
 
     private final String type;
@@ -23,7 +27,11 @@ public class OPDSContent {
         return type;
     }
 
-    public String getValue() {
+    public String getValue(){
+        return value;
+    }
+
+    public String getValue(Resources res, Locale locale) {
         return value;
     }
 

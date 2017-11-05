@@ -31,7 +31,7 @@ public class ZUserService implements UserDetailsService {
     public static final String USER = "ROLE_USER";
     public static final String ADMIN_AUTHORITY = "ROLE_ADMIN";
     private static Logger log = LoggerFactory.getLogger(ZUserService.class);
-    private final ZUser anonim = new ZUser("anonimus", true);
+    public static final ZUser anonim = new ZUser("anonimus", true);
     @Autowired
     private ZUserRepository userRepo;
 
@@ -74,6 +74,12 @@ public class ZUserService implements UserDetailsService {
         if (getByRole(ADMIN_AUTHORITY).isEmpty()) {
             user.getAuthorities().add(new ZUserAuthority(user, ADMIN_AUTHORITY));
         }
+        if (user.getUserConfig() == null) {
+            user.setUserConfig(new ZUserConfig());
+        }
+        if (user.getUserConfig().getLang() == null) {
+            user.getUserConfig().setLang("en");
+        }
         user.setEnabled(true);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepo.save(user);
@@ -108,16 +114,18 @@ public class ZUserService implements UserDetailsService {
         }
         PropertyDescriptor[] pds = BeanUtils.getPropertyDescriptors(ZUserConfig.class);
         for (PropertyDescriptor pd : pds) {
-            Method writeMethod = pd.getWriteMethod();
-            Method readMethod = pd.getReadMethod();
-            if (writeMethod != null && readMethod != null) {
-                try {
-                    Object value = readMethod.invoke(newConfig);
-                    if (value != null) {
-                        writeMethod.invoke(userConfig, value);
+            if (!"id".equals(pd.getName()) && !"user".equals(pd.getName())) {
+                Method writeMethod = pd.getWriteMethod();
+                Method readMethod = pd.getReadMethod();
+                if (writeMethod != null && readMethod != null) {
+                    try {
+                        Object value = readMethod.invoke(newConfig);
+                        if (value != null) {
+                            writeMethod.invoke(userConfig, value);
+                        }
+                    } catch (ReflectiveOperationException e) {
+                        log.error(e.getMessage(), e);
                     }
-                } catch (ReflectiveOperationException e) {
-                    log.error(e.getMessage(), e);
                 }
             }
         }

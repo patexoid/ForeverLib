@@ -1,6 +1,7 @@
 package com.patex.opds.converters;
 
 import com.patex.opds.OPDSContent;
+import com.patex.utils.Res;
 
 import java.util.Date;
 import java.util.List;
@@ -15,7 +16,7 @@ public interface OPDSEntryI {
 
     Date getUpdated();
 
-    String getTitle();
+    Res getTitle();
 
     default Optional<List<OPDSContent>> getContent() {
         return Optional.empty();

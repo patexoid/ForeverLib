@@ -1,6 +1,8 @@
 package com.patex.messaging;
 
 import com.patex.entities.ZUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -33,6 +35,8 @@ import java.util.stream.StreamSupport;
 public class TelegramZBot extends TelegramLongPollingBot implements Messenger {
 
     public static final int MAX_MESSAGE_SIZE = 4000;
+
+    private static Logger log = LoggerFactory.getLogger(TelegramZBot.class);
 
     static {
         ApiContextInitializer.init(); //strange magic
@@ -149,6 +153,9 @@ public class TelegramZBot extends TelegramLongPollingBot implements Messenger {
     }
 
     private void sendMessageToChat(String message, Long chatId) {
+        if(chatId==null){
+            return;
+        }
         SendMessage sendMessage = new SendMessage();
         sendMessage.setText(message);
         sendMessage.setChatId(chatId);
@@ -156,7 +163,7 @@ public class TelegramZBot extends TelegramLongPollingBot implements Messenger {
         try {
             sendMessage(sendMessage);
         } catch (TelegramApiException e) {
-            e.printStackTrace();
+            log.warn(e.getMessage(),e);
         }
     }
 

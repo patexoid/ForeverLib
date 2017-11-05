@@ -165,7 +165,7 @@ public class ExtLibTest {
         checkContent(syndContent, entry.getContent().get().get(0));
 
         OPDSEntryI nextEntry = data.getEntries().get(1);
-        assertEquals("Entry next Title", "Next", nextEntry.getTitle());
+        assertEquals("opds.extlib.nextPage", nextEntry.getTitle().getKey());
 
 //        Content nextContent = nextEntry.getContent().get(0);
 //        assertEquals("Content Type", "html", nextContent.getType());
@@ -310,7 +310,7 @@ public class ExtLibTest {
     }
 
     private void checkSyndEntry(SyndEntryImpl syndEntry, OPDSEntryI entry) {
-        assertEquals("Entry Title", syndEntry.getTitle(), entry.getTitle());
+        assertEquals("Entry Title", syndEntry.getTitle(), entry.getTitle().getObjs()[0]);
         assertEquals("Entry Id", syndEntry.getUri(), entry.getId());
     }
 }

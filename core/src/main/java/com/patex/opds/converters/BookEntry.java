@@ -4,6 +4,7 @@ import com.patex.entities.AuthorBook;
 import com.patex.entities.Book;
 import com.patex.opds.OPDSContent;
 import com.patex.utils.LinkUtils;
+import com.patex.utils.Res;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,10 +18,9 @@ import java.util.stream.Collectors;
  */
 public class BookEntry implements OPDSEntryI {
 
-
     private final String id;
     private final Date updated;
-    private final String title;
+    private final Res title;
     private final List<OPDSAuthor> authors;
     private final List<OPDSContent> content;
     private final List<OPDSLink> links;
@@ -28,7 +28,7 @@ public class BookEntry implements OPDSEntryI {
     public BookEntry(Book book) {
         id = "book:" + book.getId();
         updated = Date.from(book.getCreated());
-        title = book.getTitle();
+        title = new Res("opds.first.value",book.getTitle());
         authors = book.getAuthorBooks().stream().map(AuthorBook::getAuthor).map(OPDSAuthorImpl::new).
                 collect(Collectors.toList());
         // TODO entry.setCategories();
@@ -55,7 +55,7 @@ public class BookEntry implements OPDSEntryI {
     }
 
     @Override
-    public String getTitle() {
+    public Res getTitle() {
         return title;
     }
 

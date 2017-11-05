@@ -189,7 +189,11 @@
             <version>0.1</version>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>com.patex.zombielib2</groupId>
+            <artifactId>localization</artifactId>
+            <version>0.1</version>
+        </dependency>
         <dependency>
             <!--TODO DELETE IT IN FUTURE if hiberante 5.2.0 or later will be used
             required to support java.time.Instant as column support
