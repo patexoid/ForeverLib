@@ -243,7 +243,7 @@ public class DuplicateHandler {
                 secondary.getTitle();
         log.info(message);
         if (user != null) {
-            messenger.sendMessageToUser(message, user);
+            messenger.sendMessageToUser(user, message);
         }
         this.bookService.updateBook(primary);
     }

@@ -5,6 +5,7 @@ import com.patex.entities.AuthorBook;
 import com.patex.entities.Book;
 import com.patex.opds.OPDSContent;
 import com.patex.utils.LinkUtils;
+import com.patex.utils.Res;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 public class AuthorEntry implements OPDSEntryI {
 
     private final String id;
-    private final String title;
+    private final Res title;
     private final List<OPDSContent> content;
     private final List<OPDSLink> links;
     private final Date date;
@@ -28,7 +29,7 @@ public class AuthorEntry implements OPDSEntryI {
 
     public AuthorEntry(Author author) {
         id = "author:" + author.getId();
-        title = author.getName();
+        title = new Res("opds.first.value",author.getName());
         String descr = author.getDescr();
         if (author.getDescr() != null) {
             content = Arrays.stream(descr.split("\n")).map(OPDSContent::new).collect(Collectors.toList());
@@ -49,7 +50,7 @@ public class AuthorEntry implements OPDSEntryI {
     }
 
     @Override
-    public String getTitle() {
+    public Res getTitle() {
         return title;
     }
 

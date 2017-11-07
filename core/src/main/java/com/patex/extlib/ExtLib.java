@@ -11,12 +11,14 @@ import com.patex.entities.Subscription;
 import com.patex.entities.SubscriptionRepository;
 import com.patex.entities.ZUser;
 import com.patex.messaging.MessengerService;
+import com.patex.messaging.ZMessage;
 import com.patex.opds.converters.OPDSAuthor;
 import com.patex.opds.converters.OPDSEntryI;
 import com.patex.opds.converters.OPDSEntryImpl;
 import com.patex.opds.converters.OPDSLink;
 import com.patex.service.BookService;
 import com.patex.service.ZUserService;
+import com.patex.utils.Res;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.feed.synd.SyndLink;
 import com.rometools.rome.io.SyndFeedInput;
@@ -125,17 +127,19 @@ public class ExtLib {
                             filter(subscriptionf -> uri.equals(subscriptionf.getLink())).findFirst();
             if (subscription.isPresent()) {
                 String href = ExtLibOPDSEntry.mapToUri("action/unsubscribe?id=" + subscription.get().getId() + "&", uri);
-                entries.add(0, new OPDSEntryImpl("subscribe:" + uri, new Date(),
-                        "unsubscribe to " + feed.getTitle(), "Subscribe",
+                entries.add(0, new OPDSEntryImpl("unsubscribe:" + uri, new Date(),
+                        new Res("opds.extlib.unsubscribe", feed.getTitle()), null,
                         new OPDSLink(href, OPDS_CATALOG)));
             } else {
                 entries.add(0, new OPDSEntryImpl("subscribe:" + uri, new Date(),
-                        "Subscribe to " + feed.getTitle(), "Subscribe",
+                        new Res("opds.extlib.subscribe", feed.getTitle()), null,
                         new OPDSLink(ExtLibOPDSEntry.mapToUri("action/subscribe?", uri), OPDS_CATALOG)));
             }
 
-            entries.add(0, new OPDSEntryImpl("download:" + uri, new Date(), "Download all " + feed.getTitle(),
-                    "Download all",
+            entries.add(0, new OPDSEntryImpl("download:" + uri, new Date(),
+
+                    new Res("opds.extlib.download", feed.getTitle()),
+                    null,
                     new OPDSLink(ExtLibOPDSEntry.mapToUri("action/downloadAll?", uri), OPDS_CATALOG)
             ));
         }
@@ -144,7 +148,9 @@ public class ExtLib {
         feed.getLinks().stream().
                 filter(link -> REL_NEXT.equals(link.getRel())).findFirst().
                 ifPresent(nextLink -> {
-                    OPDSEntryI nextEntry = new OPDSEntryImpl("next:" + uri, new Date(), "Next", "Next Page",
+                    OPDSEntryI nextEntry = new OPDSEntryImpl("next:" + uri, new Date(),
+                            new Res("opds.extlib.nextPage" ),
+                            null,
                             nextLink);
                     entries.add(nextEntry);
                 });
@@ -221,7 +227,7 @@ public class ExtLib {
     public void downloadAll(ZUser user, String uri) {
         try {
             downloadAll(getEntries(uri), user).ifPresent(
-                    result -> messengerService.sendMessageToUser("Download " + result.getResultMessage(), user)
+                    result -> messengerService.sendMessageToUser(result, user)
             );
         } catch (LibException e) {
             log.error(e.getMessage(), e);
@@ -241,7 +247,7 @@ public class ExtLib {
             String warning = "Book id: " + entry.getId() + " have more than 1 download link " +
                     "\nBook title:" + entry.getTitle();
             log.warn(warning);
-            messengerService.toRole(warning, ZUserService.ADMIN_AUTHORITY);
+            messengerService.toRole(new ZMessage(warning), ZUserService.ADMIN_AUTHORITY);
             return DownloadAllResult.empty(authors, entry.getTitle());
         } else if (links.size() == 0) {
             return DownloadAllResult.empty(authors, entry.getTitle());
@@ -308,14 +314,15 @@ public class ExtLib {
                     filter(DownloadAllResult::hasResult).
                     ifPresent(
                             result -> messengerService.
-                                    sendMessageToUser("Subscription " + result.getResultMessage(), subscription.getUser()));
+                                    sendMessageToUser(result, subscription.getUser()));
         } catch (LibException e) {
             log.error(e.getMessage(), e);
         }
     }
 
     public OPDSEntryI getRootEntry() {
-        return new OPDSEntryImpl("" + extLibrary.getId(), extLibrary.getName(), new OPDSLink("", OPDS_CATALOG));
+        return new OPDSEntryImpl("" + extLibrary.getId(), new Res("opds.first.value",
+                extLibrary.getName()), new OPDSLink("", OPDS_CATALOG));
     }
 
     public String getExtLibId() {

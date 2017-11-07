@@ -177,6 +177,10 @@ public class Book {
         return duplicate;
     }
 
+
+    public Boolean isPrimary() {
+        return !duplicate;
+    }
     public void setDuplicate(Boolean duplicate) {
         this.duplicate = duplicate;
     }

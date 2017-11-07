@@ -1,6 +1,8 @@
 package com.patex.messaging;
 
 import com.patex.entities.ZUser;
+import com.patex.entities.ZUserConfig;
+import com.patex.service.Resources;
 import com.patex.service.ZUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -17,41 +19,53 @@ import java.util.List;
 @Component
 public class MessengerService {
 
+    @Autowired
+    Resources res;
     private List<Messenger> messengers = new ArrayList<>();
-
     @Autowired
     private ZUserService userService;
 
     public void register(Messenger messenger) {
         messengers.add(messenger);
-        toRole("ZLib Started", ZUserService.ADMIN_AUTHORITY, Collections.singletonList(messenger));
+        toRole(new ZMessage("lib.started"), ZUserService.ADMIN_AUTHORITY, Collections.singletonList(messenger));
     }
 
     @PreDestroy()
     public void contextStoppedEvent() {
-        toRole("Shutdown ZLib ", ZUserService.ADMIN_AUTHORITY);
+        toRole(new ZMessage("lib.stopped"), ZUserService.ADMIN_AUTHORITY);
     }
 
 
-    public void sendMessageToUser(String message, ZUser user) {
+    public void sendMessageToUser(ZUser user, String message, Object... objs) {
+        sendMessageToUser(new ZMessage(message, objs), user);
+    }
+
+
+    public void sendMessageToUser(ZMessage message, ZUser user) {
         if (user != null && user.getUserConfig() != null) {
-            messengers.forEach(messenger -> messenger.sendToUser(message, user));
+            messengers.forEach(messenger ->
+                    messenger.sendToUser(message.getMessage(res, user.getUserConfig().getLocale()), user));
         }
     }
 
-    public void toRole(String message, String role) {
+    public void toRole(ZMessage message, String role) {
         toRole(message, role, messengers);
     }
 
-    private void toRole(String message, String role, Collection<Messenger> messengers) {
+    private void toRole(ZMessage message, String role, Collection<Messenger> messengers) {
         Collection<ZUser> users = userService.getByRole(role);
         if (!users.isEmpty()) {
             messengers.forEach(messenger -> sendToUsers(messenger, message, users));
         }
     }
 
-    private void sendToUsers(Messenger messenger, String mesage, Collection<ZUser> users) {
-        users.forEach(user -> messenger.sendToUser(mesage, user));
+    private void sendToUsers(Messenger messenger, ZMessage message, Collection<ZUser> users) {
+        users.forEach(user -> {
+            ZUserConfig userConfig = user.getUserConfig();
+            if (userConfig != null) {
+                messenger.sendToUser(message.getMessage(res, userConfig.getLocale()), user);
+            }
+        });
     }
 
 }

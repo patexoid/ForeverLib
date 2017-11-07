@@ -1,20 +1,27 @@
 package com.patex.opds;
 
+import com.patex.entities.ZUser;
+import com.patex.entities.ZUserConfig;
 import com.patex.opds.converters.OPDSAuthor;
 import com.patex.opds.converters.OPDSEntryI;
 import com.patex.opds.converters.OPDSLink;
+import com.patex.service.Resources;
+import com.patex.service.ZUserService;
+import com.patex.utils.Res;
 import com.rometools.rome.feed.atom.Content;
 import com.rometools.rome.feed.atom.Entry;
 import com.rometools.rome.feed.atom.Feed;
 import com.rometools.rome.feed.atom.Link;
 import com.rometools.rome.feed.atom.Person;
 import com.rometools.rome.feed.synd.SyndPerson;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.view.feed.AbstractAtomFeedView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -26,6 +33,11 @@ public class OpdsView extends AbstractAtomFeedView {
     public static final String ENTRIES = "Entries";
     public static final String OPDS_METADATA="opdsMetaData";
 
+    @Autowired
+    private ZUserService userService;
+
+    @Autowired
+    private Resources res;
 
     public OpdsView() {
         setFeedType("opds.atom_1.0");
@@ -35,20 +47,31 @@ public class OpdsView extends AbstractAtomFeedView {
     @Override
     protected List<Entry> buildFeedEntries(Map<String, Object> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
         List<OPDSEntryI> entries = (List<OPDSEntryI>) model.get(ENTRIES);
-        return entries.stream().map(this::toEntry).collect(Collectors.toList());
+        ZUser user = userService.getCurrentUser();
+        ZUserConfig userConfig = user.getUserConfig();
+        Locale locale;
+        if(userConfig!=null) {
+            locale = userConfig.getLocale();
+        } else {
+            locale=Locale.getDefault();
+        }
+        return entries.stream().map(entry -> toEntry(entry,locale)).collect(Collectors.toList());
     }
 
-    private Entry toEntry(OPDSEntryI opdsEntryI) {
+    private Entry toEntry(OPDSEntryI opdsEntryI, Locale locale) {
+
         Entry entry = new Entry();
         entry.setId(String.valueOf(opdsEntryI.getId()));
         if(opdsEntryI.getUpdated()!=null) {
             entry.setUpdated(opdsEntryI.getUpdated());
         }
-        entry.setTitle(opdsEntryI.getTitle());
+        Res title = opdsEntryI.getTitle();
+
+        entry.setTitle(res.get(locale, title.getKey(), title.getObjs()));
         opdsEntryI.getContent().ifPresent(contents -> {
             entry.setContents(contents.stream().map(s -> {
                 Content content = new Content();
-                content.setValue(s.getValue());
+                content.setValue(s.getValue(res, locale));
                 content.setType(s.getType());
                 content.setSrc(s.getSrc());
                 return content;
@@ -77,9 +100,18 @@ public class OpdsView extends AbstractAtomFeedView {
 
     @Override
     protected void buildFeedMetadata(Map<String, Object> model, Feed feed, HttpServletRequest request) {
+        ZUser user = userService.getCurrentUser();
+        ZUserConfig userConfig = user.getUserConfig();
+        Locale locale;
+        if(userConfig!=null) {
+            locale = userConfig.getLocale();
+        } else {
+            locale=Locale.getDefault();
+        }
         super.buildFeedMetadata(model, feed, request);
         OPDSMetadata  metadata = (OPDSMetadata) model.get(OPDS_METADATA);
-        feed.setTitle(metadata.getTitle());
+        Res title=metadata.getTitle();
+        feed.setTitle(res.get(locale, title.getKey(), title.getObjs()));
         feed.setId(metadata.getId());
         feed.setUpdated(metadata.getUpdated());
         feed.setIcon("favicon.ico");

@@ -15,6 +15,7 @@
 
     <modules>
         <module>fb2generated</module>
+        <module>localization</module>
         <module>core</module>
     </modules>
 
