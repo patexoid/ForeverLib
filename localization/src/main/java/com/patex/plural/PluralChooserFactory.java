@@ -1,12 +1,10 @@
 package com.patex.plural;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
@@ -22,7 +20,7 @@ public class PluralChooserFactory {
         chooseFunc.put("ru", PluralChooserFactory::uk_ru_fchooser);
     }
 
-    private final Map<String, PluralChooser> choosers= new HashMap<>();
+    private final Map<String, PluralChooser> choosers = new HashMap<>();
 
     private static Integer uk_ru_fchooser(Integer count) {
         int lastDigit = count % 10;
@@ -38,25 +36,25 @@ public class PluralChooserFactory {
     public synchronized PluralChooser getFormChooser(Locale locale) {
         String language = locale.getLanguage();
         PluralChooser pluralChooser = choosers.get(language);
-        if(pluralChooser==null){
-            pluralChooser=createChooser(locale);
+        if (pluralChooser == null) {
+            pluralChooser = createChooser(locale);
             choosers.put(language, pluralChooser);
         }
         return pluralChooser;
     }
 
-    private PluralChooser createChooser(Locale locale) {
-        String language = locale.getLanguage();
-        PluralChooser chooser = new PluralChooser(chooseFunc.getOrDefault(language, i -> 0), locale);
-        URL resource = PluralChooserFactory.class.getResource("/plural_" + language + ".txt");
-        if (resource != null) {
-            try {
-                List<String> lines = Files.readAllLines(Paths.get(resource.toURI()));
-                lines.stream().map(s -> s.split(",")).forEach(chooser::putWord);
-            } catch (IOException | URISyntaxException e) {
-                e.printStackTrace();
-            }
+    private PluralChooser createChooser(Locale locale)  {
+        try {
+            String language = locale.getLanguage();
+            PluralChooser chooser = new PluralChooser(chooseFunc.getOrDefault(language, i -> 0), locale);
+            InputStream resStream = PluralChooserFactory.class.getResourceAsStream("/plural_" + language + ".txt");
+            if (resStream != null)
+                try (BufferedReader buff = new BufferedReader(new InputStreamReader(resStream))) {
+                    buff.lines().forEach(chooser::putWord);
+                }
+            return chooser;
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
         }
-        return chooser;
     }
 }
