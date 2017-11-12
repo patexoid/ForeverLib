@@ -34,7 +34,7 @@ import java.util.stream.StreamSupport;
 @Component
 public class TelegramZBot extends TelegramLongPollingBot implements Messenger {
 
-    public static final int MAX_MESSAGE_SIZE = 4000;
+    private static final int MAX_MESSAGE_SIZE = 4000;
 
     private static Logger log = LoggerFactory.getLogger(TelegramZBot.class);
 
@@ -161,7 +161,7 @@ public class TelegramZBot extends TelegramLongPollingBot implements Messenger {
         sendMessage.setChatId(chatId);
         sendMessage.setParseMode("HTML");
         try {
-            sendMessage(sendMessage);
+            execute(sendMessage);
         } catch (TelegramApiException e) {
             log.warn(e.getMessage(),e);
         }
