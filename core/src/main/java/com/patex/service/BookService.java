@@ -70,7 +70,6 @@ public class BookService {
         this.publisher = publisher;
     }
 
-    @Transactional(propagation = REQUIRES_NEW, isolation = Isolation.SERIALIZABLE)
     public synchronized Book uploadBook(String fileName, InputStream is, ZUser user) throws LibException {
         Book result = transactionService.newTransaction(() -> {
             byte[] byteArray = loadFromStream(is);
@@ -83,6 +82,7 @@ public class BookService {
             if (sameBook.isPresent()) { //TODO if author or book has the same name
                 return sameBook.get();
             }
+            log.trace("new book:"+book.getFileName());
             List<AuthorBook> authorsBooks = book.getAuthorBooks().stream().
                     map(authorBook -> {
                         List<Author> saved = authorService.findByName(authorBook.getAuthor().getName());
@@ -90,14 +90,15 @@ public class BookService {
                     }).collect(Collectors.toList());
             book.setAuthorBooks(authorsBooks);
 
-            Map<String, Sequence> sequencesMap = authorsBooks.stream().
+            Map<String, List<Sequence>> sequenceMapList = authorsBooks.stream().
                     map(AuthorBook::getAuthor).
                     flatMap(Author::getSequencesStream).
                     filter(sequence -> sequence.getId() != null). //already saved
                     filter(StreamU.distinctByKey(Sequence::getId)).
-                    // some magic if 2 authors wrote the same sequence but different books
-                            collect(Collectors.groupingBy(Sequence::getName, Collectors.toList())).
-                            entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> sequenceService.mergeSequences(e.getValue())));
+                            collect(Collectors.groupingBy(Sequence::getName, Collectors.toList()));
+            // some magic if 2 authors wrote the same sequence but different books
+            Map<String, Sequence> sequencesMap = sequenceMapList.entrySet().stream().
+                    collect(Collectors.toMap(Map.Entry::getKey, e -> sequenceService.mergeSequences(e.getValue())));
 
 
             book.getSequences().forEach(bookSequence -> {
@@ -182,30 +183,7 @@ public class BookService {
                 reduce((l1, l2) -> l1 + l2).orElse(0);
     }
 
-    public void updateContentSize() {
-        transactionService.newTransaction(() -> {
-            Iterable<Book> all = bookRepository.findAll();
-            for (Book book : all) {
-                try {
-                    if (book.getContentSize() == null) {
-                        InputStream is = fileStorage.load(book.getFileResource().getFilePath());
-                        book.setContentSize(getContentSize(is, book.getFileName()));
-                        bookRepository.save(book);
-                    }
-                } catch (Exception e) {
-                    log.error("Error on contentSize calculation book:" + book.getId() + "title " + book.getTitle(), e);
-                }
-            }
-        });
-    }
-
-
-    public Iterable<Book> getBooks() {
-        return bookRepository.findAll();
-    }
-
     public void prepareExisted(ZUser user) {
-//        updateContentSize();
         Iterable<Book> books = bookRepository.findAll();
         for (Book book : books) {
             if (!book.isDuplicate()) {
