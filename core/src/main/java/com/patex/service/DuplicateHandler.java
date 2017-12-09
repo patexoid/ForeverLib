@@ -124,7 +124,7 @@ public class DuplicateHandler {
                 lastId = checkQueue.get(checkQueue.size() - 1).getId();
                 for (BookCheckQueue bcq : checkQueue) {
                     blockingExecutor.execute(
-                            () -> transactionService.transactionRequired(() -> checkForDuplicate(bcq)));
+                            () -> transactionService.newTransaction(() -> checkForDuplicate(bcq)));
                 }
             }
         }
