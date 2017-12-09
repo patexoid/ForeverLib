@@ -1,6 +1,6 @@
 language: java
 install: true
-script: mvn -P web,prod verify
+script: mvn -P prod verify
 jdk:
   - oraclejdk8
 cache:
