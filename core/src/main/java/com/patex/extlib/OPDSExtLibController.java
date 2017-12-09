@@ -6,6 +6,7 @@ import com.patex.opds.RootProvider;
 import com.patex.opds.converters.OPDSEntryI;
 import com.patex.opds.converters.OPDSEntryImpl;
 import com.patex.opds.latest.SaveLatest;
+import com.patex.service.Resources;
 import com.patex.service.ZUserService;
 import com.patex.utils.Res;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.patex.opds.OPDSController.*;
+import static com.patex.service.ZUserService.ADMIN_AUTHORITY;
 import static com.patex.service.ZUserService.USER;
 
 /**
@@ -43,9 +45,11 @@ public class OPDSExtLibController implements RootProvider {
     @Autowired
     private OPDSController opdsController;
 
-
     @Autowired
     private ZUserService userService;
+
+    @Autowired
+    private Resources resources;
 
     @PostConstruct
     public void setUp() {
@@ -79,6 +83,14 @@ public class OPDSExtLibController implements RootProvider {
         String redirect = extLibService.actionExtLibData(id, action, requestParams, userService.getCurrentUser());
         return "redirect:" + redirect;
     }
+
+    @RequestMapping(value = "runSubcriptionTask")
+    @Secured(ADMIN_AUTHORITY)
+    public String runSubcriptionTask() throws LibException {
+        extLibService.checkSubscriptions();
+        return resources.get(userService.getUserLocale(), "opds.extlib.subscription.task.in.progress");
+    }
+
 
 
 }

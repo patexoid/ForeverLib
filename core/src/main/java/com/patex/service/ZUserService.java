@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.Locale;
 
 /**
  * Created by Alexey on 25.03.2017.
@@ -32,6 +33,11 @@ public class ZUserService implements UserDetailsService {
     public static final String ADMIN_AUTHORITY = "ROLE_ADMIN";
     private static Logger log = LoggerFactory.getLogger(ZUserService.class);
     public static final ZUser anonim = new ZUser("anonimus", true);
+    static {
+        ZUserConfig userConfig = new ZUserConfig();
+        userConfig.setLang("en");
+        anonim.setUserConfig(userConfig);
+    }
     @Autowired
     private ZUserRepository userRepo;
 
@@ -135,4 +141,9 @@ public class ZUserService implements UserDetailsService {
     public Collection<ZUser> getByRole(String role) {
         return userRepo.findAllByAuthoritiesIs(role);
     }
+
+    public Locale getUserLocale(){
+        return getCurrentUser().getUserConfig().getLocale();
+    }
+
 }
