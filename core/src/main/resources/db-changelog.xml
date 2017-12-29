@@ -136,4 +136,14 @@
             UPDATE ZUSER_CONFIG SET lang='en'
         </sql>
     </changeSet>
+
+    <changeSet id="11" author="patex">
+        <dropUniqueConstraint tableName="BOOK_CHECK_QUEUE" constraintName="uk_BOOK_CHECK_QUEUE_BOOKS"/>
+        <dropColumn tableName="BOOK_CHECK_QUEUE" columnName="BOOK1_ID"/>
+        <dropColumn tableName="BOOK_CHECK_QUEUE" columnName="BOOK2_ID"/>
+        <addColumn tableName="BOOK_CHECK_QUEUE">
+            <column name="BOOK_ID" type="BIGINT(19)"/>
+        </addColumn>
+
+    </changeSet>
 </databaseChangeLog>

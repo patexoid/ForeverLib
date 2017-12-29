@@ -1,6 +1,7 @@
-package com.patex.utils.shingle;
+package com.patex.shingle;
 
-import javax.annotation.Nonnull;
+import com.patex.shingle.byteSet.ByteHashSet;
+
 import java.util.Iterator;
 
 /**
@@ -8,25 +9,22 @@ import java.util.Iterator;
  */
 class LoadedShingler implements Shingler {
 
-    private final Byte16HashSet shingles;
-    private int size;
+    private final ByteHashSet shingles;
 
 
-    LoadedShingler(Byte16HashSet shingles, int size) {
+    LoadedShingler(ByteHashSet shingles) {
         this.shingles = shingles;
-        this.size = size;
     }
 
     @Override
-    public @Nonnull
-    Iterator<byte[]> iterator() {
+    public Iterator<byte[]> iterator() {
         return shingles.iterator();
     }
 
 
     @Override
     public int size() {
-        return size;
+        return shingles.getSize();
     }
 
     public boolean contains(byte[] shingleHash) {

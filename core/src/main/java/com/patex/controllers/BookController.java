@@ -100,7 +100,7 @@ public class BookController {
 
     @RequestMapping(value = "/waitForDuplicateCheck", method = RequestMethod.GET)
     @Secured(ADMIN_AUTHORITY)
-    public @ResponseBody String duplicateCheck(){
+    public @ResponseBody String waitForDuplicateCheck(){
         duplicateHandler.waitForFinish();
         return "success";
     }

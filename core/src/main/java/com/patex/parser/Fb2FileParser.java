@@ -27,7 +27,7 @@ public class Fb2FileParser implements FileParser {
 
     private static Logger log = LoggerFactory.getLogger(Fb2FileParser.class);
 
-    private final XMLInputFactory factory;
+        private final XMLInputFactory factory;
 
     public Fb2FileParser() {
         factory = XMLInputFactory.newInstance();
