@@ -1,4 +1,4 @@
-package com.patex.utils.shingle;
+package com.patex.shingle;
 
 import java.io.Closeable;
 import java.util.Iterator;

@@ -1,4 +1,4 @@
-package com.patex.utils.shingle;
+package com.patex.shingle;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Assert;
@@ -38,7 +38,7 @@ public class ShingleComparsionTest {
     }
 
     private void checkSimilarity(List<String> content, List<String> similarContents) {
-        ShingleMatcher<List<String>, List<String>> shingleMatcher = new ShingleMatcher<>(this::toShingleable, o -> o);
+        ShingleMatcher<List<String>, List<String>> shingleMatcher = new ShingleMatcher<>(this::toShingleable, o -> o, 1, 2000);
         Assert.assertTrue(shingleMatcher.isSimilar(content, similarContents));
     }
 
@@ -71,7 +71,7 @@ public class ShingleComparsionTest {
                 limit(100).collect(Collectors.toList());
         List<String> other = Stream.generate(() -> RandomStringUtils.randomAlphabetic(1 + random.nextInt(8))).
                 limit(100).collect(Collectors.toList());
-        ShingleMatcher<List<String>, List<String>> shingleMatcher = new ShingleMatcher<>(this::toShingleable, o -> o);
+        ShingleMatcher<List<String>, List<String>> shingleMatcher = new ShingleMatcher<>(this::toShingleable, o -> o, 23, 2000);
         Assert.assertFalse(shingleMatcher.isSimilar(content, other));
     }
 

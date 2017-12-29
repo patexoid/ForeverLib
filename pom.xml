@@ -11,11 +11,12 @@
     <artifactId>main</artifactId>
 
     <packaging>pom</packaging>
-    <version>0.36-SNAPSHOT</version>
+    <version>0.38-SNAPSHOT</version>
 
     <modules>
         <module>fb2generated</module>
         <module>localization</module>
+        <module>fuzzySearch</module>
         <module>core</module>
     </modules>
 

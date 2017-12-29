@@ -12,11 +12,12 @@ import com.patex.entities.Sequence;
 import com.patex.entities.ZUser;
 import com.patex.messaging.MessengerService;
 import com.patex.parser.ParserService;
+import com.patex.shingle.ShingleCacheStorage;
+import com.patex.shingle.ShingleSearch;
+import com.patex.shingle.Shingleable;
 import com.patex.storage.StorageService;
 import com.patex.utils.BlockingExecutor;
 import com.patex.utils.StreamU;
-import com.patex.utils.shingle.ShingleMatcher;
-import com.patex.utils.shingle.Shingleable;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,10 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.io.Closeable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Comparator;
@@ -53,7 +58,7 @@ public class DuplicateHandler {
     private final MessengerService messenger;
     private final StorageService fileStorage;
     private final ParserService parserService;
-    private final ShingleMatcher<Book, Long> shingleMatcher = new ShingleMatcher<>(ShingleableBook::new, Book::getId);
+    private final ShingleSearch<Book, Long> shingleSearch;
     private final ExecutorService scheduleExecutor;
 
     private final Semaphore lock = new Semaphore(0);
@@ -64,7 +69,10 @@ public class DuplicateHandler {
     public DuplicateHandler(BookCheckQueueRepository bookCheckQueueRepo, TransactionService transactionService,
                             BookService bookService, MessengerService messenger, StorageService fileStorage,
                             ParserService parserService,
-                            @Value("${duplicateCheckThreadCount:0}") int threadCount) {
+                            @Value("${duplicateCheck.threadCount:0}") int threadCount,
+                            @Value("${duplicateCheck.shingleCoeff:1}") int coef,
+                            @Value("${duplicateCheck.fastCacheSize:100}") int cacheSize,
+                            @Value("${duplicateCheck.storageCacheFolder}") String  storageFolder) {
         this.bookCheckQueueRepo = bookCheckQueueRepo;
         this.transactionService = transactionService;
         this.bookService = bookService;
@@ -81,7 +89,13 @@ public class DuplicateHandler {
         blockingExecutor = new BlockingExecutor(this.threadCount, this.threadCount * 5, 1,
                 TimeUnit.MINUTES, this.threadCount * 5,
                 createThreadFactory(() -> "checkForDuplicate-"));
-
+        shingleSearch = new ShingleSearch<>(this::getSameAuthorsBook,
+                ShingleableBook::new,
+                Book::getId,
+                coef, cacheSize);
+    if (StringUtils.isNotEmpty(storageFolder)) {
+        shingleSearch.setStorage(new BookShingleCacheStorage(storageFolder));
+    }
     }
 
     private ThreadFactory createThreadFactory(Supplier<String> supplier) {
@@ -149,103 +163,140 @@ public class DuplicateHandler {
     @EventListener
     public void onBookCreation(BookCreationEvent event) {
         scheduleExecutor.execute(() -> {
-            if (!transactionService.newTransaction(() -> scheduleCheck(event)).isEmpty())
+            if (transactionService.newTransaction(() -> scheduleCheck(event)))
                 lock.release();
         });
     }
 
-    private List<BookCheckQueue> scheduleCheck(BookCreationEvent event) {
+    private synchronized boolean scheduleCheck(BookCreationEvent event) {
         Book newBook = bookService.getBook(event.getBook().getId());
-        List<BookCheckQueue> bookCheckQueues = newBook.getAuthorBooks().stream().map(AuthorBook::getAuthor).
+        if (newBook.isDuplicate()) {
+            return false;
+        } else {
+            bookCheckQueueRepo.saveAndFlush(new BookCheckQueue(newBook, event.getUser()));
+            return true;
+        }
+    }
+
+    private List<Book> getSameAuthorsBook(Book primaryBook) {
+        return primaryBook.getAuthorBooks().stream().map(AuthorBook::getAuthor).
                 flatMap(a -> a.getBooks().stream().map(AuthorBook::getBook)).
-                filter(book -> !book.getId().equals(newBook.getId())).
+                filter(book -> !book.getId().equals(primaryBook.getId())).
                 filter(StreamU.distinctByKey(Book::getId)).
                 filter(book -> !book.isDuplicate()).
-                filter(book -> {
-                    float min = (float) Math.min(book.getContentSize(), newBook.getContentSize());
-                    float max = (float) Math.max(book.getContentSize(), newBook.getContentSize());
-                    return min / max > 0.7f;
-                }).
-                sorted(Comparator.comparing((book) -> StringUtils.getLevenshteinDistance(book.getTitle(), newBook.getTitle()))).
-                map(sameAuthorsBook -> {
-                    if (newBook.getId() > sameAuthorsBook.getId()) {
-                        return new BookCheckQueue(sameAuthorsBook, newBook, event.getUser());
-                    } else {
-                        return new BookCheckQueue(newBook, sameAuthorsBook, event.getUser());
-                    }
-                }).
-                filter(bcq -> !bookCheckQueueRepo.
-                        existsByBook1EqualsAndBook2Equals(bcq.getBook1(), bcq.getBook2())).collect(Collectors.toList());
-
-        bookCheckQueues.forEach(bookCheckQueueRepo::saveAndFlush);
-        return bookCheckQueues;
+                sorted(Comparator.comparing(
+                        book -> StringUtils.getLevenshteinDistance(book.getTitle(), primaryBook.getTitle()))).
+                collect(Collectors.toList());
 
     }
 
     private BookCheckQueue checkForDuplicate(BookCheckQueue bookCheckQueue) {
+        Book primary = bookService.getBook(bookCheckQueue.getBook().getId());
         try {
-            Book first = bookService.getBook(bookCheckQueue.getBook1().getId());
-            Book second = bookService.getBook(bookCheckQueue.getBook2().getId());
-            if (!first.isDuplicate() && !second.isDuplicate() &&
-                    shingleMatcher.isSimilar(first, second)) {
-                markDuplications(first, second, bookCheckQueue.getUser());
-                log.trace("duplicate id=" + bookCheckQueue.getId());
-            }
+            shingleSearch.findSimilar(primary).ifPresent(
+                    book -> {
+                        markDuplications(primary, book, bookCheckQueue.getUser());
+                    });
             bookCheckQueueRepo.delete(bookCheckQueue.getId());
+            log.trace("duplicate id=" + bookCheckQueue.getId());
             return bookCheckQueue;
         } catch (Exception e) {
             throw new LibException("Duplication check exception book " +
-                    " first.id= " + bookCheckQueue.getBook1().getId() +
-                    " first.title = " + bookCheckQueue.getBook1().getTitle() +
-                    " first.filename" + bookCheckQueue.getBook1().getFileName() +
-                    "\n second.id= " + bookCheckQueue.getBook2().getId() +
-                    " second.title = " + bookCheckQueue.getBook2().getTitle() +
-                    " second.filename" + bookCheckQueue.getBook2().getFileName() +
-                    " exception=" + e.getMessage(), e);
+                    " book.id= " + primary.getId() +
+                    " book.title = " + primary.getTitle() +
+                    " book.filename" + primary.getFileName() +
+                    " exception=" + e.getMessage(),
+                    e);
         }
     }
 
     private void markDuplications(Book first, Book second, ZUser user) {
-        Book primary, secondary;
-        if (first.getContentSize() > second.getContentSize()) {
-            primary = first;
-            secondary = second;
-        } else {
-            primary = second;
-            secondary = first;
+        try {
+            Book primary, secondary;
+            if (first.getContentSize() > second.getContentSize()) {
+                primary = first;
+                secondary = second;
+            } else {
+                primary = second;
+                secondary = first;
+            }
+
+            List<Long> sequences = primary.getSequences().stream().
+                    map(BookSequence::getSequence).
+                    filter(Objects::nonNull).//todo delete later
+                    map(Sequence::getId).
+                    collect(Collectors.toList());
+            List<Long> authors = primary.getAuthorBooks().stream().map(AuthorBook::getAuthor).map(Author::getId).
+                    collect(Collectors.toList());
+
+            secondary.setDuplicate(true);
+            this.bookService.updateBook(secondary);
+            shingleSearch.invalidate(secondary);
+            for (AuthorBook authorBook : secondary.getAuthorBooks()) {
+                Author author = authorBook.getAuthor();
+                if (!authors.contains(author.getId())) {
+                    primary.getAuthorBooks().add(new AuthorBook(author, primary));
+                }
+            }
+            for (BookSequence bookSequence : secondary.getSequences()) {
+                Sequence sequence = bookSequence.getSequence();
+                if (!sequences.contains(sequence.getId())) {
+                    primary.getSequences().
+                            add(new BookSequence(bookSequence.getSeqOrder(), sequence, primary));
+                }
+            }
+            String message = "Book:" + first.getTitle() + "\nPrimary: " + primary.getTitle() + "\nDuplicate: " +
+                    secondary.getTitle();
+            log.info(message);
+            if (user != null) {
+                messenger.sendMessageToUser(user, message);
+            }
+            this.bookService.updateBook(primary);
+        } catch (Exception e) {
+            throw new LibException("Duplication mark exception book " +
+                    " first.id= " + first.getId() +
+                    " first.title = " + first.getTitle() +
+                    " first.filename" + first.getFileName() +
+                    "\n second.id= " + second.getId() +
+                    " second.title = " + second.getTitle() +
+                    " second.filename" + second.getFileName() +
+                    " exception=" + e.getMessage(), e);
+        }
+    }
+
+    private static class BookShingleCacheStorage implements ShingleCacheStorage<Book> {
+        private final  String storageFolder;
+
+        public BookShingleCacheStorage(String storageFolder) {
+            this.storageFolder = storageFolder;
         }
 
-        List<Long> sequences = primary.getSequences().stream().
-                map(BookSequence::getSequence).
-                filter(Objects::nonNull).//todo delete later
-                map(Sequence::getId).
-                collect(Collectors.toList());
-        List<Long> authors = primary.getAuthorBooks().stream().map(AuthorBook::getAuthor).map(Author::getId).
-                collect(Collectors.toList());
+        @Override
+        public InputStream load(Book book) {
+            File cache = getCacheFile(book);
+            if (cache.exists()) {
+                try {
+                    return new FileInputStream(cache);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+            return null;
+        }
 
-        secondary.setDuplicate(true);
-        this.bookService.updateBook(secondary);
-        shingleMatcher.invalidate(secondary);
-        for (AuthorBook authorBook : secondary.getAuthorBooks()) {
-            Author author = authorBook.getAuthor();
-            if (!authors.contains(author.getId())) {
-                primary.getAuthorBooks().add(new AuthorBook(author, primary));
+        private File getCacheFile(Book book) {
+            return new File(storageFolder + "/" + book.getId());
+        }
+
+        @Override
+        public void save(byte[] bytes, Book book) {
+            try(FileOutputStream fos = new FileOutputStream(getCacheFile(book))) {
+                fos.write(bytes);
+                fos.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
-        for (BookSequence bookSequence : secondary.getSequences()) {
-            Sequence sequence = bookSequence.getSequence();
-            if (!sequences.contains(sequence.getId())) {
-                primary.getSequences().
-                        add(new BookSequence(bookSequence.getSeqOrder(), sequence, primary));
-            }
-        }
-        String message = "Book:" + first.getTitle() + "\nPrimary: " + primary.getTitle() + "\nDuplicate: " +
-                secondary.getTitle();
-        log.info(message);
-        if (user != null) {
-            messenger.sendMessageToUser(user, message);
-        }
-        this.bookService.updateBook(primary);
     }
 
     private class ShingleableBook implements Shingleable {

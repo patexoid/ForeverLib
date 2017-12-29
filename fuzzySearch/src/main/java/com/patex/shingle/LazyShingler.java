@@ -1,31 +1,28 @@
-package com.patex.utils.shingle;
+package com.patex.shingle;
 
-import com.patex.LibException;
 
-import javax.annotation.Nonnull;
+import com.patex.shingle.byteSet.ByteHashSet;
+import com.patex.shingle.byteSet.ByteSetFactory;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
 /**
  *
  */
-class LazyShingler implements Shingler, Closeable {
+public class LazyShingler implements Shingler, Closeable {
 
     private static final int PACK_SIZE = 100;
+    private final int coef;
     private final MessageDigest digest;
     private final ShinglerConfig config = new ShinglerConfig();
-    private final Byte16HashSet shingles;
-    private final List<byte[]> shinglesList = new ArrayList<>();
+    private final ByteHashSet shingles;
+    private final List<byte[]>  shinglesList = new ArrayList<>();
     private final ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
     private final List<String> shingleWords = new ArrayList<>(config.shingleSize());
     private Shingleable shingleable;
@@ -35,14 +32,16 @@ class LazyShingler implements Shingler, Closeable {
         try {
             digest = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException e) {
-            throw new LibException(e.getMessage(), e);
+            throw new RuntimeException(e.getMessage(), e);
         }
     }
 
-    LazyShingler(Shingleable shingleable) throws LibException {
+    LazyShingler(Shingleable shingleable, int coef, int byteArraySize) {
+        this.coef = coef;
         this.shingleable = shingleable;
         size = shingleable.size() / config.averageWordLength();
-        shingles = new Byte16HashSet(size / 2);//some words will be skipped,(2 is magic number)
+
+        shingles = ByteSetFactory.createByteSet(size/2/coef, byteArraySize);//some words will be skipped,(2 is magic number)
         prepare();
     }
 
@@ -60,7 +59,7 @@ class LazyShingler implements Shingler, Closeable {
                         shingleWords.add(token);
                     }
                 }
-                addShingle();
+                addShingle(this.digest.digest(shingleWords.toString().getBytes()));
                 if (st.hasMoreTokens()) {
                     return readNext(st);
                 }
@@ -69,11 +68,11 @@ class LazyShingler implements Shingler, Closeable {
         }
     }
 
-    boolean isLoading() {
+    private boolean isLoading() {
         return shingleable != null;
     }
 
-    Byte16HashSet getShingles() {
+    ByteHashSet getShingles() {
         return shingles;
     }
 
@@ -99,24 +98,28 @@ class LazyShingler implements Shingler, Closeable {
             if (!config.skipWord(token)) {
                 shingleWords.remove(0);
                 shingleWords.add(token);
-                addShingle();
-                count++;
+                byte[] digest = this.digest.digest(shingleWords.toString().getBytes());
+                byte d=0;
+                for (byte b : digest) {
+                    d^=b;
+                }
+                if (d % coef == 0) {
+                    addShingle(digest);
+                    count++;
+                }
             }
         }
         return count;
     }
 
 
-    private void addShingle() {
-        byte[] shingleHash = this.digest.digest(shingleWords.toString().getBytes());
+    private void addShingle(byte[] shingleHash) {
         shingles.add(shingleHash);
         shinglesList.add(shingleHash);
     }
 
     @Override
-
-    public @Nonnull
-    Iterator<byte[]> iterator() {
+    public Iterator<byte[]> iterator() {
         return new ShingleHashIterator();
     }
 
@@ -152,6 +155,12 @@ class LazyShingler implements Shingler, Closeable {
         return false;
     }
 
+
+    public void loadAll(){
+        while (isLoading()){
+            readNextPack();
+        }
+    }
     @Override
     public void close() {
         try {
@@ -159,7 +168,7 @@ class LazyShingler implements Shingler, Closeable {
                 shingleable.close();
             shingleable = null;
         } catch (IOException e) {
-            throw new LibException(e);
+            throw new RuntimeException(e);
         }
     }
 
