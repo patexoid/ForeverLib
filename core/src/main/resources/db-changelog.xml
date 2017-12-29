@@ -139,11 +139,13 @@
 
     <changeSet id="11" author="patex">
         <dropUniqueConstraint tableName="BOOK_CHECK_QUEUE" constraintName="uk_BOOK_CHECK_QUEUE_BOOKS"/>
+    </changeSet>
+
+    <changeSet id="12" author="patex">
         <dropColumn tableName="BOOK_CHECK_QUEUE" columnName="BOOK1_ID"/>
         <dropColumn tableName="BOOK_CHECK_QUEUE" columnName="BOOK2_ID"/>
         <addColumn tableName="BOOK_CHECK_QUEUE">
             <column name="BOOK_ID" type="BIGINT(19)"/>
         </addColumn>
-
-    </changeSet>
+</changeSet>
 </databaseChangeLog>
