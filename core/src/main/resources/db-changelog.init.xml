@@ -2,10 +2,40 @@
 <databaseChangeLog
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd
-        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd">
     <changeSet author="Alexey (generated)" id="0">
+        <createTable tableName="users">
+            <column name="username" type="VARCHAR(50)">
+                <constraints primaryKey="true" primaryKeyName="users_primary"/>
+            </column>
+            <column name="password" type="VARCHAR(500)"/>
+            <column name="enabled" type="BOOLEAN(1)"/>
+        </createTable>
+        <createTable tableName="authorities">
+            <column autoIncrement="true" name="ID" type="BIGINT(19)">
+                <constraints primaryKey="true" primaryKeyName="authorities_primary"/>
+            </column>
+            <column name="username" type="VARCHAR(50)">
+                <constraints foreignKeyName="AUTHORITY_USERS_USERNAME" references="users(username)"/>
+            </column>
+            <column name="authority" type="VARCHAR(50)"/>
+        </createTable>
+        <addUniqueConstraint columnNames="username,authority"
+                             tableName="authorities"
+                             constraintName="fk_username_authority"/>
+
+        <createTable tableName="ZUSER_CONFIG">
+            <column autoIncrement="true" name="ID" type="BIGINT(19)">
+                <constraints primaryKey="true" primaryKeyName="ZUSER_CONFIG_primary"/>
+            </column>
+            <column name="username" type="VARCHAR(50)">
+                <constraints foreignKeyName="ZUSER_CONFIG_USERS_USERNAME" references="users(username)"/>
+            </column>
+            <column name="TELEGRAM_CHAT_ID" type="BIGINT(19)"/>
+            <column name="LANG" type="VARCHAR(2)"/>
+        </createTable>
+
+
         <createTable tableName="AUTHOR">
             <column autoIncrement="true" name="ID" type="BIGINT(19)">
                 <constraints primaryKey="true" primaryKeyName="CONSTRAINT_7"/>
@@ -42,6 +72,9 @@
             <column name="FILE_RESOURCE_ID" type="BIGINT(19)">
                 <constraints foreignKeyName="BOOK_FILE_RESOURCE_ID" references="FILE_RESOURCE(ID)"/>
             </column>
+            <column name="DUPLICATE" type="BOOLEAN(1)"/>
+            <column name="CONTENT_SIZE" type="INTEGER"/>
+            <column name="CREATED" type="TIMESTAMP"/>
         </createTable>
         <createTable tableName="GENRE">
             <column autoIncrement="true" name="ID" type="BIGINT(19)">
@@ -109,6 +142,41 @@
                 <constraints nullable="false"/>
             </column>
             <column name="OPDS_PATH" type="VARCHAR(255)"/>
+            <column name="PROXY_TYPE" type="VARCHAR(10)"/>
+            <column name="PROXY_HOST" type="VARCHAR(255)"/>
+            <column name="PROXY_PORT" type="INT(10)"/>
+        </createTable>
+        <createTable tableName="SAVED_BOOK">
+            <column autoIncrement="true" name="ID" type="BIGINT(19)">
+                <constraints primaryKey="true" primaryKeyName="SAVED_BOOK_PRIMARY"/>
+            </column>
+            <column name="EXT_LIBRARY_ID" type="BIGINT(19)">
+                <constraints foreignKeyName="SAVED_BOOK_EXT_LIBRARY_ID" references="EXT_LIBRARY(ID)"/>
+            </column>
+            <column name="EXT_ID" type="VARCHAR(500)"/>
+        </createTable>
+        <createTable tableName="SUBSCRIPTION">
+            <column autoIncrement="true" name="ID" type="BIGINT(19)">
+                <constraints primaryKey="true" primaryKeyName="SUBSCRIPTION_PRIMARY"/>
+            </column>
+            <column name="EXT_LIBRARY_ID" type="BIGINT(19)">
+                <constraints foreignKeyName="SUBSCRIPTION_EXT_LIBRARY_ID" references="EXT_LIBRARY(ID)"/>
+            </column>
+            <column name="LINK" type="VARCHAR(500)"/>
+            <column name="USER_USERNAME" type="VARCHAR(50)">
+                <constraints foreignKeyName="SUBSCRIPTION_USERS_USERNAME" references="users(username)"/>
+            </column>
+        </createTable>
+        <createTable tableName="BOOK_CHECK_QUEUE">
+            <column autoIncrement="true" name="ID" type="BIGINT(19)">
+                <constraints primaryKey="true" primaryKeyName="BOOK_CHECK_QUEUE_ID"/>
+            </column>
+            <column name="BOOK_ID" type="BIGINT(19)">
+                <constraints foreignKeyName="BOOK_CHECK_QUEUE_BOOK_ID" references="BOOK(ID)"/>
+            </column>
+            <column name="USER_USERNAME" type="VARCHAR(50)">
+                <constraints foreignKeyName="BOOK_CHECK_QUEUE_USERS_USERNAME" references="users(username)"/>
+            </column>
         </createTable>
 
     </changeSet>
