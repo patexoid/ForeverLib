@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -44,9 +45,11 @@ public class ZUserService implements UserDetailsService {
     @Autowired
     private ZUserConfigRepository userConfigRepo;
 
-
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private ApplicationEventPublisher publisher;
 
     @Override
     public ZUser loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -88,7 +91,9 @@ public class ZUserService implements UserDetailsService {
         }
         user.setEnabled(true);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepo.save(user);
+        ZUser created = userRepo.save(user);
+        publisher.publishEvent(new UserCreationEvent(user));
+        return created;
     }
 
     public void updatePassword(String oldPassword, String newPassword) throws LibException {
