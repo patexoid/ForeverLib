@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.TelegramBotsApi;
@@ -32,6 +33,7 @@ import java.util.stream.StreamSupport;
  */
 
 @Component
+@ConditionalOnExpression("!'${telegram.bot.token}'.isEmpty()")
 public class TelegramZBot extends TelegramLongPollingBot implements Messenger {
 
     private static final int MAX_MESSAGE_SIZE = 4000;

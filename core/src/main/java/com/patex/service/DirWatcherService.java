@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -24,6 +25,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 @Component
+@ConditionalOnExpression("!'${bulkUploadDir}'.isEmpty()")
 public class DirWatcherService {
     private static Logger log = LoggerFactory.getLogger(DirWatcherService.class);
     private final Path directoryPath;
@@ -92,8 +94,7 @@ public class DirWatcherService {
 
         Kind<?> kind = event.kind();
 
-        if (kind.equals(StandardWatchEventKinds.ENTRY_CREATE) ||
-                kind.equals(StandardWatchEventKinds.ENTRY_MODIFY)) {
+        if (kind.equals(StandardWatchEventKinds.ENTRY_CREATE)) {
             Path entry = (Path) event.context();
             Optional<ZUser> user = getAdminUser();
             File file = directoryPath.resolve(entry).toFile();
