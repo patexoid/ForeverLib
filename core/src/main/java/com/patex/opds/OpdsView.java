@@ -20,6 +20,7 @@ import org.springframework.web.servlet.view.feed.AbstractAtomFeedView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -31,7 +32,7 @@ public class OpdsView extends AbstractAtomFeedView {
 
     public static final String OPDS_VIEW = "opdsView";
     public static final String ENTRIES = "Entries";
-    public static final String OPDS_METADATA="opdsMetaData";
+    public static final String OPDS_METADATA = "opdsMetaData";
 
     @Autowired
     private ZUserService userService;
@@ -50,19 +51,19 @@ public class OpdsView extends AbstractAtomFeedView {
         ZUser user = userService.getCurrentUser();
         ZUserConfig userConfig = user.getUserConfig();
         Locale locale;
-        if(userConfig!=null) {
+        if (userConfig != null) {
             locale = userConfig.getLocale();
         } else {
-            locale=Locale.getDefault();
+            locale = Locale.getDefault();
         }
-        return entries.stream().map(entry -> toEntry(entry,locale)).collect(Collectors.toList());
+        return entries.stream().map(entry -> toEntry(entry, locale)).collect(Collectors.toList());
     }
 
     private Entry toEntry(OPDSEntryI opdsEntryI, Locale locale) {
 
         Entry entry = new Entry();
         entry.setId(String.valueOf(opdsEntryI.getId()));
-        if(opdsEntryI.getUpdated()!=null) {
+        if (opdsEntryI.getUpdated() != null) {
             entry.setUpdated(opdsEntryI.getUpdated());
         }
         Res title = opdsEntryI.getTitle();
@@ -70,17 +71,35 @@ public class OpdsView extends AbstractAtomFeedView {
         entry.setTitle(res.get(locale, title.getKey(), title.getObjs()));
         opdsEntryI.getContent().ifPresent(contents -> {
             entry.setContents(contents.stream().map(s -> {
-                Content content = new Content();
-                content.setValue(s.getValue(res, locale));
-                content.setType(s.getType());
-                content.setSrc(s.getSrc());
-                return content;
-            }).collect(Collectors.toList()));
+                        Content content = new Content();
+                        content.setValue(s.getValue(res, locale));
+                        content.setType(s.getType());
+                        content.setSrc(s.getSrc());
+                        return content;
+                    }).
+                    reduce(this::reduceContent).
+                    map(Collections::singletonList).get());
         });
         entry.setOtherLinks(opdsEntryI.getLinks().stream().map(this::toLink).collect(Collectors.toList()));
         opdsEntryI.getAuthors().ifPresent(opdsAuthors ->
                 entry.setAuthors(opdsAuthors.stream().map(this::toPerson).collect(Collectors.toList())));
         return entry;
+    }
+
+    private Content reduceContent(Content first, Content second) {
+        Content newContent = new Content();
+        String type = first.getType();
+        String newValue;
+        if (type.toLowerCase().contains("html")) {
+            newValue = first.getValue() + "<br/>" + second.getValue();
+        } else {
+            newValue = first.getValue() + "\n " + second.getValue();
+
+        }
+        newContent.setValue(newValue);
+        newContent.setType(type);
+        newContent.setSrc(first.getSrc());
+        return newContent;
     }
 
     private Link toLink(OPDSLink opdsLinkI) {
@@ -103,18 +122,19 @@ public class OpdsView extends AbstractAtomFeedView {
         ZUser user = userService.getCurrentUser();
         ZUserConfig userConfig = user.getUserConfig();
         Locale locale;
-        if(userConfig!=null) {
+        if (userConfig != null) {
             locale = userConfig.getLocale();
         } else {
-            locale=Locale.getDefault();
+            locale = Locale.getDefault();
         }
         super.buildFeedMetadata(model, feed, request);
-        OPDSMetadata  metadata = (OPDSMetadata) model.get(OPDS_METADATA);
-        Res title=metadata.getTitle();
+        OPDSMetadata metadata = (OPDSMetadata) model.get(OPDS_METADATA);
+        Res title = metadata.getTitle();
         feed.setTitle(res.get(locale, title.getKey(), title.getObjs()));
         feed.setId(metadata.getId());
         feed.setUpdated(metadata.getUpdated());
         feed.setIcon("favicon.ico");
+        feed.setEncoding("utf-8");
         //noinspection unchecked
         feed.setOtherLinks(metadata.getOtherLinks());
     }

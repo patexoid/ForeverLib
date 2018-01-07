@@ -1,5 +1,6 @@
 package com.patex.opds;
 
+import com.patex.entities.AggrResult;
 import com.patex.entities.Author;
 import com.patex.entities.AuthorBook;
 import com.patex.entities.BookSequence;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 @Controller
@@ -85,7 +87,7 @@ public class OPDSController {
         rootEntriesProvider.add(provider);
     }
 
-    @RequestMapping(produces = "application/atom+xml")
+    @RequestMapping(produces = APPLICATION_ATOM_XML)
     public ModelAndView getMain() {
         List<OPDSEntryI> rootEntries = new ArrayList<>();
         rootEntries.add(new OPDSEntryImpl("root:latest", new Res("opds.latest"),
@@ -98,48 +100,44 @@ public class OPDSController {
         return createMav(new Res("opds.catalog"), rootEntries);
     }
 
-    @RequestMapping(value = AUTHORSINDEX, produces = "application/atom+xml")
+    @RequestMapping(value = AUTHORSINDEX, produces = APPLICATION_ATOM_XML)
     public ModelAndView getAuthorsIndex() {
         return getAuthorsIndex("");
     }
 
     @SaveLatest
-    @RequestMapping(value = AUTHORSINDEX + "/{start}", produces = "application/atom+xml")
+    @RequestMapping(value = AUTHORSINDEX + "/{start}", produces = APPLICATION_ATOM_XML)
     public ModelAndView getAuthorsIndex(@PathVariable(value = "start") String start) {
         return createMav(new Res("opds.all.authors"), authorService.getAuthorsCount(start), aggrResults -> {
-            List<OPDSEntryI> entries = new ArrayList<>();
-            List<OPDSEntryI> authors = aggrResults.stream().
-                    filter(aggrResult -> aggrResult.getResult() <= EXPAND_FOR_AUTHORS_COUNT).
-                    flatMap(aggrResult -> authorService.findByName(aggrResult.getId()).stream()).
-                    map(AuthorEntry::new).
-                    sorted(Comparator.comparing(AuthorEntry::getTitle)).
+            return aggrResults.stream().
+                    flatMap(this::expandAggrResult).
+                    sorted(Comparator.comparing(OPDSEntryI::getTitle)).
                     collect(Collectors.toList());
-            entries.addAll(authors);
-
-            List<OPDSEntryI> serachEntries = aggrResults.stream().
-                    filter(aggrResult -> aggrResult.getResult() > EXPAND_FOR_AUTHORS_COUNT && aggrResults.size() != 1).
-                    map(aggr -> {
-                        String link = LinkUtils.makeURL("opds", AUTHORSINDEX, aggr.getId());
-                        Res title = new Res("opds.first.value", aggr.getId());
-                        return new OPDSEntryImpl(aggr.getId(), title, null, link);
-                    }).
-                    collect(Collectors.toList());
-            entries.addAll(serachEntries);
-            return entries;
         });
     }
 
+
+    private Stream<OPDSEntryI> expandAggrResult(AggrResult aggr) {
+        if (aggr.getResult() >= EXPAND_FOR_AUTHORS_COUNT) {
+            String link = LinkUtils.makeURL("opds", AUTHORSINDEX, LinkUtils.encode(aggr.getId()));
+            Res title = new Res("opds.first.value", aggr.getId());
+            return Stream.of(new OPDSEntryImpl(aggr.getId(), title, null, link));
+        } else {
+            return authorService.findByName(aggr.getId()).stream().map(AuthorEntry::new);
+        }
+    }
+
     @SaveLatest
-    @RequestMapping(value = "author/{id}", produces = "application/atom+xml")
+    @RequestMapping(value = "author/{id}", produces = APPLICATION_ATOM_XML)
     public ModelAndView getAuthor(@PathVariable(value = "id") long id) {
         Author authors = authorService.getAuthors(id);
-        return createMav(new Res("opds.author.books",authors.getName()), authors, author ->
+        return createMav(new Res("opds.author.books", authors.getName()), authors, author ->
                 new ExpandedAuthorEntry(author).getEntries()
         );
     }
 
     @SaveLatest
-    @RequestMapping(value = "author/{id}/alphabet", produces = "application/atom+xml")
+    @RequestMapping(value = "author/{id}/alphabet", produces = APPLICATION_ATOM_XML)
     public ModelAndView getAuthorBookAlphabet(@PathVariable(value = "id") long id) {
         Author bookAuthor = authorService.getAuthors(id);
         return createMav(new Res("opds.author.books.alphabet", bookAuthor.getName()), bookAuthor, author ->
@@ -151,7 +149,7 @@ public class OPDSController {
     }
 
     @SaveLatest
-    @RequestMapping(value = "authorsequenceless/{id}", produces = "application/atom+xml")
+    @RequestMapping(value = "authorsequenceless/{id}", produces = APPLICATION_ATOM_XML)
     public ModelAndView getAuthorBookNoSequence(@PathVariable(value = "id") long id) {
         Author bookAuthor = authorService.getAuthors(id);
         return createMav(new Res("opds.author.books.sequenceless", bookAuthor.getName()), bookAuthor, author ->
@@ -163,7 +161,7 @@ public class OPDSController {
     }
 
     @SaveLatest
-    @RequestMapping(value = "sequence/{id}", produces = "application/atom+xml")
+    @RequestMapping(value = "sequence/{id}", produces = APPLICATION_ATOM_XML)
     public ModelAndView getBookBySequence(@PathVariable(value = "id") long id) {
         Sequence sequence = sequenceService.getSequence(id);
         return createMav(new Res("opds.author.books.sequence", sequence.getName()), sequence, seq ->
