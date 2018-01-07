@@ -8,7 +8,12 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
@@ -55,6 +60,7 @@ public class LazyShingler implements Shingler, Closeable {
             readNextPack(1, st -> {
                 while (shingleWords.size() < shingleSize && st.hasMoreTokens()) {
                     String token = st.nextToken();
+                    token = config.normalize(token);
                     if (!config.skipWord(token)) {
                         shingleWords.add(token);
                     }
@@ -184,10 +190,9 @@ public class LazyShingler implements Shingler, Closeable {
             return SKIP_WORDS.contains(word);
         }
 
-//        String normalize(String s) {
-//            return s.toLowerCase();
-//             TODO lemmatization
-//        }
+        String normalize(String s) {
+            return s.toLowerCase();
+        }
 
         private int shingleSize() {
             return 10;
@@ -198,7 +203,7 @@ public class LazyShingler implements Shingler, Closeable {
         }
 
         private String getDelimiters() {
-            return ".,!?:;„“…'-—–+\n\r()»« 1234567890/%№";
+            return ".,!?:;„“…'\"-—–+\n\r()»« 1234567890/%№";
         }
 
 
