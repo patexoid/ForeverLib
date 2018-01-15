@@ -3,5 +3,28 @@
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd">
-
+    <changeSet author="patex" id="0">
+        <createIndex tableName="BOOK" indexName="BOOK_TITLE_CHECKSUM" unique="false">
+            <column name="TITLE"/>
+            <column name="CHECKSUM"/>
+        </createIndex>
+        <addColumn tableName="BOOK">
+            <column name="COVER_ID" type="BIGINT(19)">
+                <constraints foreignKeyName="BOOK_COVER_FILE_RESOURCE_ID" references="FILE_RESOURCE(ID)"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="FILE_RESOURCE">
+            <column name="SIZE" type="INTEGER"/>
+            <column name="TYPE" type="VARCHAR(50)"/>
+        </addColumn>
+        <sql>
+            UPDATE FILE_RESOURCE F
+            SET size = (SELECT b.SIZE
+            FROM BOOK b
+            WHERE b.FILE_RESOURCE_ID = F.ID)
+        </sql>
+    </changeSet>
+    <changeSet id="2" author="patex">
+        <dropColumn tableName="BOOK" columnName="SIZE"/>
+    </changeSet>
 </databaseChangeLog>

@@ -27,5 +27,7 @@ public interface OPDSEntryI {
     default Optional<List<OPDSAuthor>> getAuthors() {
         return Optional.empty();
     }
+
+
 }
 

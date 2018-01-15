@@ -26,7 +26,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
@@ -50,20 +49,23 @@ public class BookController {
     @Autowired
     private ZUserService userService;
 
-    @RequestMapping(value = "/{id}" , method = RequestMethod.GET)
-    public @ResponseBody Book getBook(@PathVariable(value = "id") long id) {
+    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
+    public @ResponseBody
+    Book getBook(@PathVariable(value = "id") long id) {
         return bookService.getBook(id);
     }
 
     @RequestMapping(method = RequestMethod.GET)
-    public @ResponseBody Page<Book> getBooks(Pageable pageable) {
+    public @ResponseBody
+    Page<Book> getBooks(Pageable pageable) {
         return bookService.getBooks(pageable);
     }
 
     @RequestMapping(method = RequestMethod.POST, value = "/upload")
     @Secured(USER)
-    public @ResponseBody List<BookUploadInfo> handleFileUpload(@RequestParam("file") MultipartFile[] files)
-            throws LibException, IOException {
+    public @ResponseBody
+    List<BookUploadInfo> handleFileUpload(@RequestParam("file") MultipartFile[] files)
+            throws LibException {
 
         return Arrays.stream(files).map(file -> {
                     try {
@@ -82,7 +84,8 @@ public class BookController {
     }
 
     @RequestMapping(method = RequestMethod.POST)
-    public @ResponseBody Book updateBook(@RequestBody Book book) throws LibException {
+    public @ResponseBody
+    Book updateBook(@RequestBody Book book) throws LibException {
         return bookService.updateBook(book);
     }
 
@@ -92,24 +95,46 @@ public class BookController {
         Book book = bookService.getBook(bookId);
         InputStream inputStream = bookService.getBookInputStream(book);
         HttpHeaders respHeaders = new HttpHeaders();
-        respHeaders.setContentLength(book.getSize());
+        respHeaders.setContentLength(book.getFileResource().getSize());
         respHeaders.setContentDispositionFormData("attachment", book.getFileName());
+        InputStreamResource isr = new InputStreamResource(inputStream);
+        return new ResponseEntity<>(isr, respHeaders, HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/cover/{id}", method = RequestMethod.GET)
+    public ResponseEntity<InputStreamResource> getCover(@PathVariable("id") int bookId) throws LibException {
+
+        Book book = bookService.getBook(bookId);
+        InputStream inputStream = bookService.getBookCoverInputStream(book);
+        HttpHeaders respHeaders = new HttpHeaders();
+        respHeaders.setContentLength(book.getCover().getSize());
+        respHeaders.add("Content-Type",book.getCover().getType());
         InputStreamResource isr = new InputStreamResource(inputStream);
         return new ResponseEntity<>(isr, respHeaders, HttpStatus.OK);
     }
 
     @RequestMapping(value = "/waitForDuplicateCheck", method = RequestMethod.GET)
     @Secured(ADMIN_AUTHORITY)
-    public @ResponseBody String waitForDuplicateCheck(){
+    public @ResponseBody
+    String waitForDuplicateCheck() {
         duplicateHandler.waitForFinish();
         return "success";
     }
 
     @RequestMapping(value = "/duplicateCheckForExisted", method = RequestMethod.GET)
     @Secured(ADMIN_AUTHORITY)
-    public @ResponseBody String duplicateCheckForExisted(){
+    public @ResponseBody
+    String duplicateCheckForExisted() {
         bookService.prepareExisted(userService.getCurrentUser());
         duplicateHandler.waitForFinish();
+        return "success";
+    }
+
+    @RequestMapping(value = "/updateCovers", method = RequestMethod.GET)
+    @Secured(ADMIN_AUTHORITY)
+    public @ResponseBody
+    String updateCovers() {
+        bookService.updateCovers();
         return "success";
     }
 

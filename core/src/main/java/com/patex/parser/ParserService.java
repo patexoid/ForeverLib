@@ -1,7 +1,6 @@
 package com.patex.parser;
 
 import com.patex.LibException;
-import com.patex.entities.Book;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +26,7 @@ public class ParserService {
         }
     }
 
-    public Book getBookInfo(String fileName, InputStream stream) throws LibException {
+    public BookInfo getBookInfo(String fileName, InputStream stream) throws LibException {
         FileParser parser = getParser(fileName);
         return parser.parseFile(fileName, stream);
 

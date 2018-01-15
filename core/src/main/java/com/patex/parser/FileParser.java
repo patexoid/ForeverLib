@@ -1,7 +1,6 @@
 package com.patex.parser;
 
 import com.patex.LibException;
-import com.patex.entities.Book;
 
 import java.io.InputStream;
 import java.util.Iterator;
@@ -13,7 +12,7 @@ public interface FileParser {
 
     String getExtension();
 
-    Book parseFile(String fileName, InputStream is) throws LibException;
+    BookInfo parseFile(String fileName, InputStream is) throws LibException;
 
     Iterator<String> getContentIterator(String fileName, InputStream is) throws LibException;
 }
