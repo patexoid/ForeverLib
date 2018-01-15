@@ -19,22 +19,19 @@ public class FileResource {
     private String filePath;
 
     @Column
-    private boolean draft;
+    private String type;
+
+    @Column
+    private Integer size;
+
 
     public FileResource() {
     }
 
-    public FileResource(String filePath) {
+    public FileResource(String filePath, String type, Integer size) {
         this.filePath = filePath;
-        this.draft = true;
-    }
-
-    public boolean isDraft() {
-        return draft;
-    }
-
-    public void setDraft(boolean draft) {
-        this.draft = draft;
+        this.type = type;
+        this.size = size;
     }
 
     public String getFilePath() {
@@ -51,5 +48,21 @@ public class FileResource {
 
     public void setId(long id) {
         this.id = id;
+    }
+
+    public Integer getSize() {
+        return size;
+    }
+
+    public void setSize(Integer size) {
+        this.size = size;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }

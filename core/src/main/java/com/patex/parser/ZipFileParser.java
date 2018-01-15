@@ -1,7 +1,6 @@
 package com.patex.parser;
 
 import com.patex.LibException;
-import com.patex.entities.Book;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -29,7 +28,7 @@ public class ZipFileParser implements FileParser {
     }
 
     @Override
-    public synchronized Book parseFile(String fileName, InputStream is) throws LibException {
+    public synchronized BookInfo parseFile(String fileName, InputStream is) throws LibException {
         return goDeep(is, zis -> parserService.getBookInfo(fileName.substring(0, fileName.lastIndexOf('.')), zis));
     }
 

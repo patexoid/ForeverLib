@@ -12,43 +12,39 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 
 @Service
 @PropertySource("/application.properties")
 @Profile("fileStorage")
 public class LocalFileStorage implements FileStorage {
 
-    private static final Pattern DUPLICATE_FILENAME_PATTERN = Pattern.compile("([^\\\\.]+?)(?:_(\\\\d+)_)?\\.(.+)");
+    private final String storageFolder;
+    private final Path storageFolderPath;
 
-    @Value("${localStorage.folder}")
-    public String storageFolder;
+
+    public LocalFileStorage(@Value("${localStorage.folder}") String storageFolder) {
+        this.storageFolder = storageFolder;
+        storageFolderPath= FileSystems.getDefault().getPath(storageFolder);
+    }
 
     @Override
     public String getType() {
         return "local";
     }
 
+    @Override
+    public boolean exists(String... filePath) {
+        return new File(getFilePath(filePath)).exists();
+    }
 
     @Override
-    public String save(String fileName, byte[] fileContent) throws LibException {
-        File file = new File(getFilePath(fileName));
-        if (file.exists()) {
-            Matcher matcher = DUPLICATE_FILENAME_PATTERN.matcher(fileName);
-            if (matcher.matches()) {
-                String prefix = matcher.group(1);
-                String suffix = matcher.group(2);
-                String extension = matcher.group(3);
-                if (suffix != null) {
-                    save(prefix + "_" + (Integer.parseInt(suffix) + 1) + "_." + extension, fileContent);
-                } else {
-                    return save(prefix + "_1_." + extension, fileContent);
-                }
-            } else {
-                throw new LibException("Can't match file name " + fileName
-                        + " pattern " + DUPLICATE_FILENAME_PATTERN.pattern());
-            }
+    public String save(byte[] fileContent, String... filePath) throws LibException {
+        File file = new File(getFilePath(filePath));
+        File  parentDir = file.getParentFile();
+        if(!parentDir.exists()){
+            parentDir.mkdirs();
         }
         try (FileOutputStream fos = new FileOutputStream(file)) {
             fos.write(fileContent);
@@ -56,11 +52,11 @@ public class LocalFileStorage implements FileStorage {
         } catch (IOException e) {
             throw new LibException(e);
         }
-        return file.getName();
+        return storageFolderPath.relativize(file.toPath()).toString();
     }
 
-    private String getFilePath(String fileName) {
-        return storageFolder + File.separator + fileName;
+    private String getFilePath(String... fileName) {
+        return storageFolder + File.separator + String.join(File.separator, fileName);
     }
 
     @Override

@@ -27,15 +27,20 @@ public class TempFileStorage implements FileStorage {
 
 
     @Override
-    public String save(String fileName, byte[] fileContent) throws LibException {
-        String filePath = tempDirectory.toAbsolutePath() + File.separator + fileName;
-        try (FileOutputStream fos = new FileOutputStream(filePath)) {
+    public boolean exists(String... filepath) {
+        return new File(getFilePath(filepath)).exists();
+    }
+
+    @Override
+    public String save(byte[] fileContent, String... filepath) throws LibException {
+        File file = new File(getFilePath(filepath));
+        try (FileOutputStream fos = new FileOutputStream(file)) {
             fos.write(fileContent);
             fos.flush();
         } catch (IOException e) {
             throw new LibException(e);
         }
-        return filePath;
+        return file.getAbsolutePath();
     }
 
     @Override
@@ -45,6 +50,11 @@ public class TempFileStorage implements FileStorage {
         } catch (FileNotFoundException e) {
             throw new LibException(e);
         }
+    }
+
+
+    private String getFilePath(String... fileName) {
+        return tempDirectory.toAbsolutePath() + File.separator + String.join(File.separator,fileName);
     }
 
     @PreDestroy

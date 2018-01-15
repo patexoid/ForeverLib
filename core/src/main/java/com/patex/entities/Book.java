@@ -59,12 +59,8 @@ public class Book {
     @JsonProperty
     private String fileName;
 
-    @Column(nullable = false)
     @JsonProperty
-    private Integer size;
-
-    @JsonProperty
-    private Integer contentSize;
+    private Integer contentSize=0;
 
     @JsonIgnore
     private Instant created;
@@ -76,6 +72,10 @@ public class Book {
     @OneToOne(cascade = {CascadeType.PERSIST}, fetch = FetchType.LAZY, orphanRemoval = true)
     @JsonIgnore
     private FileResource fileResource;
+
+    @OneToOne(cascade = {CascadeType.PERSIST}, fetch = FetchType.LAZY, orphanRemoval = true)
+    @JsonIgnore
+    private FileResource cover;
 
     @Lob
     @JsonProperty(DESCR)
@@ -125,13 +125,6 @@ public class Book {
         this.fileName = fileName;
     }
 
-    public Integer getSize() {
-        return size;
-    }
-
-    public void setSize(Integer size) {
-        this.size = size;
-    }
 
     public FileResource getFileResource() {
         return fileResource;
@@ -199,5 +192,13 @@ public class Book {
 
     public void setCreated(Instant created) {
         this.created = created;
+    }
+
+    public void setCover(FileResource cover) {
+        this.cover = cover;
+    }
+
+    public FileResource getCover() {
+        return cover;
     }
 }

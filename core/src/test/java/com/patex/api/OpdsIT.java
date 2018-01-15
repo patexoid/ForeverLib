@@ -76,7 +76,7 @@ public class OpdsIT {
         try {
             String value2 = httpClient.get("opds/latest", String.class);
             Assert.assertThat(value2,containsString(lastName));
-            Assert.assertThat(value2,equalTo(value));
+            Assert.assertEquals(value2,value);
         } catch (HttpClientErrorException e) {
             Assert.fail(e.getMessage());
         }

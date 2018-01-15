@@ -8,6 +8,8 @@ import com.patex.entities.BookRepository;
 import com.patex.entities.FileResource;
 import com.patex.entities.Sequence;
 import com.patex.entities.ZUser;
+import com.patex.parser.BookImage;
+import com.patex.parser.BookInfo;
 import com.patex.parser.ParserService;
 import com.patex.storage.StorageService;
 import com.patex.utils.StreamU;
@@ -26,14 +28,10 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Spliterators;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 /**
  *
@@ -70,15 +68,13 @@ public class BookService {
         Book result = transactionService.newTransaction(() -> {
             byte[] byteArray = loadFromStream(is);
             byte[] checksum = getChecksum(byteArray);
-            Book book = parserService.getBookInfo(fileName, new ByteArrayInputStream(byteArray));
-            Optional<Book> sameBook = bookRepository.findByTitleIgnoreCase(book.getTitle()).
-                    stream().
-                    filter(loaded -> Arrays.equals(checksum, loaded.getChecksum())).
-                    findAny();
+            BookInfo bookInfo = parserService.getBookInfo(fileName, new ByteArrayInputStream(byteArray));
+            Book book = bookInfo.getBook();
+            Optional<Book> sameBook = bookRepository.findFirstByTitleAndChecksum(book.getTitle(), checksum);
             if (sameBook.isPresent()) { //TODO if author or book has the same name
                 return sameBook.get();
             }
-            log.trace("new book:"+book.getFileName());
+            log.trace("new book:" + book.getFileName());
             List<AuthorBook> authorsBooks = book.getAuthorBooks().stream().
                     map(authorBook -> {
                         List<Author> saved = authorService.findByName(authorBook.getAuthor().getName());
@@ -91,7 +87,7 @@ public class BookService {
                     flatMap(Author::getSequencesStream).
                     filter(sequence -> sequence.getId() != null). //already saved
                     filter(StreamU.distinctByKey(Sequence::getId)).
-                            collect(Collectors.groupingBy(Sequence::getName, Collectors.toList()));
+                    collect(Collectors.groupingBy(Sequence::getName, Collectors.toList()));
             // some magic if 2 authors wrote the same sequence but different books
             Map<String, Sequence> sequencesMap = sequenceMapList.entrySet().stream().
                     collect(Collectors.toMap(Map.Entry::getKey, e -> sequenceService.mergeSequences(e.getValue())));
@@ -103,12 +99,14 @@ public class BookService {
                 bookSequence.setBook(book);
             });
 
-            String fileId = fileStorage.save(fileName, byteArray);
-            FileResource fileResource = new FileResource(fileId);
-            book.setFileResource(fileResource);
+            String fileId = fileStorage.save(byteArray, fileName);
+            book.setFileResource(new FileResource(fileId, "application/fb2+zip", byteArray.length));//TODO improve me
+            BookImage bookImage = bookInfo.getBookImage();
+            if (bookImage != null) {
+                String cover = saveCover(fileName, bookImage);
+                book.setCover(new FileResource(cover, bookImage.getType(), bookImage.getImage().length));
+            }
             book.setFileName(fileName);
-            book.setContentSize(getContentSize(new ByteArrayInputStream(byteArray), fileName));
-            book.setSize(byteArray.length);
             book.setChecksum(checksum);
             book.setCreated(Instant.now());
             Book save = bookRepository.save(book);
@@ -150,6 +148,10 @@ public class BookService {
         return fileStorage.load(book.getFileResource().getFilePath());
     }
 
+    public InputStream getBookCoverInputStream(Book book) throws LibException {
+        return fileStorage.load(book.getCover().getFilePath());
+    }
+
     public Page<Book> getBooks(Pageable pageable) {
         return bookRepository.findAll(pageable);
     }
@@ -172,13 +174,6 @@ public class BookService {
         return digest.digest();
     }
 
-    private Integer getContentSize(InputStream is, String fileName) {
-        Iterator<String> it = parserService.getContentIterator(fileName, is);
-        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, 0), false).
-                map(String::length).
-                reduce((l1, l2) -> l1 + l2).orElse(0);
-    }
-
     public void prepareExisted(ZUser user) {
         Iterable<Book> books = bookRepository.findAll();
         for (Book book : books) {
@@ -186,5 +181,33 @@ public class BookService {
                 publisher.publishEvent(new BookCreationEvent(book, user));
             }
         }
+    }
+
+    public void updateCovers() {
+        Iterable<Book> books = bookRepository.findAll();
+        for (Book book : books) {
+            transactionService.newTransaction(() -> {
+                if (book.getCover() == null) {
+                    InputStream bookIs = getBookInputStream(book);
+                    String fileName = book.getFileName();
+                    BookInfo bookInfo = parserService.getBookInfo(fileName, bookIs);
+                    BookImage bookImage = bookInfo.getBookImage();
+                    if (bookImage != null) {
+                        String cover = saveCover(fileName, bookImage);
+                        book.setCover(new FileResource(cover, bookImage.getType(), bookImage.getImage().length));
+                    }
+                    bookRepository.save(book);
+                }
+            });
+        }
+    }
+
+    private String saveCover(String fileName, BookImage bookImage) {
+        String coverName = fileName;
+        String[] type = bookImage.getType().split("/");
+        if (type.length > 1) {
+            coverName = fileName + "." + type[1];
+        }
+        return fileStorage.save(bookImage.getImage(), "image", coverName);
     }
 }

@@ -188,6 +188,7 @@ public class OPDSController {
         response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
         response.setHeader("Pragma", "no-cache"); // HTTP 1.0.
         response.setHeader("Expires", "0"); // Proxies.
+        response.setHeader("Content-Type",APPLICATION_ATOM_XML);
         return latestURIComponent.getLatestForCurrentUser();
     }
 }
