@@ -5,6 +5,7 @@ import com.patex.entities.Author;
 import com.patex.entities.AuthorBook;
 import com.patex.entities.Book;
 import com.patex.entities.BookRepository;
+import com.patex.entities.BookSequence;
 import com.patex.entities.FileResource;
 import com.patex.entities.Sequence;
 import com.patex.entities.ZUser;
@@ -71,19 +72,19 @@ public class BookService {
             BookInfo bookInfo = parserService.getBookInfo(fileName, new ByteArrayInputStream(byteArray));
             Book book = bookInfo.getBook();
             Optional<Book> sameBook = bookRepository.findFirstByTitleAndChecksum(book.getTitle(), checksum);
-            if (sameBook.isPresent()) { //TODO if author or book has the same name
+            if (sameBook.isPresent()) {
                 return sameBook.get();
             }
             log.trace("new book:" + book.getFileName());
-            List<AuthorBook> authorsBooks = book.getAuthorBooks().stream().
-                    map(authorBook -> {
-                        List<Author> saved = authorService.findByName(authorBook.getAuthor().getName());
-                        return saved.size() > 0 ? new AuthorBook(saved.get(0), book) : authorBook;
-                    }).collect(Collectors.toList());
+            List<Author> authors = book.getAuthorBooks().stream().
+                    map(AuthorBook::getAuthor).
+                    map(author -> authorService.findFirstByNameIgnoreCase(author.getName()).orElse(author)).
+                    collect(Collectors.toList());
+            List<AuthorBook> authorsBooks = authors.stream().
+                    map(author -> new AuthorBook(author, book)).collect(Collectors.toList());
             book.setAuthorBooks(authorsBooks);
 
-            Map<String, List<Sequence>> sequenceMapList = authorsBooks.stream().
-                    map(AuthorBook::getAuthor).
+            Map<String, List<Sequence>> sequenceMapList = authors.stream().
                     flatMap(Author::getSequencesStream).
                     filter(sequence -> sequence.getId() != null). //already saved
                     filter(StreamU.distinctByKey(Sequence::getId)).
@@ -93,11 +94,13 @@ public class BookService {
                     collect(Collectors.toMap(Map.Entry::getKey, e -> sequenceService.mergeSequences(e.getValue())));
 
 
-            book.getSequences().forEach(bookSequence -> {
-                Sequence sequence = bookSequence.getSequence();
-                bookSequence.setSequence(sequencesMap.getOrDefault(sequence.getName(), sequence));
-                bookSequence.setBook(book);
-            });
+            List<BookSequence> sequences = book.getSequences().stream().
+                    map(bs -> {
+                        Sequence sequence = bs.getSequence();
+                        return new BookSequence(bs.getSeqOrder(),
+                                sequencesMap.getOrDefault(sequence.getName(), sequence), book);
+                    }).collect(Collectors.toList());
+            book.setSequences(sequences);
 
             String fileId = fileStorage.save(byteArray, fileName);
             book.setFileResource(new FileResource(fileId, "application/fb2+zip", byteArray.length));//TODO improve me
@@ -118,6 +121,7 @@ public class BookService {
         publisher.publishEvent(new BookCreationEvent(result, user));
         return result;
     }
+
 
     private byte[] loadFromStream(InputStream is) throws LibException {
         byte[] buffer = new byte[32768];
