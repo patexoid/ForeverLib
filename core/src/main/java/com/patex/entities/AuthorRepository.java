@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 
 /**
@@ -19,6 +20,9 @@ public interface AuthorRepository extends CrudRepository<Author, Long> {
     Page<Author> findAllOrderByName(Pageable pageable);
 
     List<Author> findByNameStartingWithIgnoreCaseOrderByName(String name);
+
+    Optional<Author> findFirstByNameIgnoreCase(String name);
+
 
     @Query(value = "SELECT " +
             "  substring(a.name, 0, :prefixLength) AS id, " +

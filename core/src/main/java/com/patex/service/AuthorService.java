@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by potekhio on 15-Mar-16.
@@ -33,6 +34,10 @@ public class AuthorService {
 
     public List<Author> findByName(String name) {
         return authorRepository.findByNameStartingWithIgnoreCaseOrderByName(name);
+    }
+
+    public Optional<Author> findFirstByNameIgnoreCase(String name) {
+        return authorRepository.findFirstByNameIgnoreCase(name);
     }
 
     public Page<Author> getAuthors(Pageable pageable, String prefix) {
