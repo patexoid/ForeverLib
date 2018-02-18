@@ -1,10 +1,13 @@
-package com.patex.opds;
+package com.patex.controllers;
 
 import com.patex.entities.AggrResult;
 import com.patex.entities.Author;
 import com.patex.entities.AuthorBook;
 import com.patex.entities.BookSequence;
 import com.patex.entities.Sequence;
+import com.patex.opds.OPDSMetadata;
+import com.patex.opds.OpdsView;
+import com.patex.opds.RootProvider;
 import com.patex.opds.converters.AuthorEntry;
 import com.patex.opds.converters.BookEntry;
 import com.patex.opds.converters.ExpandedAuthorEntry;
@@ -108,12 +111,11 @@ public class OPDSController {
     @SaveLatest
     @RequestMapping(value = AUTHORSINDEX + "/{start}", produces = APPLICATION_ATOM_XML)
     public ModelAndView getAuthorsIndex(@PathVariable(value = "start") String start) {
-        return createMav(new Res("opds.all.authors"), authorService.getAuthorsCount(start), aggrResults -> {
-            return aggrResults.stream().
-                    flatMap(this::expandAggrResult).
-                    sorted(Comparator.comparing(OPDSEntryI::getTitle)).
-                    collect(Collectors.toList());
-        });
+        return createMav(new Res("opds.all.authors"), authorService.getAuthorsCount(start),
+                aggrResults -> aggrResults.stream().
+                flatMap(this::expandAggrResult).
+                sorted(Comparator.comparing(OPDSEntryI::getTitle)).
+                collect(Collectors.toList()));
     }
 
 

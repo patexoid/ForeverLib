@@ -1,17 +1,36 @@
 package com.patex.extlib;
 
 import com.patex.LibException;
+import com.patex.entities.Book;
+import com.patex.entities.ExtLibrary;
+import com.patex.entities.ExtLibraryRepository;
+import com.patex.entities.Subscription;
 import com.patex.entities.ZUser;
 import com.patex.opds.converters.OPDSEntryI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.patex.opds.converters.OPDSEntryImpl;
+import com.patex.opds.converters.OPDSLink;
+import com.patex.service.ZUserService;
+import com.patex.utils.Res;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.concurrent.DelegatingSecurityContextExecutorService;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
+import static com.patex.opds.converters.OPDSLink.FB2;
+import static com.patex.opds.converters.OPDSLink.OPDS_CATALOG;
 
 /**
  *
@@ -20,34 +39,164 @@ import java.util.stream.Collectors;
 
 @Service
 public class ExtLibService {
-
-    private static Logger log = LoggerFactory.getLogger(ExtLibService.class);
-
+    static final String REQUEST_P_NAME = "uri";
+    static final String REL_NEXT = "next";
+    static final String FB2_TYPE = "application/fb2";
+    private static final String PARAM_TYPE = "type";
+    private static final String ACTION_DOWNLOAD = "download";
+    private static final String ACTION_DOWNLOAD_ALL = "downloadAll";
+    private static final String ACTION_SUBSCRIBE = "subscribe";
+    private static final String ACTION_UNSUBSCRIBE = "unsubscribe";
+    @Autowired
+    ExtLibDownloadService downloadService;
+    @Autowired
+    ExtLibSubscriptionService subscriptionService;
+    private ExecutorService executor = new DelegatingSecurityContextExecutorService(
+            Executors.newCachedThreadPool(r -> {
+                AtomicInteger count = new AtomicInteger();
+                Thread thread = new Thread(r);
+                thread.setName("ExtLibService-" + count.incrementAndGet());
+                thread.setDaemon(true);
+                return thread;
+            }));
+    @Autowired
+    private ExtLibraryRepository extLibRepo;
 
     @Autowired
-    private ExtLibFactory extLibFactory;
+    private ZUserService userService;
 
-    public ExtLibFeed getDataForLibrary(String prefix, Long libId, Map<String, String> requestParams) throws LibException {
-        ExtLibFeed data = extLibFactory.getExtLib(libId).getExtLibFeed(requestParams);
-        return data.updateWithPrefix(prefix + "/" + libId + "/");
+    public static Optional<String> extractExtUri(String link) {
+        if (link.startsWith("?")) {
+            link = link.substring(1);
+        }
+        Optional<NameValuePair> uriO =
+                URLEncodedUtils.parse(link, Charset.forName("UTF-8")).stream().
+                        filter(nvp -> nvp.getName().equals(REQUEST_P_NAME)).findFirst();
+        return uriO.map(NameValuePair::getValue);
     }
 
     public List<OPDSEntryI> getRoot(String prefix) {
-        return extLibFactory.getAll().stream().
-                map(extLib -> new ExtLibOPDSEntry(extLib.getRootEntry(), prefix+"/"+extLib.getExtLibId()))
+        return extLibRepo.findAll().stream().
+                map(extLib -> new ExtLibOPDSEntry(getRootEntry(extLib), prefix + "/" + extLib.getId()))
                 .collect(Collectors.toList());
     }
 
+    private OPDSEntryI getRootEntry(ExtLibrary library) {
+        return new OPDSEntryImpl("" + library.getId(), new Res("opds.first.value",
+                library.getName()), new OPDSLink("", OPDS_CATALOG));
+    }
 
-    public String actionExtLibData(long libId, String action, Map<String, String> params, ZUser user) throws LibException {
-        log.trace("{} libid:{} params:{}", action, libId, params);
-        ExtLib extLib = extLibFactory.getExtLib(libId);
-        return extLib.action(action, params, user);
+    public String actionExtLibData(long libId, String action, Map<String, String> params) throws LibException {
+        ExtLibrary library = extLibRepo.findOne(libId);
+        return action(library, action, params);
+    }
+
+    private String action(ExtLibrary library,
+                          String action, Map<String, String> params) throws LibException {
+        if (ACTION_DOWNLOAD.equals(action)) {
+            return downloadBook(library, params);
+        } else if (ACTION_DOWNLOAD_ALL.equals(action)) {
+            return downloadAll(library, params);
+        } else if (ACTION_SUBSCRIBE.equals(action)) {
+            return addSubscription(library, params);
+        } else if (ACTION_UNSUBSCRIBE.equals(action)) {
+            return deleteSubscription(params.get("id"), params.get(REQUEST_P_NAME));
+        }
+        throw new LibException("Unknown action: " + action);
+    }
+
+    private String downloadBook(ExtLibrary library, Map<String, String> params) throws LibException {
+        String uri = params.get(REQUEST_P_NAME);
+        String type = params.get(PARAM_TYPE);
+        ZUser user = userService.getCurrentUser();
+        Book book = downloadService.downloadBook(library, uri, type, user);
+        return "/book/loadFile/" + book.getId();
+    }
+
+    private String downloadAll(ExtLibrary library, Map<String, String> params) {
+        String uri = params.get(REQUEST_P_NAME);
+        downloadService.downloadAll(library, uri, userService.getCurrentUser());
+        return ExtLibOPDSEntry.mapToUri("?", uri);
     }
 
     @Scheduled(cron = "0 00 12 * * *")
     public void checkSubscriptions() {
-        extLibFactory.getAll().forEach(ExtLib::checkSubscriptions);
+        executor.execute(() ->
+                extLibRepo.findAll().forEach(subscriptionService::checkSubscriptions));
+    }
 
+    public ExtLibFeed getDataForLibrary(Long libId, Map<String, String> requestParams)
+            throws LibException {
+        ExtLibrary library = extLibRepo.findOne(libId);
+        String uri = requestParams.get(REQUEST_P_NAME);
+        return getExtLibFeed(library, uri);
+    }
+
+    private ExtLibFeed getExtLibFeed(ExtLibrary extLibrary, String uri) throws LibException {
+        ExtLibFeed feed = downloadService.getExtLibFeed(extLibrary, uri);
+        List<OPDSEntryI> entries = feed.getEntries();
+        if (containsDownloadLinks(entries)) {
+            entries.addAll(0, getDownloadAndSubscriptionEntries(extLibrary, uri, feed));
+        }
+        List<OPDSLink> links = feed.getLinks();
+        feed.getLinks().stream().
+                filter(link -> REL_NEXT.equals(link.getRel())).
+                findFirst().
+                ifPresent(nextLink -> {
+                    OPDSEntryI nextEntry = new OPDSEntryImpl("next:" + uri, new Date(),
+                            new Res("opds.extlib.nextPage"),
+                            null,
+                            nextLink);
+                    entries.add(nextEntry);
+                });
+
+        return new ExtLibFeed(feed.getTitle(), entries, links);
+    }
+
+    private List<OPDSEntryI> getDownloadAndSubscriptionEntries(ExtLibrary extLibrary, String uri, ExtLibFeed feed) {
+        List<OPDSEntryI> entries = new ArrayList<>();
+        entries.add(new OPDSEntryImpl("download:" + uri, new Date(),
+                new Res("opds.extlib.download", feed.getTitle()),
+                null,
+                new OPDSLink(ExtLibOPDSEntry.mapToUri("action/downloadAll?", uri), OPDS_CATALOG)
+        ));
+        OPDSEntryI subscriptionEntry =
+                extLibrary.getSubscriptions().stream().
+                        filter(s -> uri.equals(s.getLink())).
+                        findFirst().map(s -> toUnsbscribeEntry(uri, feed, s)).
+                        orElseGet(() -> toSubscribeEntry(uri, feed));
+        entries.add(subscriptionEntry);
+        return entries;
+    }
+
+    private OPDSEntryImpl toSubscribeEntry(String uri, ExtLibFeed feed) {
+        return new OPDSEntryImpl("subscribe:" + uri, new Date(),
+                new Res("opds.extlib.subscribe", feed.getTitle()), null,
+                new OPDSLink(ExtLibOPDSEntry.mapToUri("action/subscribe?", uri),
+                        OPDS_CATALOG));
+    }
+
+    private OPDSEntryImpl toUnsbscribeEntry(String uri, ExtLibFeed feed, Subscription subscription) {
+        String id = "unsubscribe:" + uri;
+        String href = ExtLibOPDSEntry.mapToUri("action/unsubscribe?id=" + subscription.getId() + "&", uri);
+        return new OPDSEntryImpl(id, new Date(),
+                new Res("opds.extlib.unsubscribe", feed.getTitle()), null,
+                new OPDSLink(href, OPDS_CATALOG));
+    }
+
+    private boolean containsDownloadLinks(List<OPDSEntryI> entries) {
+        return entries.stream().flatMap(entry -> entry.getLinks().stream()).
+                anyMatch(link -> link.getType().contains(FB2));
+    }
+
+    private String addSubscription(ExtLibrary library, Map<String, String> params) throws LibException {
+        String uri = params.get(REQUEST_P_NAME);
+        subscriptionService.addSubscription(library, uri);
+        return ExtLibOPDSEntry.mapToUri("?", uri);
+    }
+
+    private String deleteSubscription(String idS, String uri) throws LibException {
+        subscriptionService.deleteSubscription(Long.valueOf(idS));
+        return ExtLibOPDSEntry.mapToUri("?", uri);
     }
 }
