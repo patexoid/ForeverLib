@@ -45,7 +45,7 @@ public class ExtLibrary {
     @Enumerated(EnumType.STRING)
     private Proxy.Type proxyType;
 
-    @OneToMany(fetch = FetchType.EAGER,cascade = CascadeType.ALL, mappedBy = "extLibrary")
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "extLibrary")
     private List<Subscription> subscriptions = new ArrayList<>();
 
     public Long getId() {

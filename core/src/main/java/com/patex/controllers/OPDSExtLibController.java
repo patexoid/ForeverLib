@@ -1,7 +1,8 @@
-package com.patex.extlib;
+package com.patex.controllers;
 
 import com.patex.LibException;
-import com.patex.opds.OPDSController;
+import com.patex.extlib.ExtLibFeed;
+import com.patex.extlib.ExtLibService;
 import com.patex.opds.RootProvider;
 import com.patex.opds.converters.OPDSEntryI;
 import com.patex.opds.converters.OPDSEntryImpl;
@@ -23,7 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static com.patex.opds.OPDSController.*;
+import static com.patex.controllers.OPDSController.*;
 import static com.patex.service.ZUserService.ADMIN_AUTHORITY;
 import static com.patex.service.ZUserService.USER;
 
@@ -71,9 +72,11 @@ public class OPDSExtLibController implements RootProvider {
     @RequestMapping(value = "{id}", produces = APPLICATION_ATOM_XML)
     public ModelAndView getExtLibData(@PathVariable(value = "id") long id,
                                       @RequestParam(required = false) Map<String, String> requestParams) throws LibException {
-        ExtLibFeed extLibFeed = extLibService.getDataForLibrary(OPDS_EXT_LIB, id, requestParams);
-        return createMav(new Res("opds.first.value",extLibFeed.getTitle()), extLibFeed.getEntries());
+        ExtLibFeed extLibFeed = extLibService.getDataForLibrary(id, requestParams);
+        extLibFeed = extLibFeed.updateWithPrefix(OPDS_EXT_LIB + "/" + id + "/");
+        return createMav(new Res("opds.first.value", extLibFeed.getTitle()), extLibFeed.getEntries());
     }
+
 
     @RequestMapping(value = "{id}/action/{action}")
     @Secured(USER)
@@ -81,17 +84,16 @@ public class OPDSExtLibController implements RootProvider {
                                    @PathVariable(value = "action") String action,
                                    @RequestParam(required = false) Map<String, String> requestParams) throws LibException {
 
-        String redirect = extLibService.actionExtLibData(id, action, requestParams, userService.getCurrentUser());
+        String redirect = extLibService.actionExtLibData(id, action, requestParams);
         return "redirect:" + redirect;
     }
 
     @RequestMapping(value = "runSubcriptionTask")
     @Secured(ADMIN_AUTHORITY)
-    public @ResponseBody String runSubcriptionTask() throws LibException {
+    public @ResponseBody
+    String runSubcriptionTask() throws LibException {
         extLibService.checkSubscriptions();
         return resources.get(userService.getUserLocale(), "opds.extlib.subscription.task.in.progress");
     }
-
-
 
 }

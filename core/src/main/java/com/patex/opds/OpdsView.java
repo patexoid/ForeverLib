@@ -20,10 +20,12 @@ import org.springframework.web.servlet.view.feed.AbstractAtomFeedView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -69,21 +71,23 @@ public class OpdsView extends AbstractAtomFeedView {
         Res title = opdsEntryI.getTitle();
 
         entry.setTitle(res.get(locale, title.getKey(), title.getObjs()));
-        opdsEntryI.getContent().ifPresent(contents -> {
-            entry.setContents(contents.stream().map(s -> {
-                        Content content = new Content();
-                        content.setValue(s.getValue(res, locale));
-                        content.setType(s.getType());
-                        content.setSrc(s.getSrc());
-                        return content;
-                    }).
-                    reduce(this::reduceContent).
-                    map(Collections::singletonList).get());
-        });
+        Optional<List<Content>> content = opdsEntryI.getContent().map(contents -> toRomeContent(locale, contents));
+        content.ifPresent(entry::setContents);
+
         entry.setOtherLinks(opdsEntryI.getLinks().stream().map(this::toLink).collect(Collectors.toList()));
         opdsEntryI.getAuthors().ifPresent(opdsAuthors ->
                 entry.setAuthors(opdsAuthors.stream().map(this::toPerson).collect(Collectors.toList())));
         return entry;
+    }
+
+    private List<Content> toRomeContent(Locale locale, List<OPDSContent> contents) {
+        return contents.stream().map(s ->{
+            Content content = new Content();
+            content.setValue(s.getValue(res, locale));
+            content.setType(s.getType());
+            content.setSrc(s.getSrc());
+            return content;
+        }).reduce(this::reduceContent).map(Collections::singletonList).orElseGet(ArrayList::new);
     }
 
     private Content reduceContent(Content first, Content second) {

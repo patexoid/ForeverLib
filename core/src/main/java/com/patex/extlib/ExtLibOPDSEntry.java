@@ -35,14 +35,12 @@ public class ExtLibOPDSEntry implements OPDSEntryI {
         mapLinks.add(new FB2Link());
     }
 
-
     private final String id;
     private final Res title;
     private final List<OPDSLink> links;
     private final Date updated;
     private final Optional<List<OPDSContent>> content;
     private final Optional<List<OPDSAuthor>> authors;
-
 
     public ExtLibOPDSEntry(SyndEntry syndEntry) {
         id = syndEntry.getUri();
@@ -71,7 +69,7 @@ public class ExtLibOPDSEntry implements OPDSEntryI {
 
     static String mapToUri(String prefix, String href) {
         try {
-            return prefix + ExtLib.REQUEST_P_NAME + "=" + URLEncoder.encode(href, "UTF-8");
+            return prefix + ExtLibService.REQUEST_P_NAME + "=" + URLEncoder.encode(href, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             log.error(e.getMessage(), e);
             return null;
