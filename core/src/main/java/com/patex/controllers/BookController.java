@@ -103,14 +103,17 @@ public class BookController {
 
     @RequestMapping(value = "/cover/{id}", method = RequestMethod.GET)
     public ResponseEntity<InputStreamResource> getCover(@PathVariable("id") int bookId) throws LibException {
-
         Book book = bookService.getBook(bookId);
-        InputStream inputStream = bookService.getBookCoverInputStream(book);
-        HttpHeaders respHeaders = new HttpHeaders();
-        respHeaders.setContentLength(book.getCover().getSize());
-        respHeaders.add("Content-Type",book.getCover().getType());
-        InputStreamResource isr = new InputStreamResource(inputStream);
-        return new ResponseEntity<>(isr, respHeaders, HttpStatus.OK);
+        if(book.getCover()!=null) {
+            InputStream inputStream = bookService.getBookCoverInputStream(book);
+            HttpHeaders respHeaders = new HttpHeaders();
+            respHeaders.setContentLength(book.getCover().getSize());
+            respHeaders.add("Content-Type", book.getCover().getType());
+            InputStreamResource isr = new InputStreamResource(inputStream);
+            return new ResponseEntity<>(isr, respHeaders, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     @RequestMapping(value = "/waitForDuplicateCheck", method = RequestMethod.GET)

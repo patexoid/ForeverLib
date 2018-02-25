@@ -2,6 +2,7 @@ package com.patex.controllers;
 
 import com.patex.LibException;
 import com.patex.extlib.ExtLibFeed;
+import com.patex.extlib.ExtLibOPDSEntry;
 import com.patex.extlib.ExtLibService;
 import com.patex.opds.RootProvider;
 import com.patex.opds.converters.OPDSEntryI;
@@ -9,6 +10,7 @@ import com.patex.opds.converters.OPDSEntryImpl;
 import com.patex.opds.latest.SaveLatest;
 import com.patex.service.Resources;
 import com.patex.service.ZUserService;
+import com.patex.utils.LinkUtils;
 import com.patex.utils.Res;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
@@ -77,15 +79,28 @@ public class OPDSExtLibController implements RootProvider {
         return createMav(new Res("opds.first.value", extLibFeed.getTitle()), extLibFeed.getEntries());
     }
 
+    @RequestMapping(value = "{id}/download")
+    @Secured(USER)
+    public String downloadBook(@PathVariable(value = "id") long id,
+                               @RequestParam(name = ExtLibService.REQUEST_P_NAME) String url,
+                               @RequestParam(name = ExtLibService.PARAM_TYPE) String type)
+            throws LibException {
+
+        String redirect = extLibService.downloadBook(id, url, type);
+        return "redirect:" + redirect;
+    }
+
 
     @RequestMapping(value = "{id}/action/{action}")
     @Secured(USER)
     public String actionExtLibData(@PathVariable(value = "id") long id,
                                    @PathVariable(value = "action") String action,
-                                   @RequestParam(required = false) Map<String, String> requestParams) throws LibException {
-
-        String redirect = extLibService.actionExtLibData(id, action, requestParams);
-        return "redirect:" + redirect;
+                                   @RequestParam Map<String, String> requestParams,
+                                   @RequestParam("uri") String uri)
+            throws LibException {
+        extLibService.actionExtLibData(id, action, requestParams);
+        //referer header is not supported by some clients make redirect url manually
+        return "redirect:" + LinkUtils.makeURL(OPDS_EXT_LIB, id, ExtLibOPDSEntry.mapToUri("?", uri));
     }
 
     @RequestMapping(value = "runSubcriptionTask")
@@ -95,5 +110,4 @@ public class OPDSExtLibController implements RootProvider {
         extLibService.checkSubscriptions();
         return resources.get(userService.getUserLocale(), "opds.extlib.subscription.task.in.progress");
     }
-
 }
