@@ -67,7 +67,7 @@ public class ExtLibOPDSEntry implements OPDSEntryI {
         authors = entry.getAuthors();
     }
 
-    static String mapToUri(String prefix, String href) {
+    public static String mapToUri(String prefix, String href) {
         try {
             return prefix + ExtLibService.REQUEST_P_NAME + "=" + URLEncoder.encode(href, "UTF-8");
         } catch (UnsupportedEncodingException e) {
@@ -146,7 +146,7 @@ public class ExtLibOPDSEntry implements OPDSEntryI {
 
         @Override
         public OPDSLink mapLink(SyndLink link) {
-            return new OPDSLink(mapToUri("action/download?type=fb2&", link.getHref()),
+            return new OPDSLink(mapToUri("download?type=fb2&", link.getHref()),
                     link.getRel(), link.getType());
         }
     }

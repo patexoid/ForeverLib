@@ -39,11 +39,11 @@ import static com.patex.opds.converters.OPDSLink.OPDS_CATALOG;
 
 @Service
 public class ExtLibService {
-    static final String REQUEST_P_NAME = "uri";
+    public static final String REQUEST_P_NAME = "uri";
+    public static final String PARAM_TYPE = "type";
     static final String REL_NEXT = "next";
     static final String FB2_TYPE = "application/fb2";
-    private static final String PARAM_TYPE = "type";
-    private static final String ACTION_DOWNLOAD = "download";
+
     private static final String ACTION_DOWNLOAD_ALL = "downloadAll";
     private static final String ACTION_SUBSCRIBE = "subscribe";
     private static final String ACTION_UNSUBSCRIBE = "unsubscribe";
@@ -86,35 +86,36 @@ public class ExtLibService {
                 library.getName()), new OPDSLink("", OPDS_CATALOG));
     }
 
-    public String actionExtLibData(long libId, String action, Map<String, String> params) throws LibException {
+    public void actionExtLibData(long libId, String action, Map<String, String> params) throws LibException {
         ExtLibrary library = extLibRepo.findOne(libId);
-        return action(library, action, params);
+        action(library, action, params, params.get(REQUEST_P_NAME));
     }
 
-    private String action(ExtLibrary library,
-                          String action, Map<String, String> params) throws LibException {
-        if (ACTION_DOWNLOAD.equals(action)) {
-            return downloadBook(library, params);
-        } else if (ACTION_DOWNLOAD_ALL.equals(action)) {
-            return downloadAll(library, params);
+    private void action(ExtLibrary library,
+                        String action, Map<String, String> params, String uri) throws LibException {
+        if (ACTION_DOWNLOAD_ALL.equals(action)) {
+            downloadAll(library, uri);
         } else if (ACTION_SUBSCRIBE.equals(action)) {
-            return addSubscription(library, params);
+            addSubscription(library, uri);
         } else if (ACTION_UNSUBSCRIBE.equals(action)) {
-            return deleteSubscription(params.get("id"), params.get(REQUEST_P_NAME));
+            deleteSubscription(params.get("id"));
+        } else {
+            throw new LibException("Unknown action: " + action);
         }
-        throw new LibException("Unknown action: " + action);
     }
 
-    private String downloadBook(ExtLibrary library, Map<String, String> params) throws LibException {
-        String uri = params.get(REQUEST_P_NAME);
-        String type = params.get(PARAM_TYPE);
+    public String downloadBook(long libId, String uri, String type) throws LibException {
+        ExtLibrary library = extLibRepo.findOne(libId);
+        return downloadBook(library, uri, type);
+    }
+
+    private String downloadBook(ExtLibrary library, String uri, String type) throws LibException {
         ZUser user = userService.getCurrentUser();
         Book book = downloadService.downloadBook(library, uri, type, user);
         return "/book/loadFile/" + book.getId();
     }
 
-    private String downloadAll(ExtLibrary library, Map<String, String> params) {
-        String uri = params.get(REQUEST_P_NAME);
+    private String downloadAll(ExtLibrary library, String uri) {
         downloadService.downloadAll(library, uri, userService.getCurrentUser());
         return ExtLibOPDSEntry.mapToUri("?", uri);
     }
@@ -189,14 +190,12 @@ public class ExtLibService {
                 anyMatch(link -> link.getType().contains(FB2));
     }
 
-    private String addSubscription(ExtLibrary library, Map<String, String> params) throws LibException {
-        String uri = params.get(REQUEST_P_NAME);
+    private String addSubscription(ExtLibrary library, String uri) throws LibException {
         subscriptionService.addSubscription(library, uri);
         return ExtLibOPDSEntry.mapToUri("?", uri);
     }
 
-    private String deleteSubscription(String idS, String uri) throws LibException {
+    private void deleteSubscription(String idS) throws LibException {
         subscriptionService.deleteSubscription(Long.valueOf(idS));
-        return ExtLibOPDSEntry.mapToUri("?", uri);
     }
 }
