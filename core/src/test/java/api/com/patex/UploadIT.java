@@ -1,4 +1,4 @@
-package com.patex.api;
+package api.com.patex;
 
 
 import com.patex.BookUploadInfo;
@@ -113,7 +113,7 @@ public class UploadIT {
         String sequence = randomAlphanumeric(10);
         files.put(randomAlphanumeric(10) + ".fb2", new Fb2Creator(title).
                 addAuthor(firstName, middleName, lastName).addSequence(sequence, 1).
-                addAnnotationLine(annotationLine).getFbook());
+                addAnnotationPLine(annotationLine).getFbook());
 
         ResponseEntity<List<BookUploadInfo>> response = httpClient.uploadFiles("book/upload",
                 "file", files, new ParameterizedTypeReference<List<BookUploadInfo>>() {
@@ -288,7 +288,7 @@ public class UploadIT {
         Map<String, InputStream> files = new HashMap<>();
         files.put(randomAlphanumeric(10) + ".fb2", new Fb2Creator(randomAlphanumeric(10)).
                 addAuthor(randomAlphanumeric(10), randomAlphanumeric(10), randomAlphanumeric(10)).
-                addAnnotationLine(randomAlphanumeric(50)).
+                addAnnotationPLine(randomAlphanumeric(50)).
                 getFbook());
 
         ResponseEntity<List<BookUploadInfo>> response = httpClient.uploadFiles("book/upload",

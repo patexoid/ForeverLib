@@ -17,7 +17,9 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -115,6 +117,19 @@ public class Book {
 
     public void setAuthorBooks(List<AuthorBook> authors) {
         this.authorBooks = authors;
+    }
+
+    @JsonIgnore
+    public void setAuthors(Collection<Author> authors){
+        List<AuthorBook> authorBooks = authors.stream().
+                map(author -> new AuthorBook(author, this)).
+                collect(Collectors.toList());
+        setAuthorBooks(authorBooks);
+    }
+
+    @JsonIgnore
+    public List<Author> getAuthors() {
+        return authorBooks.stream().map(AuthorBook::getAuthor).collect(Collectors.toList());
     }
 
     public String getFileName() {

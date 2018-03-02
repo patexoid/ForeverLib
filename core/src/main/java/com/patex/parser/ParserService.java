@@ -18,7 +18,6 @@ public class ParserService {
 
     private Map<String, FileParser> parserMap = new HashMap<>();
 
-
     @Autowired
     public ParserService(FileParser... parsers) {
         for (FileParser parser : parsers) {
@@ -29,7 +28,6 @@ public class ParserService {
     public BookInfo getBookInfo(String fileName, InputStream stream) throws LibException {
         FileParser parser = getParser(fileName);
         return parser.parseFile(fileName, stream);
-
     }
 
     private FileParser getParser(String fileName) {
@@ -45,5 +43,4 @@ public class ParserService {
         FileParser parser = getParser(fileName);
         return parser.getContentIterator(fileName, is);
     }
-
 }

@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -75,7 +76,7 @@ public class BookService {
             if (sameBook.isPresent()) {
                 return sameBook.get();
             }
-            log.trace("new book:" + book.getFileName());
+            log.trace("new book:{}",  book.getFileName());
             List<Author> authors = book.getAuthorBooks().stream().
                     map(AuthorBook::getAuthor).
                     map(author -> authorService.findFirstByNameIgnoreCase(author.getName()).orElse(author)).
@@ -113,13 +114,21 @@ public class BookService {
             book.setChecksum(checksum);
             book.setCreated(Instant.now());
             Book save = bookRepository.save(book);
-            book.getAuthorBooks().stream().
-                    filter(authorBook -> !authorBook.getAuthor().getBooks().contains(authorBook)).
-                    forEach(authorBook -> authorBook.getAuthor().getBooks().add(authorBook));
+            someMagic(book);
             return save;
         });
         publisher.publishEvent(new BookCreationEvent(result, user));
         return result;
+    }
+
+    private void someMagic(Book book) {
+        book.getAuthorBooks().stream().
+                filter(authorBook -> !authorBook.getAuthor().getBooks().contains(authorBook)).
+                forEach(authorBook -> {
+                    List<AuthorBook> books = new ArrayList<>(authorBook.getAuthor().getBooks());
+                    books.add(authorBook);
+                    authorBook.getAuthor().setBooks(books);
+                });
     }
 
 

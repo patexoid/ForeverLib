@@ -25,13 +25,16 @@ import java.util.Optional;
 
 import static org.apache.commons.text.CharacterPredicates.*;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 /**
  * Created by Alexey on 15.07.2017.
  */
 public class BooksServiceTest {
+    public static final String FILE_NAME = "fileName";
+    public static final String FIRST_AUTHOR = "first author";
+    public static final String FIRST_SEQUENCE = "first sequence";
+
     private final RandomStringGenerator rsg = new RandomStringGenerator.Builder()
             .withinRange('0', 'z')
             .filteredBy(LETTERS, DIGITS)
@@ -44,26 +47,74 @@ public class BooksServiceTest {
     private TransactionService transactionService;
     private ApplicationEventPublisher eventPublisher;
     private BookService bookService;
+    private ByteArrayInputStream bookIS;
+    private ZUser user;
+    private BookInfo bookInfo;
+    private Book book;
 
     @Before
     public void setUp() {
+        parserService = mock(ParserService.class);
         bookRepo = mock(BookRepository.class);
+        sequenceService = mock(SequenceService.class);
+        authorService = mock(AuthorService.class);
+
+        bookIS = new ByteArrayInputStream(new byte[0]);
+        user = new ZUser();
+        bookInfo = new BookInfo();
+        book = new Book();
+        book.setAuthors(Collections.singleton(new Author(1L, FIRST_AUTHOR)));
+        book.setSequences(Collections.singletonList(new BookSequence(1, new Sequence(FIRST_SEQUENCE))));
+        bookInfo.setBook(book);
+
+        when(parserService.getBookInfo(eq(FILE_NAME), any())).thenReturn(bookInfo);
         when(bookRepo.findFirstByTitleAndChecksum(any(), any())).thenReturn(Optional.empty());
         when(bookRepo.save(any(Book.class))).thenAnswer(i -> i.getArguments()[0]);
-
-        sequenceService = mock(SequenceService.class);
-        when (sequenceService.mergeSequences(any())).thenAnswer(i -> ((Collection<Sequence>)i.getArguments()[0]).iterator().next());
-
-        authorService = mock(AuthorService.class);
+        when(sequenceService.mergeSequences(any())).thenAnswer(i -> ((Collection) i.getArguments()[0]).iterator().next());
         when(authorService.findFirstByNameIgnoreCase(any())).thenReturn(Optional.empty());
 
-        parserService = mock(ParserService.class);
         fileStorage = mock(StorageService.class);
         transactionService = new TransactionService();
         eventPublisher = mock(ApplicationEventPublisher.class);
         bookService = new BookService(bookRepo, sequenceService, authorService, parserService,
                 fileStorage, transactionService,
                 eventPublisher);
+    }
+
+    @Test
+    public void verifyUploadBook() {
+        Book result = bookService.uploadBook(FILE_NAME, bookIS, user);
+        verify(bookRepo).save(this.book);
+        assertEquals(result, book);
+    }
+
+    @Test
+    public void verifyUploadBookWithSavedAuthor() {
+        long authorID = 42;
+        when(authorService.findFirstByNameIgnoreCase(FIRST_AUTHOR)).thenReturn(Optional.of(new Author(authorID, FIRST_AUTHOR)));
+        Book result = bookService.uploadBook(FILE_NAME, bookIS, user);
+        Author resultAuthor = result.getAuthorBooks().get(0).getAuthor();
+        assertEquals(authorID, resultAuthor.getId().longValue());
+    }
+
+
+    @Test
+    public void verifyUploadBookWithSavedAuthorAndSequence() {
+        long authorID = 42;
+        long seqeunceId = 54;
+        Author savedAuthor = new Author(authorID, FIRST_AUTHOR);
+        Book savedBook = new Book();
+        Sequence sequence = new Sequence(seqeunceId, FIRST_SEQUENCE);
+        savedBook.setSequences(Collections.singletonList(new BookSequence(1, sequence, savedBook)));
+        savedAuthor.setBooks(Collections.singletonList(new AuthorBook(savedAuthor, savedBook)));
+        when(authorService.findFirstByNameIgnoreCase(FIRST_AUTHOR)).thenReturn(Optional.of(savedAuthor));
+
+        Book result = bookService.uploadBook(FILE_NAME, bookIS, user);
+
+        Author resultAuthor = result.getAuthorBooks().get(0).getAuthor();
+        assertEquals(authorID, resultAuthor.getId().longValue());
+        Sequence resultSequnce = result.getSequences().get(0).getSequence();
+        assertEquals(seqeunceId, resultSequnce.getId().longValue());
     }
 
     @Test
@@ -115,7 +166,7 @@ public class BooksServiceTest {
     }
 
     @Test
-    public void testSequenceReplace(){
+    public void testSequenceReplace() {
 
         String sequenceName = rsg.generate(10);
         String existedAuthorName = rsg.generate(10);
@@ -142,7 +193,7 @@ public class BooksServiceTest {
         Sequence savedSequence = new Sequence();
         savedSequence.setName(sequenceName);
         savedSequence.setId(savedSeqId);
-        savedBook.setSequences(Collections.singletonList(new BookSequence(1, savedSequence,savedBook)));
+        savedBook.setSequences(Collections.singletonList(new BookSequence(1, savedSequence, savedBook)));
         savedAuthor.getBooks().add(new AuthorBook(savedAuthor, savedBook));
         when(authorService.findFirstByNameIgnoreCase(existedAuthorName)).thenReturn(Optional.of(savedAuthor));
 

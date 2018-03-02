@@ -18,7 +18,7 @@ public class BookInfo {
         this.book = book;
     }
 
-    public String getCoverage() {
+    public String getCoverpageImageHref() {
         return coverage;
     }
 

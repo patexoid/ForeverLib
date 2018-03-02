@@ -21,11 +21,15 @@ import static org.springframework.transaction.annotation.Propagation.MANDATORY;
 @Service
 public class SequenceService {
 
-    @Autowired
-    private SequenceRepository sequenceRepository;
+    private final SequenceRepository sequenceRepository;
+
+    private final  EntityManager entityManager;
 
     @Autowired
-    private EntityManager entityManager;
+    public SequenceService(SequenceRepository sequenceRepository, EntityManager entityManager) {
+        this.sequenceRepository = sequenceRepository;
+        this.entityManager = entityManager;
+    }
 
     public Sequence getSequence(long id) {
         return sequenceRepository.findOne(id);

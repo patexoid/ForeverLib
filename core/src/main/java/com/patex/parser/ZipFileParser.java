@@ -18,9 +18,13 @@ import java.util.zip.ZipInputStream;
 @Service
 public class ZipFileParser implements FileParser {
 
+    private final ParserService parserService;
+
     @Autowired()
     @Lazy
-    private ParserService parserService;
+    public ZipFileParser(ParserService parserService) {
+        this.parserService = parserService;
+    }
 
     @Override
     public String getExtension() {
@@ -41,7 +45,7 @@ public class ZipFileParser implements FileParser {
         }
     }
 
-    public Iterator<String> getContentIterator(String fileName, InputStream is) throws LibException {
+    public CloseableIterator getContentIterator(String fileName, InputStream is) throws LibException {
         final ZipInputStream zis = new ZipInputStream(is);
         try {
             zis.getNextEntry();

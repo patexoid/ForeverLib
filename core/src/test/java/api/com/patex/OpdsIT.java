@@ -1,4 +1,4 @@
-package com.patex.api;
+package api.com.patex;
 
 import com.patex.BookUploadInfo;
 import com.patex.entities.ZUser;
