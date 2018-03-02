@@ -12,12 +12,15 @@ import com.patex.opds.converters.OPDSEntryI;
 import com.patex.opds.converters.OPDSLink;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.feed.synd.SyndLink;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.concurrent.DelegatingSecurityContextExecutorService;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,8 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static com.patex.extlib.ExtLibService.FB2_TYPE;
-import static com.patex.extlib.ExtLibService.REL_NEXT;
+import static com.patex.extlib.ExtLibService.*;
 
 @Service
 public class ExtLibDownloadService {
@@ -95,21 +97,35 @@ public class ExtLibDownloadService {
     }
 
     private Optional<DownloadAllResult> downloadAll(String uri, ZUser user, ExtLibrary library) {
-        List<OPDSEntryI> entries = getExtLibFeed(uri).getEntries();
+        List<OPDSEntryI> entries = getAllEntries(uri);
         Set<String> saved = getAlreadySaved(library, entries);
         return entries.stream().
                 filter(entry -> entry.getLinks().stream().map(OPDSLink::getHref).
-                        map(ExtLibService::extractExtUri).
+                        map(ExtLibDownloadService::extractExtUri).
                         filter(Optional::isPresent).map(Optional::get).noneMatch(saved::contains)
                 ).map(entry -> download(entry, user))
                 .reduce(DownloadAllResult::concat);
+    }
+
+    private List<OPDSEntryI> getAllEntries(String uri) throws LibException {
+        List<OPDSEntryI> result = new ArrayList<>();
+        while (uri != null) {
+            String uri0 = uri;
+            ExtLibFeed data = getExtLibFeed(uri0);
+            result.addAll(data.getEntries());
+            Optional<String> nextLink = data.getLinks().stream().
+                    filter(link -> REL_NEXT.equals(link.getRel())).
+                    findFirst().map(link -> extractExtUri(link.getHref()).orElse(null));
+            uri = nextLink.orElse(null);
+        }
+        return result;
     }
 
     private Set<String> getAlreadySaved(ExtLibrary library, List<OPDSEntryI> entries) {
         List<String> links = entries.stream().
                 map(OPDSEntryI::getLinks).
                 flatMap(Collection::stream).map(OPDSLink::getHref).
-                map(ExtLibService::extractExtUri).filter(Optional::isPresent).map(Optional::get).
+                map(ExtLibDownloadService::extractExtUri).filter(Optional::isPresent).map(Optional::get).
                 distinct().collect(Collectors.toList());
         return savedBookRepo.findSavedBooksByExtLibraryAndExtIdIn(library, links).
                 stream().map(SavedBook::getExtId).distinct().collect(Collectors.toSet());
@@ -128,7 +144,7 @@ public class ExtLibDownloadService {
                         "\nBook title:" + entry.getTitle());
             }
             try {
-                String uri = ExtLibService.extractExtUri(links.get(0).getHref()).orElse("");
+                String uri = extractExtUri(links.get(0).getHref()).orElse("");
                 String type = "fb2";
                 Book book = downloadBook(uri, type, user);
                 return DownloadAllResult.success(authors, book);
@@ -137,5 +153,15 @@ public class ExtLibDownloadService {
                 return DownloadAllResult.failed(authors, entry.getTitle());
             }
         }
+    }
+
+    public static Optional<String> extractExtUri(String link) {
+        if (link.startsWith("?")) {
+            link = link.substring(1);
+        }
+        Optional<NameValuePair> uriO =
+                URLEncodedUtils.parse(link, Charset.forName("UTF-8")).stream().
+                        filter(nvp -> nvp.getName().equals(REQUEST_P_NAME)).findFirst();
+        return uriO.map(NameValuePair::getValue);
     }
 }
