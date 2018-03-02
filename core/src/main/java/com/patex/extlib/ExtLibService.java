@@ -11,19 +11,15 @@ import com.patex.opds.converters.OPDSEntryImpl;
 import com.patex.opds.converters.OPDSLink;
 import com.patex.service.ZUserService;
 import com.patex.utils.Res;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URLEncodedUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.concurrent.DelegatingSecurityContextExecutorService;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -64,16 +60,6 @@ public class ExtLibService {
 
     @Autowired
     private ZUserService userService;
-
-    public static Optional<String> extractExtUri(String link) {
-        if (link.startsWith("?")) {
-            link = link.substring(1);
-        }
-        Optional<NameValuePair> uriO =
-                URLEncodedUtils.parse(link, Charset.forName("UTF-8")).stream().
-                        filter(nvp -> nvp.getName().equals(REQUEST_P_NAME)).findFirst();
-        return uriO.map(NameValuePair::getValue);
-    }
 
     public List<OPDSEntryI> getRoot(String prefix) {
         return extLibRepo.findAll().stream().
