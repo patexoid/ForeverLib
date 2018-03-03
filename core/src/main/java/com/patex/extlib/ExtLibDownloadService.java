@@ -10,6 +10,7 @@ import com.patex.entities.ZUser;
 import com.patex.opds.converters.OPDSAuthor;
 import com.patex.opds.converters.OPDSEntryI;
 import com.patex.opds.converters.OPDSLink;
+import com.patex.utils.ExecutorCreator;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.feed.synd.SyndLink;
 import org.apache.http.NameValuePair;
@@ -17,7 +18,6 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.concurrent.DelegatingSecurityContextExecutorService;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.Charset;
@@ -29,8 +29,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -39,27 +37,30 @@ import static com.patex.extlib.ExtLibService.*;
 @Service
 public class ExtLibDownloadService {
 
-    private static Logger log = LoggerFactory.getLogger(ExtLibService.class);
+    private static Logger log = LoggerFactory.getLogger(ExtLibDownloadService.class);
 
-    private final ExecutorService executor = new DelegatingSecurityContextExecutorService(
-            Executors.newCachedThreadPool(r -> {
-                AtomicInteger count = new AtomicInteger();
-                Thread thread = new Thread(r);
-                thread.setName("ExtLibDownloadService-" + count.incrementAndGet());
-                thread.setDaemon(true);
-                return thread;
-            }));
-
+    private final ExecutorService executor = ExecutorCreator.createExecutor("ExtLibDownloadService", log);
 
     private final ExtLibConnection connection;
-    private final  ExtLibInScopeRunner scopeRunner;
-    private final  SavedBookRepository savedBookRepo;
+    private final ExtLibInScopeRunner scopeRunner;
+    private final SavedBookRepository savedBookRepo;
 
     @Autowired
     public ExtLibDownloadService(ExtLibConnection connection, ExtLibInScopeRunner scopeRunner, SavedBookRepository savedBookRepo) {
         this.connection = connection;
         this.scopeRunner = scopeRunner;
         this.savedBookRepo = savedBookRepo;
+
+    }
+
+    public static Optional<String> extractExtUri(String link) {
+        if (link.startsWith("?")) {
+            link = link.substring(1);
+        }
+        Optional<NameValuePair> uriO =
+                URLEncodedUtils.parse(link, Charset.forName("UTF-8")).stream().
+                        filter(nvp -> nvp.getName().equals(REQUEST_P_NAME)).findFirst();
+        return uriO.map(NameValuePair::getValue);
     }
 
     public Book downloadBook(ExtLibrary library, String uri, String type, ZUser user) {
@@ -87,7 +88,6 @@ public class ExtLibDownloadService {
         nextPage.ifPresent(syndLink -> links.add(ExtLibOPDSEntry.mapLink(syndLink)));
         return new ExtLibFeed(feed.getTitle(), entries, links);
     }
-
 
     public CompletableFuture<Optional<DownloadAllResult>> downloadAll(ExtLibrary library, String uri, ZUser user) {
 
@@ -153,15 +153,5 @@ public class ExtLibDownloadService {
                 return DownloadAllResult.failed(authors, entry.getTitle());
             }
         }
-    }
-
-    public static Optional<String> extractExtUri(String link) {
-        if (link.startsWith("?")) {
-            link = link.substring(1);
-        }
-        Optional<NameValuePair> uriO =
-                URLEncodedUtils.parse(link, Charset.forName("UTF-8")).stream().
-                        filter(nvp -> nvp.getName().equals(REQUEST_P_NAME)).findFirst();
-        return uriO.map(NameValuePair::getValue);
     }
 }

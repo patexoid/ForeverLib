@@ -10,10 +10,12 @@ import com.patex.opds.converters.OPDSEntryI;
 import com.patex.opds.converters.OPDSEntryImpl;
 import com.patex.opds.converters.OPDSLink;
 import com.patex.service.ZUserService;
+import com.patex.utils.ExecutorCreator;
 import com.patex.utils.Res;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.concurrent.DelegatingSecurityContextExecutorService;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -21,8 +23,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.patex.opds.converters.OPDSLink.FB2;
@@ -35,6 +35,7 @@ import static com.patex.opds.converters.OPDSLink.OPDS_CATALOG;
 
 @Service
 public class ExtLibService {
+
     public static final String REQUEST_P_NAME = "uri";
     public static final String PARAM_TYPE = "type";
     static final String REL_NEXT = "next";
@@ -43,20 +44,20 @@ public class ExtLibService {
     private static final String ACTION_DOWNLOAD_ALL = "downloadAll";
     private static final String ACTION_SUBSCRIBE = "subscribe";
     private static final String ACTION_UNSUBSCRIBE = "unsubscribe";
-    @Autowired
-    ExtLibDownloadService downloadService;
-    @Autowired
-    ExtLibSubscriptionService subscriptionService;
-    private ExecutorService executor = new DelegatingSecurityContextExecutorService(
-            Executors.newCachedThreadPool(r -> {
-                AtomicInteger count = new AtomicInteger();
-                Thread thread = new Thread(r);
-                thread.setName("ExtLibService-" + count.incrementAndGet());
-                thread.setDaemon(true);
-                return thread;
-            }));
-    @Autowired
+    private static Logger log = LoggerFactory.getLogger(ExtLibService.class);
+
+    private final ExtLibDownloadService downloadService;
+    private final ExtLibSubscriptionService subscriptionService;
     private ExtLibraryRepository extLibRepo;
+
+    private ExecutorService executor = ExecutorCreator.createExecutor("ExtLibService", log);
+
+    public ExtLibService(ExtLibDownloadService downloadService, ExtLibSubscriptionService subscriptionService,
+                         ExtLibraryRepository extLibRepo) {
+        this.downloadService = downloadService;
+        this.subscriptionService = subscriptionService;
+        this.extLibRepo = extLibRepo;
+    }
 
     @Autowired
     private ZUserService userService;
