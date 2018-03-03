@@ -3,6 +3,7 @@ package com.patex.extlib;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.patex.LibException;
 import com.patex.entities.Book;
 import com.patex.entities.ExtLibrary;
@@ -128,7 +129,9 @@ class ExtLibConnection {
             return bookCache.get(uri, () -> getData(uri, conn -> downloadBook(type, conn, user)));
         } catch (ExecutionException e) {
             throw new LibException(e.getMessage(), e);
-        }
+    } catch (UncheckedExecutionException e) {//need to add test or this exception
+        throw new LibException(e.getCause().getMessage(), e.getCause());
+    }
     }
 
     private Book downloadBook(String type, URLConnection conn, ZUser user) throws LibException, IOException {
