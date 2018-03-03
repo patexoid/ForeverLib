@@ -5,6 +5,7 @@ import com.patex.entities.Book;
 import com.patex.entities.ExtLibrary;
 import com.patex.entities.SavedBookRepository;
 import com.patex.entities.ZUser;
+import com.patex.messaging.MessengerService;
 import com.patex.opds.OPDSContent;
 import com.patex.opds.converters.OPDSEntryI;
 import com.patex.opds.converters.OPDSLink;
@@ -251,7 +252,7 @@ public class ExtLibTest {
         return new ExtLibDownloadService(
                 connectionService,
                 new ExtLibInScopeRunner(mock(ExtLibScopeStorage.class)),
-                mock(SavedBookRepository.class));
+                mock(SavedBookRepository.class), mock(MessengerService.class));
     }
 
     @Test
