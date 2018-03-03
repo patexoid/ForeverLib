@@ -122,9 +122,13 @@ class ExtLibConnection {
             return bookCache.get(uri, () -> getData(uri, conn -> downloadBook(type, conn, user)));
         } catch (ExecutionException e) {
             throw new LibException(e.getMessage(), e);
-    } catch (UncheckedExecutionException e) {//need to add test or this exception
-        throw new LibException(e.getCause().getMessage(), e.getCause());
-    }
+        } catch (UncheckedExecutionException e) {//need to add test or this exception
+            if (e.getCause() instanceof LibException) {
+                throw (LibException) e.getCause();
+            } else {
+                throw new LibException(e.getCause().getMessage(), e.getCause());
+            }
+        }
     }
 
     private Book downloadBook(String type, URLConnection conn, ZUser user) throws LibException, IOException {

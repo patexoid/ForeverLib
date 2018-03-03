@@ -7,6 +7,7 @@ import com.patex.entities.ExtLibrary;
 import com.patex.entities.SavedBook;
 import com.patex.entities.SavedBookRepository;
 import com.patex.entities.ZUser;
+import com.patex.messaging.MessengerService;
 import com.patex.opds.converters.OPDSAuthor;
 import com.patex.opds.converters.OPDSEntryI;
 import com.patex.opds.converters.OPDSLink;
@@ -44,13 +45,17 @@ public class ExtLibDownloadService {
     private final ExtLibConnection connection;
     private final ExtLibInScopeRunner scopeRunner;
     private final SavedBookRepository savedBookRepo;
+    private final MessengerService messengerService;
+
 
     @Autowired
-    public ExtLibDownloadService(ExtLibConnection connection, ExtLibInScopeRunner scopeRunner, SavedBookRepository savedBookRepo) {
+    public ExtLibDownloadService(ExtLibConnection connection, ExtLibInScopeRunner scopeRunner,
+                                 SavedBookRepository savedBookRepo, MessengerService messengerService) {
         this.connection = connection;
         this.scopeRunner = scopeRunner;
         this.savedBookRepo = savedBookRepo;
 
+        this.messengerService = messengerService;
     }
 
     public static Optional<String> extractExtUri(String link) {
@@ -95,12 +100,14 @@ public class ExtLibDownloadService {
     private Optional<DownloadAllResult> downloadAll(String uri, ZUser user, ExtLibrary library) {
         List<OPDSEntryI> entries = getAllEntries(uri);
         Set<String> saved = getAlreadySaved(library, entries);
-        return entries.stream().
+        Optional<DownloadAllResult> downloadResult = entries.stream().
                 filter(entry -> entry.getLinks().stream().map(OPDSLink::getHref).
                         map(ExtLibDownloadService::extractExtUri).
                         filter(Optional::isPresent).map(Optional::get).noneMatch(saved::contains)
                 ).map(entry -> download(entry, user, library))
                 .reduce(DownloadAllResult::concat);
+        downloadResult.ifPresent(result -> messengerService.sendMessageToUser(result, user));
+        return downloadResult;
     }
 
     private List<OPDSEntryI> getAllEntries(String uri) throws LibException {
@@ -110,7 +117,7 @@ public class ExtLibDownloadService {
             ExtLibFeed data = getExtLibFeed(uri0);
             result.addAll(data.getEntries());
             Optional<String> nextLink = data.getLinks().stream().
-                     filter(link -> REL_NEXT.equals(link.getRel())).
+                    filter(link -> REL_NEXT.equals(link.getRel())).
                     findFirst().map(link -> extractExtUri(link.getHref()).orElse(null));
             uri = nextLink.orElse(null);
         }
@@ -142,7 +149,7 @@ public class ExtLibDownloadService {
             try {
                 String uri = extractExtUri(links.get(0).getHref()).orElse("");
                 String type = "fb2";
-                Book book = downloadBook(library,uri, type, user);
+                Book book = downloadBook(library, uri, type, user);
                 return DownloadAllResult.success(authors, book);
             } catch (LibException e) {
                 log.error(e.getMessage(), e);
