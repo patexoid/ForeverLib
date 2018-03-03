@@ -9,6 +9,7 @@ import com.patex.entities.Book;
 import com.patex.entities.ExtLibrary;
 import com.patex.entities.ZUser;
 import com.patex.service.BookService;
+import com.patex.utils.ExecutorCreator;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.SyndFeedInput;
 import com.rometools.rome.io.XmlReader;
@@ -28,11 +29,9 @@ import java.util.Base64;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,13 +52,13 @@ class ExtLibConnection {
     private final String prefix;
     private final String login;
     private final String password;
+    private final BookService bookService;
     private Proxy proxy;
 
-    private final BookService bookService;
 
     ExtLibConnection(String url, String prefix, String login, String password,
                      String proxyHost, Integer proxyPort, Proxy.Type proxyType, ExecutorService executor,
-                            BookService bookService) {
+                     BookService bookService) {
         this.executor = executor;
         this.url = url;
         this.prefix = prefix;
@@ -68,7 +67,7 @@ class ExtLibConnection {
         if (proxyType != null) {
             proxy = new Proxy(proxyType, new InetSocketAddress(proxyHost, proxyPort));
         } else {
-            proxy=Proxy.NO_PROXY;
+            proxy = Proxy.NO_PROXY;
         }
         this.bookService = bookService;
     }
@@ -91,13 +90,7 @@ class ExtLibConnection {
         } else {
             proxy = Proxy.NO_PROXY;
         }
-        executor = Executors.newCachedThreadPool(r -> {
-            AtomicInteger count = new AtomicInteger();
-            Thread thread = new Thread(r);
-            thread.setName("ExtLib:" + extLibrary.getName() + " Connection" + count.incrementAndGet());
-            thread.setDaemon(true);
-            return thread;
-        });
+        executor = ExecutorCreator.createExecutor("ExtLib:" + extLibrary.getName() + " Connection", log);
     }
 
     @VisibleForTesting

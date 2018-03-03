@@ -64,13 +64,9 @@ public class ExtLibDownloadService {
     }
 
     public Book downloadBook(ExtLibrary library, String uri, String type, ZUser user) {
-        Book book = scopeRunner.runInScope(library, () -> downloadBook(uri, type, user));
+        Book book = scopeRunner.runInScope(library, () -> connection.downloadBook(uri, type, user));
         savedBookRepo.save(new SavedBook(library, uri));
         return book;
-    }
-
-    private Book downloadBook(String uri, String type, ZUser user) {
-        return connection.downloadBook(uri, type, user);
     }
 
     public ExtLibFeed getExtLibFeed(ExtLibrary library, String uri) throws LibException {
@@ -103,7 +99,7 @@ public class ExtLibDownloadService {
                 filter(entry -> entry.getLinks().stream().map(OPDSLink::getHref).
                         map(ExtLibDownloadService::extractExtUri).
                         filter(Optional::isPresent).map(Optional::get).noneMatch(saved::contains)
-                ).map(entry -> download(entry, user))
+                ).map(entry -> download(entry, user, library))
                 .reduce(DownloadAllResult::concat);
     }
 
@@ -114,7 +110,7 @@ public class ExtLibDownloadService {
             ExtLibFeed data = getExtLibFeed(uri0);
             result.addAll(data.getEntries());
             Optional<String> nextLink = data.getLinks().stream().
-                    filter(link -> REL_NEXT.equals(link.getRel())).
+                     filter(link -> REL_NEXT.equals(link.getRel())).
                     findFirst().map(link -> extractExtUri(link.getHref()).orElse(null));
             uri = nextLink.orElse(null);
         }
@@ -131,7 +127,7 @@ public class ExtLibDownloadService {
                 stream().map(SavedBook::getExtId).distinct().collect(Collectors.toSet());
     }
 
-    private DownloadAllResult download(OPDSEntryI entry, ZUser user) {
+    private DownloadAllResult download(OPDSEntryI entry, ZUser user, ExtLibrary library) {
         List<OPDSLink> links = entry.getLinks().stream().
                 filter(link -> link.getType().contains(FB2_TYPE)).collect(Collectors.toList());
         List<String> authors = entry.getAuthors().orElse(Collections.emptyList()).stream().
@@ -146,7 +142,7 @@ public class ExtLibDownloadService {
             try {
                 String uri = extractExtUri(links.get(0).getHref()).orElse("");
                 String type = "fb2";
-                Book book = downloadBook(uri, type, user);
+                Book book = downloadBook(library,uri, type, user);
                 return DownloadAllResult.success(authors, book);
             } catch (LibException e) {
                 log.error(e.getMessage(), e);
