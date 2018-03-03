@@ -5,34 +5,33 @@ import com.patex.entities.ExtLibrary;
 import com.patex.entities.Subscription;
 import com.patex.entities.SubscriptionRepository;
 import com.patex.service.ZUserService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.concurrent.DelegatingSecurityContextExecutorService;
+import com.patex.utils.ExecutorCreator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class ExtLibSubscriptionService {
 
-    @Autowired
+    private static Logger log = LoggerFactory.getLogger(ExtLibSubscriptionService.class);
+
     private SubscriptionRepository subscriptionRepo;
 
-    @Autowired
     private ExtLibDownloadService downloadService;
 
-    @Autowired
     private ZUserService userService;
 
-    private ExecutorService executor = new DelegatingSecurityContextExecutorService(
-            Executors.newCachedThreadPool(r -> {
-                AtomicInteger count = new AtomicInteger();
-                Thread thread = new Thread(r);
-                thread.setName("ExtLibSubscriptionService-" + count.incrementAndGet());
-                thread.setDaemon(true);
-                return thread;
-            }));
+    private ExecutorService executor = ExecutorCreator.createExecutor("ExtLibSubscriptionService", log);
+
+
+    public ExtLibSubscriptionService(SubscriptionRepository subscriptionRepo, ExtLibDownloadService downloadService,
+                                     ZUserService userService) {
+        this.subscriptionRepo = subscriptionRepo;
+        this.downloadService = downloadService;
+        this.userService = userService;
+    }
 
     public void addSubscription(ExtLibrary library, String uri) throws LibException {
         if (library.getSubscriptions().stream().
