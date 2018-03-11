@@ -5,16 +5,18 @@ import fb2.AnnotationType;
 import fb2.BodyType;
 import fb2.FictionBook;
 import fb2.GenreType;
+import fb2.InlineImageType;
+import fb2.ObjectFactory;
+import fb2.PType;
 import fb2.SectionType;
 import fb2.SequenceType;
 import fb2.TextFieldType;
 import fb2.TitleInfoType;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
-import javax.xml.namespace.QName;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -24,6 +26,7 @@ import java.math.BigInteger;
  * Created by Alexey on 11/5/2016.
  */
 public class Fb2Creator {
+    public static final ObjectFactory F = new ObjectFactory();
     private final TitleInfoType titleInfo;
     private final Marshaller jaxbMarshaller;
     private FictionBook fbook;
@@ -41,72 +44,109 @@ public class Fb2Creator {
         }
 
         fbook = new FictionBook();
-        FictionBook.Description description = new FictionBook.Description();
-        titleInfo = new TitleInfoType();
+        FictionBook.Description description = F.createFictionBookDescription();
+        titleInfo = F.createTitleInfoType();
 
-        TextFieldType titleType = new TextFieldType();
-        titleType.setValue(title);
-        titleInfo.setBookTitle(titleType);
+        titleInfo.setBookTitle(getTextFieldType(title));
         description.setTitleInfo(titleInfo);
         fbook.setDescription(description);
     }
 
     public Fb2Creator addAuthor(String firstName, String middleName, String lastName, String homePage, String email) {
-        TitleInfoType.Author author = new TitleInfoType.Author();
-        author.getContent().add(new JAXBElement<>(new QName("", "first-name"), String.class, firstName));
-        author.getContent().add(new JAXBElement<>(new QName("", "middle-name"), String.class, middleName));
-        author.getContent().add(new JAXBElement<>(new QName("", "last-name"), String.class, lastName));
-        author.getContent().add(new JAXBElement<>(new QName("", "home-page"), String.class, homePage));
-        author.getContent().add(new JAXBElement<>(new QName("", "email"), String.class, email));
+        TitleInfoType.Author author = F.createTitleInfoTypeAuthor();
+
+        if (StringUtils.isNotEmpty(firstName))
+            author.getContent().add(F.createAuthorTypeFirstName(getTextFieldType(firstName)));
+        if (StringUtils.isNotEmpty(middleName))
+            author.getContent().add(F.createAuthorTypeMiddleName(getTextFieldType(middleName)));
+        if (StringUtils.isNotEmpty(lastName))
+            author.getContent().add(F.createAuthorTypeLastName(getTextFieldType(lastName)));
+        if (StringUtils.isNotEmpty(homePage))
+            author.getContent().add(F.createAuthorTypeHomePage(homePage));
+        if (StringUtils.isNotEmpty(email))
+            author.getContent().add(F.createAuthorTypeEmail(email));
         titleInfo.getAuthor().add(author);
         return this;
     }
+
+    private TextFieldType getTextFieldType(String firstName) {
+        TextFieldType firstNameTextFieldType = F.createTextFieldType();
+        firstNameTextFieldType.setValue(firstName);
+        return firstNameTextFieldType;
+    }
+
+    public Fb2Creator setCoverpage(String href) {
+        TitleInfoType.Coverpage coverpage = F.createTitleInfoTypeCoverpage();
+        InlineImageType imageType = new InlineImageType();
+        imageType.setHref(href);
+        coverpage.getImage().add(imageType);
+        titleInfo.setCoverpage(coverpage);
+        return this;
+    }
+
 
     public Fb2Creator addAuthor(String firstName, String middleName, String lastName) {
         return addAuthor(firstName, middleName, lastName, null, null);
     }
 
     public Fb2Creator addGenre(String genre) {
-        TitleInfoType.Genre genreType = new TitleInfoType.Genre();
-        genreType.setValue(GenreType.valueOf(genre));
+        TitleInfoType.Genre genreType = F.createTitleInfoTypeGenre();
+        genreType.setValue(GenreType.fromValue(genre));
         titleInfo.getGenre().add(genreType);
         return this;
     }
 
-    public Fb2Creator addSequence(String sequenceName, int number) {
-        SequenceType sequence = new SequenceType();
+    public Fb2Creator addSequence(String sequenceName, Integer number) {
+        SequenceType sequence = F.createSequenceType();
         sequence.setName(sequenceName);
-        sequence.setNumber(BigInteger.valueOf(number));
+        if (number != null)
+            sequence.setNumber(BigInteger.valueOf(number));
         titleInfo.getSequence().add(sequence);
         return this;
     }
 
-    public Fb2Creator addContent(String content){
-        if(body==null) {
-           nextSection();
+
+    public Fb2Creator addContent(String content) {
+        if (body == null) {
+            nextSection();
         }
-        section.getPOrImageOrPoem().add(new JAXBElement<>(new QName("p"), String.class,content));
+        PType pType = F.createPType();
+        pType.getContent().add(content);
+        section.getPOrImageOrPoem().add(F.createSectionTypeP(pType));
         fbook.setBody(body);
         return this;
     }
 
-    public Fb2Creator nextSection(){
-        if(body==null) {
-            body = new BodyType();
+
+    public Fb2Creator addBinary(String href, byte[] content, String contentType) {
+        FictionBook.Binary binary = F.createFictionBookBinary();
+        binary.setId(href);
+        binary.setContentType(contentType);
+        binary.setValue(content);
+        fbook.getBinary().add(binary);
+        return this;
+    }
+
+    public Fb2Creator nextSection() {
+        if (body == null) {
+            body = F.createBodyType();
         }
-        if(section==null){
-            section = new SectionType();
+        if (section == null) {
+            section = F.createSectionType();
             body.getSection().add(section);
         }
         return this;
     }
 
-    public Fb2Creator addAnnotationLine(String annotationLine) {
+    public Fb2Creator addAnnotationPLine(String pLine) {
         if (annotation == null) {
-            annotation = new AnnotationType();
+            annotation = F.createAnnotationType();
             titleInfo.setAnnotation(annotation);
         }
-        annotation.getPOrPoemOrCite().add(new JAXBElement<>(new QName("", "p"), String.class, annotationLine));
+        PType pType = F.createPType();
+        pType.getContent().add(pLine);
+        F.createAnnotationTypeP(pType);
+        annotation.getPOrPoemOrCite().add(F.createAnnotationTypeP(pType));
         return this;
     }
 

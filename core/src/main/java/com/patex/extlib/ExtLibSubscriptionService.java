@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 
 @Service
@@ -34,10 +36,8 @@ public class ExtLibSubscriptionService {
     }
 
     public void addSubscription(ExtLibrary library, String uri) throws LibException {
-        if (library.getSubscriptions().stream().
-                noneMatch(s -> uri.equals(s.getLink()))) {
+        if (!find(library, uri).isPresent()) {
             Subscription saved = subscriptionRepo.save(new Subscription(library, uri, userService.getCurrentUser()));
-            library.getSubscriptions().add(saved);
             executor.execute(() -> checkSubscription(library, saved));
         }
     }
@@ -51,7 +51,12 @@ public class ExtLibSubscriptionService {
     }
 
     public void checkSubscriptions(ExtLibrary library) {
-        library.getSubscriptions().forEach(subscription ->
+        Collection<Subscription> subscriptions = subscriptionRepo.findAllByExtLibrary(library);
+        subscriptions.forEach(subscription ->
                 downloadService.downloadAll(library, subscription.getLink(), subscription.getUser()));
+    }
+
+    public Optional<Subscription> find(ExtLibrary library, String url) {
+        return subscriptionRepo.findFirstByExtLibraryAndLink(library, url);
     }
 }

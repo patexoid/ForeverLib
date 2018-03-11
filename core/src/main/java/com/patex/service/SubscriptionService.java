@@ -2,7 +2,6 @@ package com.patex.service;
 
 import com.patex.entities.Subscription;
 import com.patex.entities.SubscriptionRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -13,8 +12,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class SubscriptionService {
 
-    @Autowired
-    private SubscriptionRepository subscriptionRepository;
+    private final SubscriptionRepository subscriptionRepository;
+
+    public SubscriptionService(SubscriptionRepository subscriptionRepository) {
+        this.subscriptionRepository = subscriptionRepository;
+    }
 
     public Subscription save(Subscription entity) {
         return subscriptionRepository.save(entity);

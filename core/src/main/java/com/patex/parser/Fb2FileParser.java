@@ -7,6 +7,7 @@ import com.patex.entities.BookGenre;
 import com.patex.entities.BookSequence;
 import com.patex.entities.Genre;
 import com.patex.entities.Sequence;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -40,7 +41,6 @@ public class Fb2FileParser implements FileParser {
     public String getExtension() {
         return "fb2";
     }
-
 
     @Override
     public BookInfo parseFile(String fileName, InputStream is) throws LibException {
@@ -87,7 +87,7 @@ public class Fb2FileParser implements FileParser {
                 } else if ("binary".equals(event.asStartElement().getName().getLocalPart())) {
                     String id = event.asStartElement().getAttributeByName(QName.valueOf("id")).getValue();
                     String type = event.asStartElement().getAttributeByName(QName.valueOf("content-type")).getValue();
-                    if (bookInfo.getCoverage().contains(id) && type.contains("image")) {
+                    if (bookInfo.getCoverpageImageHref().contains(id) && type.contains("image")) {
                         String binary = getText(reader, "binary").replaceAll("\n", "");
                         byte[] imageBytes = Base64.getDecoder().decode(binary);
                         BookImage bookImage = new BookImage();
@@ -153,18 +153,16 @@ public class Fb2FileParser implements FileParser {
                     text.append(data).append("\n");
                 }
             } else if (event.isEndElement() && tag.equals(event.asEndElement().getName().getLocalPart())) {
-                return text.toString();
-
+                return text.length() == 0 ? "" : text.deleteCharAt(text.length() - 1).toString();
             }
         }
-
         return text.toString();
     }
 
     private Author parseAuthor(XMLEventReader reader) throws XMLStreamException {
-        String lastName = "";
-        String firstName = "";
-        String middleName = "";
+        String lastName = null;
+        String firstName = null;
+        String middleName = null;
         Author author = new Author();
         while (reader.hasNext()) {
             XMLEvent event = reader.nextEvent();
@@ -180,8 +178,23 @@ public class Fb2FileParser implements FileParser {
                 }
             }
             if (event.isEndElement() && "author".equals(event.asEndElement().getName().getLocalPart())) {
-                String name = lastName + " " + firstName + " " + middleName;
-                author.setName(name.replaceAll("\\s+", " "));
+                String name = "";
+                if (StringUtils.isNotEmpty(lastName)) {
+                    name += lastName;
+                }
+                if (StringUtils.isNotEmpty(firstName)) {
+                    if (!name.isEmpty()) {
+                        name += " ";
+                    }
+                    name += firstName;
+                }
+                if (StringUtils.isNotEmpty(middleName)) {
+                    if (!name.isEmpty()) {
+                        name += " ";
+                    }
+                    name += middleName;
+                }
+                author.setName(name);
                 return author;
             }
         }
@@ -294,7 +307,6 @@ public class Fb2FileParser implements FileParser {
                 }
                 return null;
             }
-
         };
     }
 }

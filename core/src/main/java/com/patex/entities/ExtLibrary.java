@@ -2,18 +2,13 @@ package com.patex.entities;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
 import java.net.Proxy;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
@@ -44,9 +39,6 @@ public class ExtLibrary {
 
     @Enumerated(EnumType.STRING)
     private Proxy.Type proxyType;
-
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "extLibrary")
-    private List<Subscription> subscriptions = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -119,14 +111,4 @@ public class ExtLibrary {
     public void setProxyType(Proxy.Type proxyType) {
         this.proxyType = proxyType;
     }
-
-    public List<Subscription> getSubscriptions() {
-        return subscriptions;
-    }
-
-    public void setSubscriptions(List<Subscription> subscriptions) {
-        this.subscriptions = subscriptions;
-    }
-
-
 }

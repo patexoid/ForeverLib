@@ -32,24 +32,33 @@ public class ZUserService implements UserDetailsService {
     public static final String GUEST = "GUEST";
     public static final String USER = "ROLE_USER";
     public static final String ADMIN_AUTHORITY = "ROLE_ADMIN";
-    private static Logger log = LoggerFactory.getLogger(ZUserService.class);
     public static final ZUser anonim = new ZUser("anonimus", true);
+    private static Logger log = LoggerFactory.getLogger(ZUserService.class);
+
     static {
         ZUserConfig userConfig = new ZUserConfig();
         userConfig.setLang("en");
         anonim.setUserConfig(userConfig);
     }
-    @Autowired
-    private ZUserRepository userRepo;
+
+    private final ZUserRepository userRepo;
+
+    private final ZUserConfigRepository userConfigRepo;
+
+    private final PasswordEncoder passwordEncoder;
+
+    private final ApplicationEventPublisher publisher;
 
     @Autowired
-    private ZUserConfigRepository userConfigRepo;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private ApplicationEventPublisher publisher;
+    public ZUserService(ZUserRepository userRepo,
+                        ZUserConfigRepository userConfigRepo,
+                        PasswordEncoder passwordEncoder,
+                        ApplicationEventPublisher publisher) {
+        this.userRepo = userRepo;
+        this.userConfigRepo = userConfigRepo;
+        this.passwordEncoder = passwordEncoder;
+        this.publisher = publisher;
+    }
 
     @Override
     public ZUser loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -147,7 +156,7 @@ public class ZUserService implements UserDetailsService {
         return userRepo.findAllByAuthoritiesIs(role);
     }
 
-    public Locale getUserLocale(){
+    public Locale getUserLocale() {
         return getCurrentUser().getUserConfig().getLocale();
     }
 

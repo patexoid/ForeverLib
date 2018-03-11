@@ -3,7 +3,6 @@ package com.patex.service;
 import com.patex.entities.AggrResult;
 import com.patex.entities.Author;
 import com.patex.entities.AuthorRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,8 +16,11 @@ import java.util.Optional;
 @Service
 public class AuthorService {
 
-    @Autowired
-    private AuthorRepository authorRepository;
+    private final AuthorRepository authorRepository;
+
+    public AuthorService(AuthorRepository authorRepository) {
+        this.authorRepository = authorRepository;
+    }
 
     public Author getAuthors(long id) {
         return authorRepository.findOne(id);
@@ -41,7 +43,7 @@ public class AuthorService {
     }
 
     public Page<Author> getAuthors(Pageable pageable, String prefix) {
-        prefix=prefix==null?"":prefix;
+        prefix = prefix == null ? "" : prefix;
         return authorRepository.getAuthorsByName(pageable, prefix);
     }
 }

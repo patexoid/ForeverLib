@@ -148,10 +148,10 @@ public class ExtLibService {
                 null,
                 new OPDSLink(ExtLibOPDSEntry.mapToUri("action/downloadAll?", uri), OPDS_CATALOG)
         ));
+
+
         OPDSEntryI subscriptionEntry =
-                extLibrary.getSubscriptions().stream().
-                        filter(s -> uri.equals(s.getLink())).
-                        findFirst().map(s -> toUnsbscribeEntry(uri, feed, s)).
+                subscriptionService.find(extLibrary, uri).map(s -> toUnsbscribeEntry(uri, feed, s)).
                         orElseGet(() -> toSubscribeEntry(uri, feed));
         entries.add(subscriptionEntry);
         return entries;

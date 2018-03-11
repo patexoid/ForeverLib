@@ -32,7 +32,7 @@ public class Sequence {
     private List<BookSequence> bookSequences = new ArrayList<>();
 
 
-    Sequence(Long id, String name) {
+    public Sequence(Long id, String name) {
         this.id = id;
         this.name = name;
     }
