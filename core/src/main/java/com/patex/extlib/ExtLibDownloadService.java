@@ -106,7 +106,9 @@ public class ExtLibDownloadService {
                         filter(Optional::isPresent).map(Optional::get).noneMatch(saved::contains)
                 ).map(entry -> download(entry, user, library))
                 .reduce(DownloadAllResult::concat);
-        downloadResult.ifPresent(result -> messengerService.sendMessageToUser(result, user));
+        downloadResult.
+                filter(DownloadAllResult::hasResult).
+                ifPresent(result -> messengerService.sendMessageToUser(result, user));
         return downloadResult;
     }
 

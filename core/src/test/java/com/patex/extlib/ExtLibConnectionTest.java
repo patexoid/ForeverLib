@@ -51,7 +51,7 @@ public class ExtLibConnectionTest {
         when(urlConnection.getHeaderField("Content-Disposition")).thenReturn("attachment; filename=\"" + fileName + "\"");
 
         ExtLibConnection connectionService = spy(new ExtLibConnection(url, "", null, null, null, 0, null,
-                MoreExecutors.newDirectExecutorService(), bookService));
+                MoreExecutors.newDirectExecutorService(), bookService,300));
         when(connectionService.getConnection(url + uri)).thenReturn(urlConnection);
         Book actual = connectionService.downloadBook(uri, type, user);
 
@@ -93,7 +93,7 @@ public class ExtLibConnectionTest {
         byte[] bytes = expectedXML.getBytes();
 
         ExtLibConnection connectionService = spy(new ExtLibConnection(url, "", null, null, null, 0, null,
-                MoreExecutors.newDirectExecutorService(), mock(BookService.class)));
+                MoreExecutors.newDirectExecutorService(), mock(BookService.class),300));
         URLConnection urlConnection = mock(URLConnection.class);
         when(connectionService.getConnection(url + uri)).thenReturn(urlConnection);
         when(urlConnection.getInputStream()).thenReturn(new ByteArrayInputStream(bytes));
