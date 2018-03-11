@@ -211,7 +211,7 @@ public class ExtLibTest {
 
         connectionService =
                 spy(new ExtLibConnection(url, "", null, null, null, 0, null,
-                        MoreExecutors.newDirectExecutorService(), bookService));
+                        MoreExecutors.newDirectExecutorService(), bookService,300));
         downloadService = createExtLib();
         URLConnection urlConnection1 = mock(URLConnection.class);
         String fileName1 = rsg.generate(10);
@@ -259,7 +259,7 @@ public class ExtLibTest {
     public void testDownloadAction() throws Exception {
         String uri = rsg.generate(10);
         connectionService = spy(new ExtLibConnection(url, "", null, null, null, 0, null,
-                MoreExecutors.newDirectExecutorService(),bookService));
+                MoreExecutors.newDirectExecutorService(),bookService,300));
         URLConnection urlConnection = mock(URLConnection.class);
         String fileName = rsg.generate(10);
         when(urlConnection.getHeaderField("Content-Disposition")).thenReturn("attachment; filename=\"" + fileName + "\"");

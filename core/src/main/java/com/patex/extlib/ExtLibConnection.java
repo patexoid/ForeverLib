@@ -16,9 +16,10 @@ import com.rometools.rome.io.XmlReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -38,13 +39,13 @@ import java.util.regex.Pattern;
 /**
  *
  */
-@Configuration
+@Component
 @Scope(scopeName = "extLibrary", proxyMode = ScopedProxyMode.TARGET_CLASS)
 class ExtLibConnection {
 
     private final static Pattern fileNamePattern = Pattern.compile("attachment; filename=\"([^\"]+)\"");
 
-    private static Logger log = LoggerFactory.getLogger(ExtLibConnection.class);
+    private final static Logger log = LoggerFactory.getLogger(ExtLibConnection.class);
     private final Semaphore semaphore = new Semaphore(2);
     private final Cache<String, Book> bookCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
     private final ExecutorService executor;
@@ -53,12 +54,15 @@ class ExtLibConnection {
     private final String login;
     private final String password;
     private final BookService bookService;
-    private Proxy proxy;
+    private final Proxy proxy;
+    private final int timeout;
 
 
+    @VisibleForTesting
     ExtLibConnection(String url, String prefix, String login, String password,
                      String proxyHost, Integer proxyPort, Proxy.Type proxyType, ExecutorService executor,
-                     BookService bookService) {
+                     BookService bookService,
+                     int timeout) {
         this.executor = executor;
         this.url = url;
         this.prefix = prefix;
@@ -70,14 +74,16 @@ class ExtLibConnection {
             proxy = Proxy.NO_PROXY;
         }
         this.bookService = bookService;
+        this.timeout = timeout;
     }
 
     @Autowired
-    public ExtLibConnection(BookService bookService, ExtLibScopeStorage extLibScope) {
-        this(bookService, extLibScope.getCurrentExtLib());
+    public ExtLibConnection(BookService bookService, ExtLibScopeStorage extLibScope,
+                            @Value("${extlib.connection.timeout}") int timeout) {
+        this(bookService, extLibScope.getCurrentExtLib(), timeout);
     }
 
-    ExtLibConnection(BookService bookService, ExtLibrary extLibrary) {
+    ExtLibConnection(BookService bookService, ExtLibrary extLibrary,int timeout) {
         this.bookService = bookService;
         this.url = extLibrary.getUrl();
         this.prefix = extLibrary.getOpdsPath();
@@ -91,6 +97,7 @@ class ExtLibConnection {
             proxy = Proxy.NO_PROXY;
         }
         executor = ExecutorCreator.createExecutor("ExtLib:" + extLibrary.getName() + " Connection", log);
+        this.timeout = timeout;
     }
 
     @VisibleForTesting
@@ -108,7 +115,7 @@ class ExtLibConnection {
         try {
             semaphore.acquire();
             return executor.submit(() -> execute(uri, function)
-            ).get(120, TimeUnit.SECONDS);
+            ).get(timeout, TimeUnit.SECONDS);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
             log.error(e.getMessage(), e);
             throw new LibException(e.getMessage(), e);
