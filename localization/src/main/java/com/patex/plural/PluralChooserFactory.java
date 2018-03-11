@@ -12,9 +12,9 @@ import java.util.function.Function;
 //TODO temporary solution need to make it more universal(javacc???)
 public class PluralChooserFactory {
 
-    public static Map<String, Function<Integer, Integer>> chooseFunc = new HashMap<>();
+    private final Map<String, Function<Integer, Integer>> chooseFunc = new HashMap<>();
 
-    static {
+     {
         chooseFunc.put("en", count -> count == 1 ? 0 : 1);
         chooseFunc.put("uk", PluralChooserFactory::uk_ru_fchooser);
         chooseFunc.put("ru", PluralChooserFactory::uk_ru_fchooser);
@@ -33,12 +33,17 @@ public class PluralChooserFactory {
         }
     }
 
-    public synchronized PluralChooser getFormChooser(Locale locale) {
+    PluralChooser getFormChooser(Locale locale) {
         String language = locale.getLanguage();
         PluralChooser pluralChooser = choosers.get(language);
         if (pluralChooser == null) {
-            pluralChooser = createChooser(locale);
-            choosers.put(language, pluralChooser);
+            synchronized (chooseFunc) {
+                pluralChooser = choosers.get(language);
+                if (pluralChooser == null) {
+                    pluralChooser = createChooser(locale);
+                    choosers.put(language, pluralChooser);
+                }
+            }
         }
         return pluralChooser;
     }

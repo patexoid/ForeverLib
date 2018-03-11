@@ -3,6 +3,7 @@ package com.patex.controllers;
 import com.patex.BookUploadInfo;
 import com.patex.LibException;
 import com.patex.entities.Book;
+import com.patex.service.AdminService;
 import com.patex.service.BookService;
 import com.patex.service.DuplicateHandler;
 import com.patex.service.ZUserService;
@@ -42,6 +43,10 @@ public class BookController {
 
     @Autowired
     private BookService bookService;
+
+    @Autowired
+    private AdminService adminService;
+
 
     @Autowired
     private DuplicateHandler duplicateHandler;
@@ -128,7 +133,7 @@ public class BookController {
     @Secured(ADMIN_AUTHORITY)
     public @ResponseBody
     String duplicateCheckForExisted() {
-        bookService.prepareExisted(userService.getCurrentUser());
+        adminService.publisEventForExistingBooks(userService.getCurrentUser());
         duplicateHandler.waitForFinish();
         return "success";
     }
@@ -137,7 +142,7 @@ public class BookController {
     @Secured(ADMIN_AUTHORITY)
     public @ResponseBody
     String updateCovers() {
-        bookService.updateCovers();
+        adminService.updateCovers();
         return "success";
     }
 

@@ -5,21 +5,26 @@ import org.springframework.security.concurrent.DelegatingSecurityContextExecutor
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ExecutorCreator {
 
     public static ExecutorService createExecutor(final String threadNamePrefix, Logger log) {
         return new DelegatingSecurityContextExecutorService(
-                Executors.newCachedThreadPool(r -> {
-                    AtomicInteger count = new AtomicInteger();
-                    Thread thread = new Thread(r);
-                    thread.setName(threadNamePrefix + "-" + count.incrementAndGet());
-                    thread.setDaemon(true);
-                    thread.setUncaughtExceptionHandler((t, e) -> {
-                        log.error(e.getMessage(), e);
-                    });
-                    return thread;
-                }));
+                Executors.newCachedThreadPool(createThreadFactory(threadNamePrefix, log)));
+    }
+
+    public static ThreadFactory createThreadFactory(String threadNamePrefix, Logger log) {
+        AtomicInteger count = new AtomicInteger();
+        return r -> {
+            Thread thread = new Thread(r);
+            thread.setName(threadNamePrefix + "-" + count.incrementAndGet());
+            thread.setDaemon(true);
+            thread.setUncaughtExceptionHandler((t, e) -> {
+                log.error(e.getMessage(), e);
+            });
+            return thread;
+        };
     }
 }

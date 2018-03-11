@@ -28,7 +28,7 @@ public class PluralChooser {
         if (words != null) {
             String result = words[formNumber.apply(count)];
             if (Character.isUpperCase(word.charAt(0))) {
-                if (word.length() == 1 || Character.isUpperCase(word.charAt(1))) {
+                if (result.length() == 1 ) {
                     result = result.toUpperCase(locale);
                 } else {
                     result = result.substring(0, 1).toUpperCase(locale) + result.substring(1);
