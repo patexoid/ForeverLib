@@ -1,7 +1,7 @@
 package com.patex.shingle.byteSet;
 
 class NodeVarNext extends NodeVar {
-    Node next;
+    private final Node next;
 
     NodeVarNext(byte[] key, Node next) {
         super(key);

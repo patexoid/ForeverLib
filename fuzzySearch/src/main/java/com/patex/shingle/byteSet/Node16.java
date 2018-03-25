@@ -1,8 +1,8 @@
 package com.patex.shingle.byteSet;
 
 public class Node16 implements Node {
-    final int hashCode;
-    final byte b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15;
+    private final int hashCode;
+    private final byte b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15;
 
     public Node16(byte[] key) {
         b0 = key[0];
@@ -22,7 +22,7 @@ public class Node16 implements Node {
         b14 = key[14];
         b15 = key[15];
 
-        this.hashCode = ByteHashSet.getHashCode(key);
+        this.hashCode = ByteHashSet.getHashCode(key,16);
     }
 
     public boolean isEqualsArray(byte[] key) {
@@ -78,5 +78,28 @@ public class Node16 implements Node {
     @Override
     public int hashCode() {
         return hashCode;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Node16 node16 = (Node16) o;
+        return  b0 == node16.b0 &&
+                b1 == node16.b1 &&
+                b2 == node16.b2 &&
+                b3 == node16.b3 &&
+                b4 == node16.b4 &&
+                b5 == node16.b5 &&
+                b6 == node16.b6 &&
+                b7 == node16.b7 &&
+                b8 == node16.b8 &&
+                b9 == node16.b9 &&
+                b10 == node16.b10 &&
+                b11 == node16.b11 &&
+                b12 == node16.b12 &&
+                b13 == node16.b13 &&
+                b14 == node16.b14 &&
+                b15 == node16.b15;
     }
 }

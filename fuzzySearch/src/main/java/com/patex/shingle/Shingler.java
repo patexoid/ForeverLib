@@ -6,7 +6,5 @@ public interface Shingler extends Iterable<byte[]>{
 
     boolean contains(byte[] shingleHash);
 
-    default int byteSize(){
-        return 16;
-    }
+    int getByteArraySize();
 }

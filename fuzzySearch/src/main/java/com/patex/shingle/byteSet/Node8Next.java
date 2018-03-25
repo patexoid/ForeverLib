@@ -1,7 +1,7 @@
 package com.patex.shingle.byteSet;
 
 class Node8Next extends Node8 {
-    Node next;
+    private final Node next;
 
     Node8Next(byte[] key, Node next) {
         super(key);
