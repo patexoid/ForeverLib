@@ -85,7 +85,7 @@ public class ShingleCache<T> {
     public void saveToCache(Shingler shingler, T t) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         writeInt(baos, shingler.size());
-        writeInt(baos, 16);
+        writeInt(baos, shingler.getByteArraySize());
         for (byte[] bytes : shingler) {
             baos.write(bytes);
         }

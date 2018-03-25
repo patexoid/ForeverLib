@@ -27,6 +27,11 @@ class LoadedShingler implements Shingler {
         return shingles.getSize();
     }
 
+    @Override
+    public int getByteArraySize() {
+        return shingles.getByteArraySize();
+    }
+
     public boolean contains(byte[] shingleHash) {
         return shingles.contains(shingleHash);
     }

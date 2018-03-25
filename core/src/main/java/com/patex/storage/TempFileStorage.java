@@ -34,6 +34,10 @@ public class TempFileStorage implements FileStorage {
     @Override
     public String save(byte[] fileContent, String... filepath) throws LibException {
         File file = new File(getFilePath(filepath));
+        File dir = file.getParentFile();
+        if(!dir.exists()){
+            dir.mkdirs();
+        }
         try (FileOutputStream fos = new FileOutputStream(file)) {
             fos.write(fileContent);
             fos.flush();

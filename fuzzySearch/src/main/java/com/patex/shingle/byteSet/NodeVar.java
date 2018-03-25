@@ -3,12 +3,12 @@ package com.patex.shingle.byteSet;
 import java.util.Arrays;
 
 public class NodeVar implements Node {
-    final int hashCode;
-    final byte[] b;
+    private final int hashCode;
+    private final byte[] b;
 
     public NodeVar(byte[] key) {
-        b=key;
-        this.hashCode = ByteHashSet.getHashCode(key);
+        b = key;
+        this.hashCode = ByteHashSet.getHashCode(key, key.length);
     }
 
     public boolean isEqualsArray(byte[] key) {
@@ -28,5 +28,13 @@ public class NodeVar implements Node {
     @Override
     public int hashCode() {
         return hashCode;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        NodeVar nodeVar = (NodeVar) o;
+        return Arrays.equals(b, nodeVar.b);
     }
 }

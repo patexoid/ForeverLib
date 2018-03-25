@@ -10,18 +10,21 @@ public class ByteHashSet implements Iterable<byte[]> {
     private static final int MAXIMUM_CAPACITY = 1 << 30;
 
     private transient Node[] table;
-    private int size=0;
-    private Function<byte[], Node> createNode;
-    private BiFunction<byte[], Node, Node> createNextNode;
+    private int size = 0;
+    private final Function<byte[], Node> createNode;
+    private final BiFunction<byte[], Node, Node> createNextNode;
+    private final int byteArraySize;
 
     ByteHashSet(int initialCapacity,
+                int byteArraySize,
                 Function<byte[], Node> createNode,
-                BiFunction<byte[], Node,Node> createNextNode) {
+                BiFunction<byte[], Node, Node> createNextNode) {
         if (initialCapacity < 0)
             throw new IllegalArgumentException("Illegal initial capacity: " +
                     initialCapacity);
         if (initialCapacity > MAXIMUM_CAPACITY)
             initialCapacity = MAXIMUM_CAPACITY;
+        this.byteArraySize = byteArraySize;
         table = new Node[tableSizeFor(initialCapacity)];
         this.createNode = createNode;
         this.createNextNode = createNextNode;
@@ -37,14 +40,11 @@ public class ByteHashSet implements Iterable<byte[]> {
         return n < 0 ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
     }
 
-    static int getHashCode(byte[] key) {
-        if (key == null)
-            return 0;
-
+    static int getHashCode(byte[] key, int byteArraySize) {
         int result = 1;
-        for (byte element : key)
-            result = 31 * result + element;
-
+        for (int i = 0; i < byteArraySize; i++) {
+            result = 31 * result + key[i];
+        }
         return result;
     }
 
@@ -54,7 +54,7 @@ public class ByteHashSet implements Iterable<byte[]> {
     }
 
     public boolean contains(byte[] key) {
-        int hashCode = getHashCode(key);
+        int hashCode = getHashCode(key, byteArraySize);
         int index = index(hashCode);
         Node node = table[index];
         if (node != null) {
@@ -67,11 +67,11 @@ public class ByteHashSet implements Iterable<byte[]> {
     }
 
     public void add(byte[] key) {
-        int hashCode = getHashCode(key);
+        int hashCode = getHashCode(key, byteArraySize);
         int index = index(hashCode);
         Node node = table[index];
         if (node == null) {
-            table[index] = createNode.apply(key );
+            table[index] = createNode.apply(key);
             size++;
         } else {
             do {
@@ -85,6 +85,10 @@ public class ByteHashSet implements Iterable<byte[]> {
 
     public int getSize() {
         return size;
+    }
+
+    public int getByteArraySize() {
+        return byteArraySize;
     }
 
     @Override
@@ -108,7 +112,7 @@ public class ByteHashSet implements Iterable<byte[]> {
                     return;
                 }
             }
-            node=null;
+            node = null;
         }
 
         @Override

@@ -3,9 +3,10 @@ package com.patex.shingle;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.patex.shingle.byteSet.ByteHashSet;
-import com.patex.shingle.byteSet.ByteSetFactory;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -19,22 +20,34 @@ public class ShingleMatcher<T, ID> {
     private final Function<T, Shingleable> mapFunc;
     private final Function<T, ID> idFunc;
     private final ShingleCache<T> shingleCache;
-    private int coef;
+    private final ShinglerCreator shinglerCreator;
 
-    public ShingleMatcher(Function<T, Shingleable> mapFunc, Function<T, ID> idFunc, int coef, int cacheSize) {
+    public ShingleMatcher(Function<T, Shingleable> mapFunc, Function<T, ID> idFunc, int coef, int cacheSize,
+                          int byteArraySize) {
         this.mapFunc = mapFunc;
         this.idFunc = idFunc;
         shingleCache = new ShingleCache<>();
-        this.coef = coef;
-        cache =
-                CacheBuilder.newBuilder().
-                        maximumSize(cacheSize).
-                        expireAfterAccess(10, TimeUnit.MINUTES).build();
+        cache = CacheBuilder.newBuilder().
+                maximumSize(cacheSize).
+                expireAfterAccess(10, TimeUnit.MINUTES).build();
+        shinglerCreator = new ShinglerCreator(coef, byteArraySize,
+                () -> {
+                    try {
+                        MessageDigest digest = MessageDigest.getInstance("MD5");
+                        return digest::digest;
+                    } catch (NoSuchAlgorithmException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    public ShingleMatcher(Function<T, Shingleable> mapFunc, Function<T, ID> idFunc, int coef, int cacheSize) {
+        this(mapFunc, idFunc, coef, cacheSize, 16);
     }
 
     public boolean isSimilar(T first, T second) {
-        Shingler firstS = getShigler(first);
-        Shingler secondS = getShigler(second);
+        Shingler firstS = getShingler(first);
+        Shingler secondS = getShingler(second);
         return isSimilar(firstS, secondS);
     }
 
@@ -62,7 +75,7 @@ public class ShingleMatcher<T, ID> {
         return true;
     }
 
-    private Shingler getShigler(T t) {
+    private Shingler getShingler(T t) {
         ID id = idFunc.apply(t);
         try {
             return cache.get(id, () ->
@@ -74,20 +87,14 @@ public class ShingleMatcher<T, ID> {
     }
 
     private Shingler createShingler(T t) {
-        LazyShingler lazyShingler =  new LazyShingler(mapFunc.apply(t), coef, 16);
-        lazyShingler.loadAll();
-
-        ByteHashSet shinglesSet = ByteSetFactory.createByteSet(lazyShingler.getShingles().getSize(), 16);
-        for (byte[] shingle : lazyShingler.getShingles()) {
-            shinglesSet.add(shingle);
-        }
-        LoadedShingler shingler = new LoadedShingler(lazyShingler.getShingles());
         try {
+            ByteHashSet shingleSet = shinglerCreator.createShingles(mapFunc.apply(t));
+            LoadedShingler shingler = new LoadedShingler(shingleSet);
             shingleCache.saveToCache(shingler, t);
+            return shingler;
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e.getMessage(), e);
         }
-        return shingler;
     }
 
     public void invalidate(T obj) {
