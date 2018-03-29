@@ -13,7 +13,7 @@ import javax.persistence.*;
 public class ZUserAuthority implements GrantedAuthority {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)

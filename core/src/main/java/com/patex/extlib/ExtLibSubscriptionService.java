@@ -43,7 +43,7 @@ public class ExtLibSubscriptionService {
     }
 
     public void deleteSubscription(Long id) throws LibException {
-        subscriptionRepo.delete(id);
+        subscriptionRepo.deleteById(id);
     }
 
     private void checkSubscription(ExtLibrary library, Subscription subscription) {

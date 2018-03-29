@@ -26,6 +26,6 @@ public class ExtLibraryService {
     }
 
     public ExtLibrary findOne(Long id) {
-        return repo.findOne(id);
+        return repo.findById(id).get();
     }
 }

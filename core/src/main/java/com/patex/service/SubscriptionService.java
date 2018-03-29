@@ -23,7 +23,7 @@ public class SubscriptionService {
     }
 
     public Subscription findOne(Long aLong) {
-        return subscriptionRepository.findOne(aLong);
+        return subscriptionRepository.findById(aLong).get();
     }
 
     public Page<Subscription> findAll(Pageable pageable) {

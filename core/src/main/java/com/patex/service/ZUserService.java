@@ -62,7 +62,7 @@ public class ZUserService implements UserDetailsService {
 
     @Override
     public ZUser loadUserByUsername(String username) throws UsernameNotFoundException {
-        ZUser user = userRepo.findOne(username);
+        ZUser user = userRepo.findById(username).get();
         return user == null ? anonim : user;
     }
 
@@ -129,7 +129,7 @@ public class ZUserService implements UserDetailsService {
         if (userConfig == null) {
             userConfig = new ZUserConfig();
             user.setUserConfig(userConfig);
-            userConfig.setUser(userRepo.findOne(user.getUsername()));
+            userConfig.setUser(userRepo.findById(user.getUsername()).get());
 
         }
         PropertyDescriptor[] pds = BeanUtils.getPropertyDescriptors(ZUserConfig.class);

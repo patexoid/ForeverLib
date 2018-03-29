@@ -154,7 +154,7 @@ public class BookService {
     }
 
     public Book getBook(long id) {
-        return bookRepository.findOne(id);
+        return bookRepository.findById(id).get();
     }
 
     public InputStream getBookInputStream(Book book) throws LibException {
@@ -170,7 +170,7 @@ public class BookService {
     }
 
     public Book updateBook(Book book) throws LibException {
-        if (bookRepository.exists(book.getId())) {
+        if (bookRepository.existsById(book.getId())) {
             return bookRepository.save(book);
         }
         throw new LibException("Book not found");

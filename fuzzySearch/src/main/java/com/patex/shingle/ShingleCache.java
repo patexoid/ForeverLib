@@ -79,7 +79,7 @@ public class ShingleCache<T> {
         int ch4 = in.read();
         if ((ch1 | ch2 | ch3 | ch4) < 0)
             throw new EOFException();
-        return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + ch4);
+        return (ch1 << 24) + (ch2 << 16) + (ch3 << 8) + ch4;
     }
 
     public void saveToCache(Shingler shingler, T t) throws IOException {

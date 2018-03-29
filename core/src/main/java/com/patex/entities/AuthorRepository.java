@@ -17,8 +17,6 @@ import java.util.Optional;
 @Repository
 public interface AuthorRepository extends CrudRepository<Author, Long> {
 
-    Page<Author> findAllOrderByName(Pageable pageable);
-
     List<Author> findByNameStartingWithIgnoreCaseOrderByName(String name);
 
     Optional<Author> findFirstByNameIgnoreCase(String name);

@@ -11,6 +11,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.OneToMany;
@@ -34,7 +35,7 @@ public class Book {
     static final String DESCR = "descr";
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, fetch = FetchType.LAZY, mappedBy = "book")
@@ -49,8 +50,8 @@ public class Book {
     @JsonProperty(GENRES)
     private List<BookGenre> genres = new ArrayList<>();
 
-    @JsonSerialize(using=BooleanJson.Serializer.class)
-    @JsonDeserialize(using=BooleanJson.Deserializer.class)
+    @JsonSerialize(using = BooleanJson.Serializer.class)
+    @JsonDeserialize(using = BooleanJson.Deserializer.class)
     private boolean duplicate = false;
 
     @Column(nullable = false)
@@ -62,7 +63,7 @@ public class Book {
     private String fileName;
 
     @JsonProperty
-    private Integer contentSize=0;
+    private Integer contentSize = 0;
 
     @JsonIgnore
     private Instant created;
@@ -120,16 +121,16 @@ public class Book {
     }
 
     @JsonIgnore
-    public void setAuthors(Collection<Author> authors){
+    public List<Author> getAuthors() {
+        return authorBooks.stream().map(AuthorBook::getAuthor).collect(Collectors.toList());
+    }
+
+    @JsonIgnore
+    public void setAuthors(Collection<Author> authors) {
         List<AuthorBook> authorBooks = authors.stream().
                 map(author -> new AuthorBook(author, this)).
                 collect(Collectors.toList());
         setAuthorBooks(authorBooks);
-    }
-
-    @JsonIgnore
-    public List<Author> getAuthors() {
-        return authorBooks.stream().map(AuthorBook::getAuthor).collect(Collectors.toList());
     }
 
     public String getFileName() {
@@ -189,6 +190,7 @@ public class Book {
     public Boolean isPrimary() {
         return !duplicate;
     }
+
     public void setDuplicate(Boolean duplicate) {
         this.duplicate = duplicate;
     }
@@ -209,11 +211,11 @@ public class Book {
         this.created = created;
     }
 
-    public void setCover(FileResource cover) {
-        this.cover = cover;
-    }
-
     public FileResource getCover() {
         return cover;
+    }
+
+    public void setCover(FileResource cover) {
+        this.cover = cover;
     }
 }
