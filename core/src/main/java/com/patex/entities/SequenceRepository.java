@@ -5,8 +5,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 /**
  * Created by Alexey on 12.03.2016.
  */
@@ -15,7 +13,5 @@ import java.util.List;
 public interface SequenceRepository extends CrudRepository<Sequence, Long> {
 
     Page<Sequence> findAll(Pageable pageable);
-
-    List<Sequence> findAll(Iterable<Long> ids);
 
 }

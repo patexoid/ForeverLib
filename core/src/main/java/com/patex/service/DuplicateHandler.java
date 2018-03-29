@@ -197,7 +197,7 @@ public class DuplicateHandler {
                     book -> {
                         markDuplications(primary, book, bookCheckQueue.getUser());
                     });
-            bookCheckQueueRepo.delete(bookCheckQueue.getId());
+            bookCheckQueueRepo.deleteById(bookCheckQueue.getId());
             log.trace("duplicate id=" + bookCheckQueue.getId());
             return bookCheckQueue;
         } catch (Exception e) {

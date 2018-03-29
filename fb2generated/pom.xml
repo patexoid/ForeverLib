@@ -11,30 +11,72 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>jaxb2-maven-plugin</artifactId>
-                <version>2.3.1</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.9</source>
+                    <target>1.9</target>
+                </configuration>
+            </plugin>
+            <!--<plugin>-->
+                <!--<groupId>org.codehaus.mojo</groupId>-->
+                <!--<artifactId>jaxb2-maven-plugin</artifactId>-->
+                <!--<version>2.3.1</version>-->
+                <!--<executions>-->
+                    <!--<execution>-->
+                        <!--<id>xjc</id>-->
+                        <!--<goals>-->
+                            <!--<goal>xjc</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+                <!--<configuration>-->
+                    <!--&lt;!&ndash; The package of your generated sources &ndash;&gt;-->
+                    <!--<packageName>fb2</packageName>-->
+                    <!--<xjbSources>-->
+                        <!--<xjbSource>${project.build.sourceDirectory}/../resources/xsd/bindings.xjb</xjbSource>-->
+                    <!--</xjbSources>-->
+                    <!--<sources>-->
+                        <!--<source>${project.build.sourceDirectory}/../resources/xsd/fb2</source>-->
+                    <!--</sources>-->
+                    <!--<outputDirectory>${project.build.sourceDirectory}</outputDirectory>-->
+                <!--</configuration>-->
+            <!--</plugin>-->
+            <plugin>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-xjc-plugin</artifactId>
+                <version>3.2.1</version>
+                <configuration>
+
+                </configuration>
                 <executions>
                     <execution>
-                        <id>xjc</id>
+                        <id>generate-sources</id>
+                        <phase>generate-sources</phase>
                         <goals>
-                            <goal>xjc</goal>
+                            <goal>xsdtojava</goal>
                         </goals>
+                        <configuration>
+                            <sourceRoot>${basedir}/target/generated-sources/src/main/java</sourceRoot>
+                            <xsdOptions>
+                                <xsdOption>
+                                    <xsdDir>${project.build.sourceDirectory}/xsd/fb2</xsdDir>
+                                    <bindingFile>${project.build.sourceDirectory}/xsd/bindings.xjb</bindingFile>
+                                    <packagename>fb2</packagename>
+                                </xsdOption>
+                            </xsdOptions>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <!-- The package of your generated sources -->
-                    <packageName>fb2</packageName>
-                    <xjbSources>
-                        <xjbSource>${project.build.sourceDirectory}/../resources/xsd/bindings.xjb</xjbSource>
-                    </xjbSources>
-                    <sources>
-                        <source>${project.build.sourceDirectory}/../resources/xsd/fb2</source>
-                    </sources>
-                    <outputDirectory>${project.build.sourceDirectory}</outputDirectory>
-                </configuration>
             </plugin>
         </plugins>
     </build>
+    <dependencies>
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>2.2.11</version>
+        </dependency>
 
+    </dependencies>
 </project>

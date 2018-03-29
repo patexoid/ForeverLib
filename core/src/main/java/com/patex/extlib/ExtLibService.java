@@ -74,7 +74,7 @@ public class ExtLibService {
     }
 
     public void actionExtLibData(long libId, String action, Map<String, String> params) throws LibException {
-        ExtLibrary library = extLibRepo.findOne(libId);
+        ExtLibrary library = extLibRepo.findById(libId).orElse(null);
         action(library, action, params, params.get(REQUEST_P_NAME));
     }
 
@@ -92,7 +92,7 @@ public class ExtLibService {
     }
 
     public String downloadBook(long libId, String uri, String type) throws LibException {
-        ExtLibrary library = extLibRepo.findOne(libId);
+        ExtLibrary library = extLibRepo.findById(libId).get();
         return downloadBook(library, uri, type);
     }
 
@@ -115,7 +115,7 @@ public class ExtLibService {
 
     public ExtLibFeed getDataForLibrary(Long libId, Map<String, String> requestParams)
             throws LibException {
-        ExtLibrary library = extLibRepo.findOne(libId);
+        ExtLibrary library = extLibRepo.findById(libId).get();
         String uri = requestParams.get(REQUEST_P_NAME);
         return getExtLibFeed(library, uri);
     }

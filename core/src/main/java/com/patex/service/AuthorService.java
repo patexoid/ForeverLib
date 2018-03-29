@@ -23,7 +23,7 @@ public class AuthorService {
     }
 
     public Author getAuthors(long id) {
-        return authorRepository.findOne(id);
+        return authorRepository.findById(id).get();
     }
 
     public Page<Author> findByName(String name, Pageable pageable) {

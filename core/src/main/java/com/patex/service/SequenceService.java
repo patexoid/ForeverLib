@@ -32,7 +32,7 @@ public class SequenceService {
     }
 
     public Sequence getSequence(long id) {
-        return sequenceRepository.findOne(id);
+        return sequenceRepository.findById(id).get();
     }
 
     @Transactional(propagation = MANDATORY, isolation = Isolation.SERIALIZABLE)
