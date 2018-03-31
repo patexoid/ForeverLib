@@ -17,6 +17,7 @@ import com.patex.shingle.ShingleSearch;
 import com.patex.shingle.Shingleable;
 import com.patex.storage.StorageService;
 import com.patex.utils.BlockingExecutor;
+import com.patex.utils.ExecutorCreator;
 import com.patex.utils.StreamU;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -42,9 +43,7 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Component
@@ -72,7 +71,7 @@ public class DuplicateHandler {
                             @Value("${duplicateCheck.threadCount:0}") int threadCount,
                             @Value("${duplicateCheck.shingleCoeff:1}") int coef,
                             @Value("${duplicateCheck.fastCacheSize:100}") int cacheSize,
-                            @Value("${duplicateCheck.storageCacheFolder}") String  storageFolder) {
+                            @Value("${duplicateCheck.storageCacheFolder}") String storageFolder) {
         this.bookCheckQueueRepo = bookCheckQueueRepo;
         this.transactionService = transactionService;
         this.bookService = bookService;
@@ -85,27 +84,18 @@ public class DuplicateHandler {
             this.threadCount = threadCount;
             this.threadCount = availableProcessors > 1 ? availableProcessors / 2 : 1;
         }
-        scheduleExecutor = Executors.newSingleThreadExecutor(createThreadFactory(() -> "scheduleExecutor"));
+        scheduleExecutor = Executors.
+                newSingleThreadExecutor(ExecutorCreator.createThreadFactory("scheduleExecutor-", log));
         blockingExecutor = new BlockingExecutor(this.threadCount, this.threadCount * 5, 1,
                 TimeUnit.MINUTES, this.threadCount * 5,
-                createThreadFactory(() -> "checkForDuplicate-"));
+                ExecutorCreator.createThreadFactory("checkForDuplicate-", log));
         shingleSearch = new ShingleSearch<>(this::getSameAuthorsBook,
                 ShingleableBook::new,
                 Book::getId,
                 coef, cacheSize);
-    if (StringUtils.isNotEmpty(storageFolder)) {
-        shingleSearch.setStorage(new BookShingleCacheStorage(storageFolder));
-    }
-    }
-
-    private ThreadFactory createThreadFactory(Supplier<String> supplier) {
-        return r -> {
-            Thread thread = new Thread(r);
-            thread.setName(supplier.get());
-            thread.setDaemon(true);
-            thread.setUncaughtExceptionHandler((t, e) -> log.error(e.getMessage(), e));
-            return thread;
-        };
+        if (StringUtils.isNotEmpty(storageFolder)) {
+            shingleSearch.setStorage(new BookShingleCacheStorage(storageFolder));
+        }
     }
 
     @PostConstruct
@@ -187,7 +177,6 @@ public class DuplicateHandler {
                 sorted(Comparator.comparing(
                         book -> StringUtils.getLevenshteinDistance(book.getTitle(), primaryBook.getTitle()))).
                 collect(Collectors.toList());
-
     }
 
     private BookCheckQueue checkForDuplicate(BookCheckQueue bookCheckQueue) {
@@ -265,7 +254,7 @@ public class DuplicateHandler {
     }
 
     private static class BookShingleCacheStorage implements ShingleCacheStorage<Book> {
-        private final  String storageFolder;
+        private final String storageFolder;
 
         public BookShingleCacheStorage(String storageFolder) {
             this.storageFolder = storageFolder;
@@ -290,7 +279,7 @@ public class DuplicateHandler {
 
         @Override
         public void save(byte[] bytes, Book book) {
-            try(FileOutputStream fos = new FileOutputStream(getCacheFile(book))) {
+            try (FileOutputStream fos = new FileOutputStream(getCacheFile(book))) {
                 fos.write(bytes);
                 fos.flush();
             } catch (IOException e) {
@@ -341,6 +330,4 @@ public class DuplicateHandler {
             }
         }
     }
-
-
 }

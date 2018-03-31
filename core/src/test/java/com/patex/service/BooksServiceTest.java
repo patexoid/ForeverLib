@@ -7,6 +7,7 @@ import com.patex.entities.BookRepository;
 import com.patex.entities.BookSequence;
 import com.patex.entities.Sequence;
 import com.patex.entities.ZUser;
+import com.patex.parser.BookImage;
 import com.patex.parser.BookInfo;
 import com.patex.parser.ParserService;
 import com.patex.storage.StorageService;
@@ -25,6 +26,7 @@ import java.util.Optional;
 
 import static org.apache.commons.text.CharacterPredicates.*;
 import static org.junit.Assert.*;
+import static org.mockito.AdditionalMatchers.aryEq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -33,6 +35,7 @@ import static org.mockito.Mockito.*;
 public class BooksServiceTest {
     public static final String FILE_NAME = "fileName";
     public static final String FIRST_AUTHOR = "first author";
+    public static final String SECOND_AUTHOR = "second author";
     public static final String FIRST_SEQUENCE = "first sequence";
 
     private final RandomStringGenerator rsg = new RandomStringGenerator.Builder()
@@ -70,7 +73,14 @@ public class BooksServiceTest {
         when(parserService.getBookInfo(eq(FILE_NAME), any())).thenReturn(bookInfo);
         when(bookRepo.findFirstByTitleAndChecksum(any(), any())).thenReturn(Optional.empty());
         when(bookRepo.save(any(Book.class))).thenAnswer(i -> i.getArguments()[0]);
-        when(sequenceService.mergeSequences(any())).thenAnswer(i -> ((Collection) i.getArguments()[0]).iterator().next());
+        when(sequenceService.mergeSequences(any())).thenAnswer(i -> {
+            Collection sequences = (Collection) i.getArguments()[0];
+            if (sequences == null) {
+                return null;
+            } else {
+                return sequences.iterator().next();
+            }
+        });
         when(authorService.findFirstByNameIgnoreCase(any())).thenReturn(Optional.empty());
 
         fileStorage = mock(StorageService.class);
@@ -85,6 +95,8 @@ public class BooksServiceTest {
     public void verifyUploadBook() {
         Book result = bookService.uploadBook(FILE_NAME, bookIS, user);
         verify(bookRepo).save(this.book);
+        verify(fileStorage).save(any(), eq(FILE_NAME));
+        assertEquals(FILE_NAME, book.getFileName());
         assertEquals(result, book);
     }
 
@@ -92,7 +104,9 @@ public class BooksServiceTest {
     public void verifyUploadBookWithSavedAuthor() {
         long authorID = 42;
         when(authorService.findFirstByNameIgnoreCase(FIRST_AUTHOR)).thenReturn(Optional.of(new Author(authorID, FIRST_AUTHOR)));
+
         Book result = bookService.uploadBook(FILE_NAME, bookIS, user);
+
         Author resultAuthor = result.getAuthorBooks().get(0).getAuthor();
         assertEquals(authorID, resultAuthor.getId().longValue());
     }
@@ -116,6 +130,53 @@ public class BooksServiceTest {
         Sequence resultSequnce = result.getSequences().get(0).getSequence();
         assertEquals(seqeunceId, resultSequnce.getId().longValue());
     }
+
+
+    @Test
+    public void verifyMergeSequenceDuringBookUpload() {
+
+        long firstSavedSequenceId = 1L;
+        long secondSavedSequenceId = 2L;
+        long mergedSequenceId = 3L;
+        Author firstSavedAuthor = new Author(FIRST_AUTHOR);
+        Book firstSavedBook = new Book();
+        Sequence firstSequence = new Sequence(firstSavedSequenceId, FIRST_SEQUENCE);
+        firstSavedBook.setSequences(Collections.singletonList(new BookSequence(1, firstSequence, firstSavedBook)));
+        firstSavedAuthor.setBooks(Collections.singletonList(new AuthorBook(firstSavedAuthor, firstSavedBook)));
+        when(authorService.findFirstByNameIgnoreCase(FIRST_AUTHOR)).thenReturn(Optional.of(firstSavedAuthor));
+
+        Author secondSavedAuthor = new Author(SECOND_AUTHOR);
+        Book secondSavedBook = new Book();
+        Sequence secondSequence = new Sequence(secondSavedSequenceId, FIRST_SEQUENCE);
+        secondSavedBook.setSequences(Collections.singletonList(new BookSequence(1, secondSequence, secondSavedBook)));
+        secondSavedAuthor.setBooks(Collections.singletonList(new AuthorBook(secondSavedAuthor, secondSavedBook)));
+        when(authorService.findFirstByNameIgnoreCase(SECOND_AUTHOR)).thenReturn(Optional.of(secondSavedAuthor));
+
+        book.setAuthors(Arrays.asList(new Author(FIRST_AUTHOR), new Author(SECOND_AUTHOR)));
+
+        when(sequenceService.mergeSequences(any())).thenReturn(new Sequence(mergedSequenceId, FIRST_SEQUENCE));
+
+        Book result = bookService.uploadBook(FILE_NAME, bookIS, user);
+
+        verify(sequenceService).mergeSequences(anyList());
+        assertEquals(mergedSequenceId, result.getSequences().get(0).getSequence().getId().longValue());
+    }
+
+
+    @Test
+    public void verifyBookCoverSave() {
+        BookImage bookImage = new BookImage();
+        byte[] imageBytes = new byte[]{1, 2, 3, 4, 5, 6};
+        bookImage.setImage(imageBytes);
+        String extension = "extension";
+        bookImage.setType("image/" + extension);
+        bookInfo.setBookImage(bookImage);
+
+        bookService.uploadBook(FILE_NAME, bookIS, user);
+        verify(fileStorage).save(aryEq(imageBytes), eq("image"), eq(FILE_NAME + "." + extension));
+
+    }
+
 
     @Test
     public void testSameBookUpload() {

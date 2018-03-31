@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import java.util.Locale;
 
-public class PluralMessageFormatTest {
+public class PluralChooserTest {
 
 
     private PluralChooserFactory factory ;
@@ -25,6 +25,43 @@ public class PluralMessageFormatTest {
         Assert.assertEquals("1 book", messageFormat.format("{0} <p:book>", 1));
         Assert.assertEquals("2 books", messageFormat.format("{0} <p:book>", 2));
     }
+
+    @Test
+    public void testEmpty() {
+        PluralChooser chooser = factory.getFormChooser(Locale.ENGLISH);
+        PluralMessageFormat messageFormat = new PluralMessageFormat(chooser);
+        Assert.assertEquals("1 book", messageFormat.format("{0} <p:book>", 1));
+        Assert.assertEquals("2 book", messageFormat.format("{0} <p:book>", 2));
+    }
+
+    @Test
+    public void testBroken() {
+        PluralChooser chooser = factory.getFormChooser(Locale.ENGLISH);
+        PluralMessageFormat messageFormat = new PluralMessageFormat(chooser);
+        Assert.assertEquals("1 <", messageFormat.format("{0} <", 1));
+        Assert.assertEquals("1 <p", messageFormat.format("{0} <p", 1));
+        Assert.assertEquals("1 <p:", messageFormat.format("{0} <p:", 1));
+        Assert.assertEquals("1 ", messageFormat.format("{0} <p:>", 1));
+    }
+
+    @Test
+    public void testSimplePluralWithUpperCase() {
+        PluralChooser chooser = factory.getFormChooser(Locale.ENGLISH);
+        chooser.putWord("book", "books");
+        PluralMessageFormat messageFormat = new PluralMessageFormat(chooser);
+        Assert.assertEquals("1 Book", messageFormat.format("{0} <p:Book>", 1));
+        Assert.assertEquals("2 Books", messageFormat.format("{0} <p:Book>", 2));
+    }
+
+    @Test
+    public void testSingleCharInUpperCase() {
+        PluralChooser chooser = factory.getFormChooser(Locale.ENGLISH);
+        chooser.putWord("b", "bs");
+        PluralMessageFormat messageFormat = new PluralMessageFormat(chooser);
+        Assert.assertEquals("1 B", messageFormat.format("{0} <p:B>", 1));
+        Assert.assertEquals("2 Bs", messageFormat.format("{0} <p:B>", 2));
+    }
+
 
     @Test
     public void testPluralWithIndex() {

@@ -2,22 +2,22 @@ package com.patex.plural;
 
 import java.text.MessageFormat;
 
-public class PluralMessageFormat {
+class PluralMessageFormat {
 
 
     private final PluralChooser chooser;
 
-    public PluralMessageFormat(PluralChooser chooser) {
+    PluralMessageFormat(PluralChooser chooser) {
         this.chooser = chooser;
     }
 
-    public String format(String source, Object... args) {
+    String format(String source, Object... args) {
         return format(source.toCharArray(), args);
     }
 
 
     @SuppressWarnings("StatementWithEmptyBody")
-    public String format(char[] source, Object... args) {
+    private String format(char[] source, Object... args) {
         StringBuilder result = new StringBuilder(source.length);
         int argIndex = -1;
         //find nearest left argument index
@@ -37,8 +37,9 @@ public class PluralMessageFormat {
                 }
                 argIndex = Integer.valueOf(String.valueOf(source, indexBegin, indexEnd - indexBegin));
                 result.append(source[i]);
-            //find plural format
-            } else if (source[i] == '<' && source[i + 1] == 'p' && source[i + 2] == ':') {
+                //find plural format
+            } else if (source[i] == '<' &&
+                    source.length > i + 3 && source[i + 1] == 'p' && source[i + 2] == ':'){
                 i += 3;
                 //if index argument set directly
                 if (source[i] == '{') {
@@ -58,7 +59,7 @@ public class PluralMessageFormat {
                 String word = String.copyValueOf(source, wordBegin, end - wordBegin);
                 String form = chooser.getForm(word, (Integer) args[argIndex]);
                 result.append(form);
-            } else {
+            } else{
                 result.append(source[i]);
             }
         }

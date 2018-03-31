@@ -187,40 +187,21 @@ public class BookService {
         return digest.digest();
     }
 
-    public void prepareExisted(ZUser user) {
-        Iterable<Book> books = bookRepository.findAll();
-        for (Book book : books) {
-            if (!book.isDuplicate()) {
-                publisher.publishEvent(new BookCreationEvent(book, user));
-            }
-        }
-    }
 
-    public void updateCovers() {
-        Iterable<Book> books = bookRepository.findAll();
-        for (Book book : books) {
-            transactionService.newTransaction(() -> {
-                if (book.getCover() == null) {
-                    InputStream bookIs = getBookInputStream(book);
-                    String fileName = book.getFileName();
-                    BookInfo bookInfo = parserService.getBookInfo(fileName, bookIs);
-                    BookImage bookImage = bookInfo.getBookImage();
-                    if (bookImage != null) {
-                        String cover = saveCover(fileName, bookImage);
-                        book.setCover(new FileResource(cover, bookImage.getType(), bookImage.getImage().length));
-                    }
-                    bookRepository.save(book);
-                }
-            });
-        }
-    }
-
-    private String saveCover(String fileName, BookImage bookImage) {
+    String saveCover(String fileName, BookImage bookImage) {
         String coverName = fileName;
         String[] type = bookImage.getType().split("/");
         if (type.length > 1) {
             coverName = fileName + "." + type[1];
         }
         return fileStorage.save(bookImage.getImage(), "image", coverName);
+    }
+
+    public Book save(Book entity) {
+        return bookRepository.save(entity);
+    }
+
+    public Iterable<Book> findAll() {
+        return bookRepository.findAll();
     }
 }

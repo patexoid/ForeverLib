@@ -17,4 +17,5 @@ public interface BookRepository extends CrudRepository<Book, Long> {
     Page<Book> findAll(Pageable pageable);
 
     Optional<Book> findFirstByTitleAndChecksum(String title, byte[] checksum);
+
 }
