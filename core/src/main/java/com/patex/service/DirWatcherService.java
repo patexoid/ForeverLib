@@ -27,11 +27,11 @@ import java.util.concurrent.Executors;
 @Component
 @ConditionalOnExpression("!'${bulkUploadDir}'.isEmpty()")
 public class DirWatcherService {
-    private static Logger log = LoggerFactory.getLogger(DirWatcherService.class);
+   private static final Logger log = LoggerFactory.getLogger(DirWatcherService.class);
     private final Path directoryPath;
     private final BookService bookService;
     private final ZUserService zUserService;
-    private Executor executor = Executors.newSingleThreadExecutor(r -> {
+    private final Executor executor = Executors.newSingleThreadExecutor(r -> {
         Thread thread = new Thread(r);
         thread.setName("DirWatcherService");
         thread.setDaemon(true);

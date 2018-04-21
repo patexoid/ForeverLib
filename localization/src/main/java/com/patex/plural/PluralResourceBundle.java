@@ -10,8 +10,8 @@ import java.util.ResourceBundle;
 
 public class PluralResourceBundle extends ResourceBundle {
 
-    private static Logger log = LoggerFactory.getLogger(PluralResourceBundle.class);
-    private static PluralChooserFactory defaultFactory = new PluralChooserFactory();
+    private static final Logger log = LoggerFactory.getLogger(PluralResourceBundle.class);
+    private static final PluralChooserFactory defaultFactory = new PluralChooserFactory();
     private final ResourceBundle resourceBundle;
     private final PluralMessageFormat pluralMessageFormat;
 

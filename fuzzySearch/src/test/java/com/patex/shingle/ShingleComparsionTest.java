@@ -6,7 +6,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -26,7 +25,7 @@ public class ShingleComparsionTest {
 
     @Parameterized.Parameters
     public static Iterable<Integer> data() {
-        return Arrays.asList(8);
+        return Arrays.asList(8,16);//TODO other size
     }
 
     @Test
@@ -109,7 +108,7 @@ public class ShingleComparsionTest {
             }
 
             @Override
-            public void close() throws IOException {
+            public void close() {
 
             }
         };

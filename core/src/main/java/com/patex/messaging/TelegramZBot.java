@@ -38,7 +38,7 @@ public class TelegramZBot extends TelegramLongPollingBot implements Messenger {
 
     private static final int MAX_MESSAGE_SIZE = 4000;
 
-    private static Logger log = LoggerFactory.getLogger(TelegramZBot.class);
+   private static final Logger log = LoggerFactory.getLogger(TelegramZBot.class);
 
     static {
         ApiContextInitializer.init(); //strange magic
@@ -49,7 +49,7 @@ public class TelegramZBot extends TelegramLongPollingBot implements Messenger {
     private String baseurl;
     @Autowired
     private MessengerService messagingComponent;
-    private List<String> delims = Arrays.asList("\n", ".", ";", "-", ",");
+    private final List<String> delims = Arrays.asList("\n", ".", ";", "-", ",");
 
 
     public TelegramZBot(@Value("${telegram.bot.token}") String botToken,

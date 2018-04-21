@@ -11,8 +11,8 @@ import static org.mockito.Mockito.*;
 public class ParserServiceTest {
 
 
-    public static final String EXT = "parser";
-    public static final String FILE_NAME = "filename." + EXT;
+    private static final String EXT = "parser";
+    private static final String FILE_NAME = "filename." + EXT;
 
     @Test
     public void verifyParser() {

@@ -100,7 +100,7 @@ public class ByteHashSet implements Iterable<byte[]> {
         int position = 0;
         Node node;
 
-        public ByteIterator() {
+        ByteIterator() {
             nextBucket();
         }
 

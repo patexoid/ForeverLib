@@ -11,14 +11,14 @@ import java.util.Arrays;
  * Created by Alexey on 07.05.2017.
  */
 public class LinkUtils {
-    public static final String SLASH = "/";
-    private static Logger log = LoggerFactory.getLogger(LinkUtils.class);
+    private static final String SEPARATOR = "/";
+   private static final Logger log = LoggerFactory.getLogger(LinkUtils.class);
 
     public static String makeURL(Object... parts) {
         return Arrays.stream(parts).map(String::valueOf).
-                map(s -> s.startsWith(SLASH) ? s.substring(1) : s).
-                map(s -> s.endsWith(SLASH) ? s.substring(0, s.length() - 1) : s)
-                .reduce("", (s, s2) -> s + SLASH + s2);
+                map(s -> s.startsWith(SEPARATOR) ? s.substring(1) : s).
+                map(s -> s.endsWith(SEPARATOR) ? s.substring(0, s.length() - 1) : s)
+                .reduce("", (s, s2) -> s + SEPARATOR + s2);
     }
 
     public static String encode(String text) {

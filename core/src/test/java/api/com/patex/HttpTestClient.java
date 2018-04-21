@@ -112,7 +112,7 @@ public class HttpTestClient {
 
     private class MultipartFileResource extends InputStreamResource {
 
-        String filename;
+        final String filename;
 
         public MultipartFileResource(InputStream inputStream, String filename) {
             super(inputStream);

@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/author")
 public class AuthorController {
 
-    private static Logger log = LoggerFactory.getLogger(AuthorController.class);
+   private static final Logger log = LoggerFactory.getLogger(AuthorController.class);
 
     @Autowired
     private AuthorService authorService;

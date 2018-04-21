@@ -2,7 +2,6 @@ package com.patex.utils;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -24,7 +23,7 @@ public class BooleanJson {
 
     public static class Deserializer extends JsonDeserializer {
         @Override
-        public Object deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+        public Object deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
             return p.getValueAsBoolean();
         }
     }

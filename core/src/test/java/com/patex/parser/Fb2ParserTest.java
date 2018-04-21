@@ -16,10 +16,10 @@ public class Fb2ParserTest {
 
 
     private static final String TITLE = "title";
-    public static final String CONTENT_1 = "content 1";
-    public static final String CONTENT_2 = "content 2";
-    public static final String CONTENT_3 = "content 3";
-    public static final String IMAGE_TYPE = "image/dummy";
+    private static final String CONTENT_1 = "content 1";
+    private static final String CONTENT_2 = "content 2";
+    private static final String CONTENT_3 = "content 3";
+    private static final String IMAGE_TYPE = "image/dummy";
 
     @Test
     public void verifyOneAuthorFullName() {

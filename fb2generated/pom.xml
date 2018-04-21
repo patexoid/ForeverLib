@@ -7,41 +7,20 @@
     <groupId>com.patex.zombielib2</groupId>
     <artifactId>fb2-generated</artifactId>
     <version>0.1</version>
-
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.7.0</version>
                 <configuration>
                     <source>1.9</source>
                     <target>1.9</target>
                 </configuration>
             </plugin>
-            <!--<plugin>-->
-                <!--<groupId>org.codehaus.mojo</groupId>-->
-                <!--<artifactId>jaxb2-maven-plugin</artifactId>-->
-                <!--<version>2.3.1</version>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<id>xjc</id>-->
-                        <!--<goals>-->
-                            <!--<goal>xjc</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
-                <!--</executions>-->
-                <!--<configuration>-->
-                    <!--&lt;!&ndash; The package of your generated sources &ndash;&gt;-->
-                    <!--<packageName>fb2</packageName>-->
-                    <!--<xjbSources>-->
-                        <!--<xjbSource>${project.build.sourceDirectory}/../resources/xsd/bindings.xjb</xjbSource>-->
-                    <!--</xjbSources>-->
-                    <!--<sources>-->
-                        <!--<source>${project.build.sourceDirectory}/../resources/xsd/fb2</source>-->
-                    <!--</sources>-->
-                    <!--<outputDirectory>${project.build.sourceDirectory}</outputDirectory>-->
-                <!--</configuration>-->
-            <!--</plugin>-->
             <plugin>
                 <groupId>org.apache.cxf</groupId>
                 <artifactId>cxf-xjc-plugin</artifactId>

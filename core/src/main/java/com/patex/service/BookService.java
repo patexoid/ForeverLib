@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
  */
 @Service
 public class BookService {
-    private static Logger log = LoggerFactory.getLogger(BookService.class);
+   private static final Logger log = LoggerFactory.getLogger(BookService.class);
 
 
     private final BookRepository bookRepository;

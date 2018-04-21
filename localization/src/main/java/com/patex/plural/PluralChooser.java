@@ -6,12 +6,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 
-public class PluralChooser {
+class PluralChooser {
 
     private final Function<Integer, Integer> formNumber;
     private final Locale locale;
 
-    private Map<String, String[]> allWords = new HashMap<>();
+    private final Map<String, String[]> allWords = new HashMap<>();
 
     public PluralChooser(Function<Integer, Integer> formNumber, Locale locale) {
         this.formNumber = formNumber;

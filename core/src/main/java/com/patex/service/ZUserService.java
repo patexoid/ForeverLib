@@ -33,7 +33,7 @@ public class ZUserService implements UserDetailsService {
     public static final String USER = "ROLE_USER";
     public static final String ADMIN_AUTHORITY = "ROLE_ADMIN";
     public static final ZUser anonim = new ZUser("anonimus", true);
-    private static Logger log = LoggerFactory.getLogger(ZUserService.class);
+   private static final Logger log = LoggerFactory.getLogger(ZUserService.class);
 
     static {
         ZUserConfig userConfig = new ZUserConfig();

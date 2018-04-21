@@ -2,7 +2,6 @@ package com.patex.plural;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.Locale;
@@ -10,10 +9,10 @@ import java.util.Locale;
 public class PluralChooserTest {
 
 
-    private PluralChooserFactory factory ;
+    private PluralChooserFactory factory;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         factory = new PluralChooserFactory();
     }
 

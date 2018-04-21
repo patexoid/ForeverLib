@@ -18,7 +18,7 @@ public class PropertiesLoaderConfigurer
 
     private static final String ENVIRONMENT_PROPERTIES = "environmentProperties";
 
-    private static Logger log = LoggerFactory.getLogger(PropertiesLoaderConfigurer.class);
+   private static final Logger log = LoggerFactory.getLogger(PropertiesLoaderConfigurer.class);
 
     @Override
     public void postProcessBeanFactory(final ConfigurableListableBeanFactory beanFactory) throws BeansException {
