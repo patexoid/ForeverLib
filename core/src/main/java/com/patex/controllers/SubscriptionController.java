@@ -20,7 +20,7 @@ import static com.patex.service.ZUserService.USER;
 @RequestMapping("/subscription")
 public class SubscriptionController {
 
-//    private static Logger log = LoggerFactory.getLogger(SubscriptionController.class);
+//   private static final Logger log = LoggerFactory.getLogger(SubscriptionController.class);
 
     @Autowired
     private SubscriptionService subscriptionService;

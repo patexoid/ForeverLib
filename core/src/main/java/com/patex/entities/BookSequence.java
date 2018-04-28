@@ -2,19 +2,11 @@ package com.patex.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -93,7 +85,7 @@ public class BookSequence {
     }
 
     public static class MyDeserializer extends JsonDeserializer<Book> {
-        private static Map<String, Method> fieldsM = new HashMap<>();
+        private final static Map<String, Method> fieldsM = new HashMap<>();
 
         static {
             try {
@@ -109,7 +101,7 @@ public class BookSequence {
         }
 
         @Override
-        public Book deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+        public Book deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
             try {
                 Book value = new Book();
                 while (!p.currentToken().isStructEnd()) {

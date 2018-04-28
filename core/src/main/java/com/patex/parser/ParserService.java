@@ -16,7 +16,7 @@ import java.util.Map;
 @Service
 public class ParserService {
 
-    private Map<String, FileParser> parserMap = new HashMap<>();
+    private final Map<String, FileParser> parserMap = new HashMap<>();
 
     @Autowired
     public ParserService(FileParser... parsers) {

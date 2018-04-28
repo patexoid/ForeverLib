@@ -40,7 +40,7 @@ public class OPDSExtLibController implements RootProvider {
     private static final String EXT_LIB = "extLib";
     static final String OPDS_EXT_LIB = "/" + PREFIX + "/" + EXT_LIB;
 
-    private List<OPDSEntryI> rootEntries = Collections.singletonList(
+    private final List<OPDSEntryI> rootEntries = Collections.singletonList(
             new OPDSEntryImpl("root:libraries", null, new Res("opds.extlib.libraries"), (String) null, OPDS_EXT_LIB));
 
     @Autowired

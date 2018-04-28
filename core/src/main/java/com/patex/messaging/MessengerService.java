@@ -21,7 +21,7 @@ public class MessengerService {
 
     @Autowired
     Resources res;
-    private List<Messenger> messengers = new ArrayList<>();
+    private final List<Messenger> messengers = new ArrayList<>();
     @Autowired
     private ZUserService userService;
 

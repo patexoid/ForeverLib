@@ -7,9 +7,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class BookUploadInfo {
 
-    private long id;
-    private String fileName;
-    private Status status;
+    private final long id;
+    private final String fileName;
+    private final Status status;
 
     public enum Status {
         Failed,

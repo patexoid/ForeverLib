@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 public class BlockingExecutor {
 
-    private static Logger log = LoggerFactory.getLogger(BlockingExecutor.class);
+   private static final Logger log = LoggerFactory.getLogger(BlockingExecutor.class);
 
     private final BlockingQueue<Runnable> queue;
     private final ThreadPoolExecutor executor;

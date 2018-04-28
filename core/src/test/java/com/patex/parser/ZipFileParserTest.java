@@ -12,8 +12,8 @@ import static org.mockito.Mockito.*;
 public class ZipFileParserTest {
 
 
-    public static final String FILENAME = "test.dummy";
-    public static final String FILENAME_ZIP = FILENAME + ".zip";
+    private static final String FILENAME = "test.dummy";
+    private static final String FILENAME_ZIP = FILENAME + ".zip";
 
     @Test
     public void verifyParseFile() throws Exception {

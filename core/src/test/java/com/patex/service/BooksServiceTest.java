@@ -33,10 +33,10 @@ import static org.mockito.Mockito.*;
  * Created by Alexey on 15.07.2017.
  */
 public class BooksServiceTest {
-    public static final String FILE_NAME = "fileName";
-    public static final String FIRST_AUTHOR = "first author";
-    public static final String SECOND_AUTHOR = "second author";
-    public static final String FIRST_SEQUENCE = "first sequence";
+    private static final String FILE_NAME = "fileName";
+    private static final String FIRST_AUTHOR = "first author";
+    private static final String SECOND_AUTHOR = "second author";
+    private static final String FIRST_SEQUENCE = "first sequence";
 
     private final RandomStringGenerator rsg = new RandomStringGenerator.Builder()
             .withinRange('0', 'z')

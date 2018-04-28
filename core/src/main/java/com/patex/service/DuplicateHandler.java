@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
 @Component
 public class DuplicateHandler {
 
-    private static Logger log = LoggerFactory.getLogger(DuplicateHandler.class);
+   private static final Logger log = LoggerFactory.getLogger(DuplicateHandler.class);
 
     private final BookCheckQueueRepository bookCheckQueueRepo;
     private final TransactionService transactionService;
@@ -62,7 +62,7 @@ public class DuplicateHandler {
 
     private final Semaphore lock = new Semaphore(0);
     private int threadCount;
-    private BlockingExecutor blockingExecutor;
+    private final BlockingExecutor blockingExecutor;
 
     @Autowired
     public DuplicateHandler(BookCheckQueueRepository bookCheckQueueRepo, TransactionService transactionService,
@@ -120,7 +120,7 @@ public class DuplicateHandler {
         //noinspection InfiniteLoopStatement
         while (true) {
             List<BookCheckQueue> checkQueue = bookCheckQueueRepo.
-                    findAllByIdGreaterThanOrderByIdAsc(new PageRequest(0, pageSize), lastId).getContent();
+                    findAllByIdGreaterThanOrderByIdAsc(PageRequest.of(0, pageSize), lastId).getContent();
             if (checkQueue.isEmpty()) {
                 lock.acquire();
                 lock.drainPermits();

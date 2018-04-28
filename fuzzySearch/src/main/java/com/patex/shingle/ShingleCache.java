@@ -6,9 +6,9 @@ import com.patex.shingle.byteSet.ByteSetFactory;
 import java.io.*;
 import java.util.Optional;
 
-public class ShingleCache<T> {
+class ShingleCache<T> {
 
-    private ShingleCacheStorage<T> storage= new ShingleCacheStorage<T>() {
+    private ShingleCacheStorage<T> storage= new ShingleCacheStorage<>() {
         @Override
         public InputStream load(T t) {
             return null;
@@ -72,7 +72,7 @@ public class ShingleCache<T> {
         }
     }
 
-    public final int readInt(InputStream in) throws IOException {
+    private int readInt(InputStream in) throws IOException {
         int ch1 = in.read();
         int ch2 = in.read();
         int ch3 = in.read();
@@ -92,7 +92,7 @@ public class ShingleCache<T> {
         storage.save(baos.toByteArray(), t);
     }
 
-    public final void writeInt(OutputStream out, int v) throws IOException {
+    private void writeInt(OutputStream out, int v) throws IOException {
         out.write((v >>> 24) & 0xFF);
         out.write((v >>> 16) & 0xFF);
         out.write((v >>> 8) & 0xFF);

@@ -26,7 +26,7 @@ import java.math.BigInteger;
  * Created by Alexey on 11/5/2016.
  */
 public class Fb2Creator {
-    public static final ObjectFactory F = new ObjectFactory();
+    private static final ObjectFactory F = new ObjectFactory();
     private final TitleInfoType titleInfo;
     private final Marshaller jaxbMarshaller;
     private FictionBook fbook;
@@ -52,7 +52,7 @@ public class Fb2Creator {
         fbook.setDescription(description);
     }
 
-    public Fb2Creator addAuthor(String firstName, String middleName, String lastName, String homePage, String email) {
+    private Fb2Creator addAuthor(String firstName, String middleName, String lastName, String homePage, String email) {
         TitleInfoType.Author author = F.createTitleInfoTypeAuthor();
 
         if (StringUtils.isNotEmpty(firstName))

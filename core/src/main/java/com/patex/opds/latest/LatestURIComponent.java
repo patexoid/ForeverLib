@@ -19,7 +19,7 @@ public class LatestURIComponent {
     @Autowired
     private ZUserService userService;
 
-    private Map<String, ModelAndView> latestForUser = new HashMap<>();
+    private final Map<String, ModelAndView> latestForUser = new HashMap<>();
 
     public void afterMethod(ModelAndView view) {
         ZUser currentUser = userService.getCurrentUser();

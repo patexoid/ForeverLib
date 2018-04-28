@@ -39,7 +39,7 @@ import static com.patex.service.ZUserService.USER;
 @RequestMapping("/book")
 public class BookController {
 
-    private static Logger log = LoggerFactory.getLogger(BookController.class);
+   private static final Logger log = LoggerFactory.getLogger(BookController.class);
 
     @Autowired
     private BookService bookService;

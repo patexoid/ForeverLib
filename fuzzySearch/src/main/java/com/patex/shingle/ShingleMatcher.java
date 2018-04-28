@@ -14,13 +14,13 @@ import java.util.function.Function;
 /**
  * Created by Alexey on 16.07.2017.
  */
-public class ShingleMatcher<T, ID> {
+class ShingleMatcher<T, ID> {
 
     private final Cache<ID, Shingler> cache;
     private final Function<T, Shingleable> mapFunc;
     private final Function<T, ID> idFunc;
     private final ShingleCache<T> shingleCache;
-    private final ShinglerCreator shinglerCreator;
+    private final LoadedShinglerFactory shinglerCreator;
 
     public ShingleMatcher(Function<T, Shingleable> mapFunc, Function<T, ID> idFunc, int coef, int cacheSize,
                           int byteArraySize) {
@@ -30,7 +30,7 @@ public class ShingleMatcher<T, ID> {
         cache = CacheBuilder.newBuilder().
                 maximumSize(cacheSize).
                 expireAfterAccess(10, TimeUnit.MINUTES).build();
-        shinglerCreator = new ShinglerCreator(coef, byteArraySize,
+        shinglerCreator = new LoadedShinglerFactory(coef, byteArraySize,
                 () -> {
                     try {
                         MessageDigest digest = MessageDigest.getInstance("MD5");

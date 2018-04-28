@@ -26,6 +26,7 @@ public class FileResource {
     private Integer size;
 
 
+
     public FileResource() {
     }
 

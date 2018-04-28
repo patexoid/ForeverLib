@@ -5,21 +5,18 @@
     <modelVersion>4.0.0</modelVersion>
     <properties>
         <project.version>0.34-SNAPSHOT</project.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
     <groupId>com.patex.zombielib2</groupId>
     <artifactId>main</artifactId>
-
     <packaging>pom</packaging>
     <version>0.38-SNAPSHOT</version>
-
     <modules>
         <module>fb2generated</module>
         <module>localization</module>
         <module>fuzzySearch</module>
         <module>core</module>
     </modules>
-
     <profiles>
         <profile>
             <id>web</id>
