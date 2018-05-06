@@ -17,15 +17,15 @@ import java.util.concurrent.ExecutorService;
 @Service
 public class ExtLibSubscriptionService {
 
-    private static Logger log = LoggerFactory.getLogger(ExtLibSubscriptionService.class);
+   private static final Logger log = LoggerFactory.getLogger(ExtLibSubscriptionService.class);
 
-    private SubscriptionRepository subscriptionRepo;
+    private final SubscriptionRepository subscriptionRepo;
 
-    private ExtLibDownloadService downloadService;
+    private final ExtLibDownloadService downloadService;
 
-    private ZUserService userService;
+    private final ZUserService userService;
 
-    private ExecutorService executor = ExecutorCreator.createExecutor("ExtLibSubscriptionService", log);
+    private final  ExecutorService executor = ExecutorCreator.createExecutor("ExtLibSubscriptionService", log);
 
 
     public ExtLibSubscriptionService(SubscriptionRepository subscriptionRepo, ExtLibDownloadService downloadService,

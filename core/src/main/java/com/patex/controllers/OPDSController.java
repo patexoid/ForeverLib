@@ -10,8 +10,8 @@ import com.patex.opds.OpdsView;
 import com.patex.opds.RootProvider;
 import com.patex.opds.converters.AuthorEntry;
 import com.patex.opds.converters.BookEntry;
-import com.patex.opds.converters.ExpandedAuthorEntry;
-import com.patex.opds.converters.OPDSEntryI;
+import com.patex.opds.converters.ExpandedAuthorEntries;
+import com.patex.opds.converters.OPDSEntry;
 import com.patex.opds.converters.OPDSEntryImpl;
 import com.patex.opds.converters.OPDSLink;
 import com.patex.opds.converters.SequenceEntry;
@@ -44,11 +44,11 @@ import java.util.stream.Stream;
 @RequestMapping(OPDSController.PREFIX)
 public class OPDSController {
 
-    public static final String PREFIX = "opds";
-    public static final String APPLICATION_ATOM_XML = "application/atom+xml;charset=UTF-8";
+    static final String PREFIX = "opds";
+    static final String APPLICATION_ATOM_XML = "application/atom+xml;charset=UTF-8";
     private static final String AUTHORSINDEX = "authorsindex";
     private static final int EXPAND_FOR_AUTHORS_COUNT = 3;
-    private static Logger log = LoggerFactory.getLogger(OPDSController.class);
+    private static final Logger log = LoggerFactory.getLogger(OPDSController.class);
     private final List<RootProvider> rootEntriesProvider = new ArrayList<>();
     @Autowired
     private AuthorService authorService;
@@ -57,14 +57,14 @@ public class OPDSController {
     @Autowired
     private LatestURIComponent latestURIComponent;
 
-    public static <E> ModelAndView createMav(Res title, E e, Function<E, List<OPDSEntryI>> func, Date updated) {
+    public static <E> ModelAndView createMav(Res title, E e, Function<E, List<OPDSEntry>> func, Date updated) {
         ModelAndView mav = new ModelAndView();
         mav.setViewName(OpdsView.OPDS_VIEW);
         if (e != null) {
-            List<OPDSEntryI> entries = func.apply(e);
+            List<OPDSEntry> entries = func.apply(e);
             mav.addObject(OpdsView.ENTRIES, entries);
             if (updated == null) {
-                updated = entries.stream().map(OPDSEntryI::getUpdated).filter(Objects::nonNull).
+                updated = entries.stream().map(OPDSEntry::getUpdated).filter(Objects::nonNull).
                         max(Date::compareTo).orElse(null);
             }
         } else {
@@ -74,15 +74,15 @@ public class OPDSController {
         return mav;
     }
 
-    public static <E> ModelAndView createMav(Res title, E e, Function<E, List<OPDSEntryI>> func) {
+    public static <E> ModelAndView createMav(Res title, E e, Function<E, List<OPDSEntry>> func) {
         return createMav(title, e, func, null);
     }
 
-    public static ModelAndView createMav(Res title, List<OPDSEntryI> entries) {
+    public static ModelAndView createMav(Res title, List<OPDSEntry> entries) {
         return createMav(title, entries, e -> e);
     }
 
-    public static ModelAndView createMav(Res title, List<OPDSEntryI> entries, Date updated) {
+    public static ModelAndView createMav(Res title, List<OPDSEntry> entries, Date updated) {
         return createMav(title, entries, e -> e, updated);
     }
 
@@ -92,7 +92,7 @@ public class OPDSController {
 
     @RequestMapping(produces = APPLICATION_ATOM_XML)
     public ModelAndView getMain() {
-        List<OPDSEntryI> rootEntries = new ArrayList<>();
+        List<OPDSEntry> rootEntries = new ArrayList<>();
         rootEntries.add(new OPDSEntryImpl("root:latest", new Res("opds.latest"),
                 new OPDSLink(LinkUtils.makeURL(PREFIX, "opds.latest"), OPDSLink.OPDS_CATALOG)));
         rootEntries.add(new OPDSEntryImpl("root:authors", new Res("opds.all.authors"),
@@ -113,13 +113,13 @@ public class OPDSController {
     public ModelAndView getAuthorsIndex(@PathVariable(value = "start") String start) {
         return createMav(new Res("opds.all.authors"), authorService.getAuthorsCount(start),
                 aggrResults -> aggrResults.stream().
-                flatMap(this::expandAggrResult).
-                sorted(Comparator.comparing(OPDSEntryI::getTitle)).
-                collect(Collectors.toList()));
+                        flatMap(this::expandAggrResult).
+                        sorted(Comparator.comparing(OPDSEntry::getTitle)).
+                        collect(Collectors.toList()));
     }
 
 
-    private Stream<OPDSEntryI> expandAggrResult(AggrResult aggr) {
+    private Stream<OPDSEntry> expandAggrResult(AggrResult aggr) {
         if (aggr.getResult() >= EXPAND_FOR_AUTHORS_COUNT) {
             String link = LinkUtils.makeURL("opds", AUTHORSINDEX, LinkUtils.encode(aggr.getId()));
             Res title = new Res("opds.first.value", aggr.getId());
@@ -134,7 +134,7 @@ public class OPDSController {
     public ModelAndView getAuthor(@PathVariable(value = "id") long id) {
         Author authors = authorService.getAuthors(id);
         return createMav(new Res("opds.author.books", authors.getName()), authors, author ->
-                new ExpandedAuthorEntry(author).getEntries()
+                new ExpandedAuthorEntries(author).getEntries()
         );
     }
 
@@ -190,7 +190,7 @@ public class OPDSController {
         response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
         response.setHeader("Pragma", "no-cache"); // HTTP 1.0.
         response.setHeader("Expires", "0"); // Proxies.
-        response.setHeader("Content-Type",APPLICATION_ATOM_XML);
+        response.setHeader("Content-Type", APPLICATION_ATOM_XML);
         return latestURIComponent.getLatestForCurrentUser();
     }
 }

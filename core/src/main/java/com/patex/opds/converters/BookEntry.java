@@ -11,13 +11,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
  * Created by Alexey on 23.05.2017.
  */
-public class BookEntry implements OPDSEntryI {
+public class BookEntry implements OPDSEntry {
 
     private final String id;
     private final Date updated;
@@ -73,13 +72,13 @@ public class BookEntry implements OPDSEntryI {
         return title;
     }
 
-    public Optional<List<OPDSAuthor>> getAuthors() {
-        return Optional.ofNullable(authors);
+    public List<OPDSAuthor> getAuthors() {
+        return authors;
     }
 
     @Override
-    public Optional<List<OPDSContent>> getContent() {
-        return Optional.ofNullable(content);
+    public List<OPDSContent> getContent() {
+        return content;
     }
 
 

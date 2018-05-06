@@ -3,16 +3,12 @@ package com.patex.opds;
 import com.patex.entities.ZUser;
 import com.patex.entities.ZUserConfig;
 import com.patex.opds.converters.OPDSAuthor;
-import com.patex.opds.converters.OPDSEntryI;
+import com.patex.opds.converters.OPDSEntry;
 import com.patex.opds.converters.OPDSLink;
 import com.patex.service.Resources;
 import com.patex.service.ZUserService;
 import com.patex.utils.Res;
-import com.rometools.rome.feed.atom.Content;
-import com.rometools.rome.feed.atom.Entry;
-import com.rometools.rome.feed.atom.Feed;
-import com.rometools.rome.feed.atom.Link;
-import com.rometools.rome.feed.atom.Person;
+import com.rometools.rome.feed.atom.*;
 import com.rometools.rome.feed.synd.SyndPerson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,12 +16,7 @@ import org.springframework.web.servlet.view.feed.AbstractAtomFeedView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -48,8 +39,9 @@ public class OpdsView extends AbstractAtomFeedView {
 
     @SuppressWarnings("unchecked")
     @Override
-    protected List<Entry> buildFeedEntries(Map<String, Object> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        List<OPDSEntryI> entries = (List<OPDSEntryI>) model.get(ENTRIES);
+    protected List<Entry> buildFeedEntries(Map<String, Object> model,
+                                           HttpServletRequest request, HttpServletResponse response) {
+        List<OPDSEntry> entries = (List<OPDSEntry>) model.get(ENTRIES);
         ZUser user = userService.getCurrentUser();
         ZUserConfig userConfig = user.getUserConfig();
         Locale locale;
@@ -61,7 +53,7 @@ public class OpdsView extends AbstractAtomFeedView {
         return entries.stream().map(entry -> toEntry(entry, locale)).collect(Collectors.toList());
     }
 
-    private Entry toEntry(OPDSEntryI opdsEntryI, Locale locale) {
+    private Entry toEntry(OPDSEntry opdsEntryI, Locale locale) {
 
         Entry entry = new Entry();
         entry.setId(String.valueOf(opdsEntryI.getId()));
@@ -71,17 +63,15 @@ public class OpdsView extends AbstractAtomFeedView {
         Res title = opdsEntryI.getTitle();
 
         entry.setTitle(res.get(locale, title.getKey(), title.getObjs()));
-        Optional<List<Content>> content = opdsEntryI.getContent().map(contents -> toRomeContent(locale, contents));
-        content.ifPresent(entry::setContents);
-
+        List<Content> content = toRomeContent(locale, opdsEntryI.getContent());
+        entry.setContents(content);
         entry.setOtherLinks(opdsEntryI.getLinks().stream().map(this::toLink).collect(Collectors.toList()));
-        opdsEntryI.getAuthors().ifPresent(opdsAuthors ->
-                entry.setAuthors(opdsAuthors.stream().map(this::toPerson).collect(Collectors.toList())));
+        entry.setAuthors(opdsEntryI.getAuthors().stream().map(this::toPerson).collect(Collectors.toList()));
         return entry;
     }
 
     private List<Content> toRomeContent(Locale locale, List<OPDSContent> contents) {
-        return contents.stream().map(s ->{
+        return contents.stream().map(s -> {
             Content content = new Content();
             content.setValue(s.getValue(res, locale));
             content.setType(s.getType());

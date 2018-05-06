@@ -11,12 +11,11 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Created by Alexey on 23.05.2017.
  */
-public class SequenceEntry implements OPDSEntryI {
+public class SequenceEntry implements OPDSEntry {
 
     private final String id;
     private final Res title;
@@ -27,7 +26,7 @@ public class SequenceEntry implements OPDSEntryI {
     public SequenceEntry(Sequence sequence) {
 
         id = "sequence:" + sequence.getId();
-        title = new Res("opds.first.value",sequence.getName());
+        title = new Res("opds.first.value", sequence.getName());
         content = Collections.
                 singletonList(new OPDSContent("Количество книг в серии: " + sequence.getBookSequences().size()));
         links = Collections.singletonList(
@@ -48,8 +47,8 @@ public class SequenceEntry implements OPDSEntryI {
     }
 
     @Override
-    public Optional<List<OPDSContent>> getContent() {
-        return Optional.of(content);
+    public List<OPDSContent> getContent() {
+        return content;
     }
 
     @Override
@@ -60,5 +59,10 @@ public class SequenceEntry implements OPDSEntryI {
     @Override
     public Date getUpdated() {
         return date;
+    }
+
+    @Override
+    public List<OPDSAuthor> getAuthors() {
+        return Collections.emptyList();
     }
 }
