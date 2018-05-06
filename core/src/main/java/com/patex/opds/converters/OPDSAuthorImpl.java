@@ -15,6 +15,11 @@ public class OPDSAuthorImpl implements OPDSAuthor {
         uri = "/opds/author/" + author.getId();
     }
 
+    public OPDSAuthorImpl(String name, String uri) {
+        this.name = name;
+        this.uri = uri;
+    }
+
     @Override
     public String getName() {
         return name;

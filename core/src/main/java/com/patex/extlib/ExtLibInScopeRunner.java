@@ -12,7 +12,7 @@ import java.util.function.Supplier;
 @Component
 public class ExtLibInScopeRunner {
 
-    private ExtLibScopeStorage scopeStorage;
+    private final ExtLibScopeStorage scopeStorage;
 
     @Autowired
     public ExtLibInScopeRunner(ExtLibScopeStorage scopeStorage) {

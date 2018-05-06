@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ExtLibScopeStorage {
 
-    private ThreadLocal<Tuple<ExtLibrary, Integer>> scopeTL = new ThreadLocal<>();
+    private final ThreadLocal<Tuple<ExtLibrary, Integer>> scopeTL = new ThreadLocal<>();
 
     public ExtLibrary getCurrentExtLib() {
         return scopeTL.get()._1;

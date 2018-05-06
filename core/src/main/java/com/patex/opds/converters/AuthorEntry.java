@@ -8,17 +8,14 @@ import com.patex.utils.LinkUtils;
 import com.patex.utils.Res;
 
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Created by Alexey on 07.05.2017.
  */
-public class AuthorEntry implements OPDSEntryI {
+public class AuthorEntry implements OPDSEntry {
 
     private final String id;
     private final Res title;
@@ -29,12 +26,11 @@ public class AuthorEntry implements OPDSEntryI {
 
     public AuthorEntry(Author author) {
         id = "author:" + author.getId();
-        title = new Res("opds.first.value",author.getName());
-        String descr = author.getDescr();
+        title = new Res("opds.first.value", author.getName());
         if (author.getDescr() != null) {
-            content = Arrays.stream(descr.split("\n")).map(OPDSContent::new).collect(Collectors.toList());
+            content = Collections.singletonList(new OPDSContent(author.getDescr()));
         } else {
-            content = null;
+            content = Collections.emptyList();
         }
         links = Collections.singletonList(
                 new OPDSLink(LinkUtils.makeURL("opds", "author", author.getId()), OPDSLink.OPDS_CATALOG)
@@ -55,8 +51,8 @@ public class AuthorEntry implements OPDSEntryI {
     }
 
     @Override
-    public Optional<List<OPDSContent>> getContent() {
-        return Optional.ofNullable(content);
+    public List<OPDSContent> getContent() {
+        return content;
     }
 
     @Override
@@ -67,5 +63,10 @@ public class AuthorEntry implements OPDSEntryI {
     @Override
     public Date getUpdated() {
         return date;
+    }
+
+    @Override
+    public List<OPDSAuthor> getAuthors() {
+        return Collections.emptyList();
     }
 }

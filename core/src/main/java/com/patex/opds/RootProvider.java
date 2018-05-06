@@ -1,10 +1,10 @@
 package com.patex.opds;
 
-import com.patex.opds.converters.OPDSEntryI;
+import com.patex.opds.converters.OPDSEntry;
 
 import java.util.List;
 
 public interface RootProvider {
 
-    List<OPDSEntryI> getRoot();
+    List<OPDSEntry> getRoot();
 }

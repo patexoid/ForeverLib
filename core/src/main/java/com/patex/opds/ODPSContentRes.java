@@ -23,4 +23,8 @@ public class ODPSContentRes extends OPDSContent {
     public String getValue(Resources res, Locale locale) {
         return res.get(locale,getValue(),objs);
     }
+
+    public Object[] getObjs() {
+        return objs;
+    }
 }

@@ -1,8 +1,12 @@
 package com.patex.extlib;
 
 import com.google.common.util.concurrent.MoreExecutors;
+import com.patex.LibException;
 import com.patex.entities.Book;
 import com.patex.entities.ZUser;
+import com.patex.opds.OPDSContent;
+import com.patex.opds.converters.OPDSEntry;
+import com.patex.opds.converters.OPDSLink;
 import com.patex.service.BookService;
 import com.rometools.rome.feed.synd.SyndContent;
 import com.rometools.rome.feed.synd.SyndContentImpl;
@@ -14,7 +18,6 @@ import com.rometools.rome.feed.synd.SyndLink;
 import com.rometools.rome.feed.synd.SyndLinkImpl;
 import com.rometools.rome.io.SyndFeedOutput;
 import org.apache.commons.lang3.RandomUtils;
-import org.apache.commons.text.RandomStringGenerator;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -23,68 +26,76 @@ import java.net.URLConnection;
 import java.util.Collections;
 
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class ExtLibConnectionTest {
 
-
-    private RandomStringGenerator rsg = new RandomStringGenerator.Builder()
-            .withinRange('a', 'z').build();
+    private static final String FILE_NAME = "filename";
+    private static final String URL = "http://example.com";
+    private static final String URI = "/path";
+    private static final String TYPE = "type";
+    private static final String TITLE = "title";
+    private static final String ENTRY_URI = "entryPath";
+    private static final String ENTRY_TITLE = "entryTitle";
+    private static final String LINK_HREF = "linkHref";
+    private static final String FEED_TYPE = "atom_1.0";
+    private static final String CONTENT_VALUE = "contentValue";
+    private static final String REL = "Rel";
 
     @Test
     public void testDownloadBook() throws Exception {
-        String fileName = rsg.generate(10);
-        String url = "http://" + rsg.generate(10);
-        String uri = rsg.generate(10);
         ZUser user = new ZUser();
         Book book = new Book();
         book.setId(RandomUtils.nextLong(0, 1000));
-        String type = rsg.generate(10);
         InputStream is = mock(InputStream.class);
 
         BookService bookService = mock(BookService.class);
-        when(bookService.uploadBook(fileName, is, user)).thenReturn(book);
+        when(bookService.uploadBook(FILE_NAME, is, user)).thenReturn(book);
         URLConnection urlConnection = mock(URLConnection.class);
         when(urlConnection.getInputStream()).thenReturn(is);
-        when(urlConnection.getHeaderField("Content-Disposition")).thenReturn("attachment; filename=\"" + fileName + "\"");
+        when(urlConnection.getHeaderField("Content-Disposition")).thenReturn("attachment; filename=\"" + FILE_NAME + "\"");
 
-        ExtLibConnection connectionService = spy(new ExtLibConnection(url, "", null, null, null, 0, null,
-                MoreExecutors.newDirectExecutorService(), bookService,300));
-        when(connectionService.getConnection(url + uri)).thenReturn(urlConnection);
-        Book actual = connectionService.downloadBook(uri, type, user);
+        ExtLibConnection connectionService = spy(new ExtLibConnection(URL, "", null, null, null, 0, null,
+                MoreExecutors.newDirectExecutorService(), bookService, 300));
+        when(connectionService.getConnection(URL + URI)).thenReturn(urlConnection);
+        Book actual = connectionService.downloadBook(URI, TYPE, user);
 
         assertEquals(book.getId(), actual.getId());
     }
 
+    @Test(expected = LibException.class)
+    public void testDownloadBookLibException() throws Exception {
+        ZUser user = new ZUser();
+
+        BookService bookService = mock(BookService.class);
+        when(bookService.uploadBook(any(), any(), eq(user))).thenThrow(new LibException());
+        URLConnection urlConnection = mock(URLConnection.class);
+        ExtLibConnection connectionService = spy(new ExtLibConnection(URL, "", null, null, null, 0, null,
+                MoreExecutors.newDirectExecutorService(), bookService, 300));
+        when(connectionService.getConnection(URL + URI)).thenReturn(urlConnection);
+        connectionService.downloadBook(URI, TYPE, user);
+    }
+
     @Test
     public void testGetDataSimpleFeed() throws Exception {
-        String url = "http://" + rsg.generate(10);
-        String uri = rsg.generate(10);
 
         SyndFeed syndFeed = new SyndFeedImpl();
-        syndFeed.setFeedType("atom_1.0");
-        String title = rsg.generate(10);
-        String entryUri = rsg.generate(10);
-        String entryTitle = rsg.generate(10);
-        String linkHref = rsg.generate(10);
-        String contentValue = rsg.generate(10);
-
-        syndFeed.setTitle(title);
+        syndFeed.setFeedType(FEED_TYPE);
+        syndFeed.setTitle(TITLE);
         SyndEntry syndEntry = new SyndEntryImpl();
-        syndEntry.setUri(entryUri);
-        syndEntry.setTitle(entryTitle);
+        syndEntry.setUri(ENTRY_URI);
+        syndEntry.setTitle(ENTRY_TITLE);
 
         SyndLink syndLink = new SyndLinkImpl();
         syndLink.setType("profile=opds-catalog");
-        syndLink.setHref(linkHref);
-        syndLink.setRel(rsg.generate(10));
+        syndLink.setHref(LINK_HREF);
+        syndLink.setRel(REL);
         syndEntry.setLinks(Collections.singletonList(syndLink));
 
         SyndContent syndContent = new SyndContentImpl();
-        syndContent.setType(rsg.generate(10));
-        syndContent.setValue(contentValue);
+        syndContent.setType(TYPE);
+        syndContent.setValue(CONTENT_VALUE);
         syndContent.setMode("xml");
         syndEntry.setContents(Collections.singletonList(syndContent));
 
@@ -92,29 +103,60 @@ public class ExtLibConnectionTest {
         String expectedXML = new SyndFeedOutput().outputString(syndFeed);
         byte[] bytes = expectedXML.getBytes();
 
-        ExtLibConnection connectionService = spy(new ExtLibConnection(url, "", null, null, null, 0, null,
-                MoreExecutors.newDirectExecutorService(), mock(BookService.class),300));
+        ExtLibConnection connectionService = spy(new ExtLibConnection(URL, "", null, null, null, 0, null,
+                MoreExecutors.newDirectExecutorService(), mock(BookService.class), 300));
         URLConnection urlConnection = mock(URLConnection.class);
-        when(connectionService.getConnection(url + uri)).thenReturn(urlConnection);
+        when(connectionService.getConnection(URL + URI)).thenReturn(urlConnection);
         when(urlConnection.getInputStream()).thenReturn(new ByteArrayInputStream(bytes));
 
-        SyndFeed actualFeed = connectionService.getFeed(uri);
-        assertEquals("ExtLibFeed Title", title, actualFeed.getTitle());
+        ExtLibFeed actualFeed = connectionService.getFeed(URI);
+        assertEquals("ExtLibFeed Title", TITLE, actualFeed.getTitle());
 
         assertThat(actualFeed.getEntries(), hasSize(1));
-        SyndEntry actualEntry = actualFeed.getEntries().get(0);
-        assertEquals("Entry URI", entryUri, actualEntry.getUri());
-        assertEquals("Entry Title", entryTitle, actualEntry.getTitle());
+        OPDSEntry actualEntry = actualFeed.getEntries().get(0);
+        assertEquals("Entry URI", ENTRY_URI, actualEntry.getId());
+        assertEquals("Entry Title", ENTRY_TITLE, actualEntry.getTitle().getObjs()[0]);
 
         assertThat(actualEntry.getLinks(), hasSize(1));
-        SyndLink actualLink = actualEntry.getLinks().get(0);
-        assertEquals("Link href ", linkHref, actualLink.getHref());
+        OPDSLink actualLink = actualEntry.getLinks().get(0);
+        assertEquals("Link href ", "?uri=" + LINK_HREF, actualLink.getHref());
 
-        assertThat(actualEntry.getContents(), hasSize(1));
-        SyndContent actualContent = actualEntry.getContents().get(0);
-        assertEquals("Link href ", contentValue, actualContent.getValue());
-
-
+        assertThat(actualEntry.getContent(), hasSize(1));
+        OPDSContent actualContent = actualEntry.getContent().get(0);
+        assertEquals("Link href ", CONTENT_VALUE, actualContent.getValue());
     }
 
+
+    @Test
+    public void testGetDataSimpleFeedWithNextLink() throws Exception {
+        String nextHref = "nextHref";
+        String linkType = "profile=opds-catalog";
+
+        SyndFeed syndFeed = new SyndFeedImpl();
+        syndFeed.setFeedType(FEED_TYPE);
+        syndFeed.setTitle(TITLE);
+
+        SyndLinkImpl syndLinkNext = new SyndLinkImpl();
+        syndLinkNext.setRel(ExtLibService.REL_NEXT);
+        syndLinkNext.setHref(nextHref);
+        syndLinkNext.setType(linkType);
+        syndFeed.setLinks(Collections.singletonList(syndLinkNext));
+
+        String expectedXML = new SyndFeedOutput().outputString(syndFeed);
+        byte[] bytes = expectedXML.getBytes();
+
+        ExtLibConnection connectionService = spy(new ExtLibConnection(URL, "", null, null, null, 0, null,
+                MoreExecutors.newDirectExecutorService(), mock(BookService.class), 300));
+        URLConnection urlConnection = mock(URLConnection.class);
+        when(connectionService.getConnection(URL + URI)).thenReturn(urlConnection);
+        when(urlConnection.getInputStream()).thenReturn(new ByteArrayInputStream(bytes));
+
+        ExtLibFeed actualFeed = connectionService.getFeed(URI);
+
+        assertThat(actualFeed.getLinks(), hasSize(1));
+        OPDSLink opdsLink = actualFeed.getLinks().get(0);
+        assertEquals("Link href", "?uri=" + nextHref, opdsLink.getHref());
+        assertEquals("Link rel", ExtLibService.REL_NEXT, opdsLink.getRel());
+        assertEquals("Link type ", linkType, opdsLink.getType());
+    }
 }

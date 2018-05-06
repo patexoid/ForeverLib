@@ -9,13 +9,13 @@ public class OPDSLink {
     public static final String FB2_ZIP = "application/fb2+zip";
     public static final String FB2 = "application/fb2";
 
-    private String href;
-    private String rel;
-    private String type;
+    private final String href;
+    private final String rel;
+    private final String type;
 
     public OPDSLink(String href, String type) {
-        this.href = href;
-        this.type = type;
+        this(href, null,type);
+
     }
 
     public OPDSLink(String href, String rel, String type) {
@@ -36,7 +36,4 @@ public class OPDSLink {
         return type;
     }
 
-    public void setHref(String href) {
-        this.href = href;
-    }
 }

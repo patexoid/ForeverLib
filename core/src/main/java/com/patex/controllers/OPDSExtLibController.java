@@ -2,11 +2,12 @@ package com.patex.controllers;
 
 import com.patex.LibException;
 import com.patex.extlib.ExtLibFeed;
-import com.patex.extlib.ExtLibOPDSEntry;
 import com.patex.extlib.ExtLibService;
+import com.patex.extlib.LinkMapper;
+import com.patex.opds.OPDSEntryBuilder;
 import com.patex.opds.RootProvider;
-import com.patex.opds.converters.OPDSEntryI;
-import com.patex.opds.converters.OPDSEntryImpl;
+import com.patex.opds.converters.OPDSEntry;
+import com.patex.opds.converters.OPDSLink;
 import com.patex.opds.latest.SaveLatest;
 import com.patex.service.Resources;
 import com.patex.service.ZUserService;
@@ -27,8 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.patex.controllers.OPDSController.*;
-import static com.patex.service.ZUserService.ADMIN_AUTHORITY;
-import static com.patex.service.ZUserService.USER;
+import static com.patex.service.ZUserService.*;
 
 /**
  *
@@ -40,8 +40,10 @@ public class OPDSExtLibController implements RootProvider {
     private static final String EXT_LIB = "extLib";
     static final String OPDS_EXT_LIB = "/" + PREFIX + "/" + EXT_LIB;
 
-    private final List<OPDSEntryI> rootEntries = Collections.singletonList(
-            new OPDSEntryImpl("root:libraries", null, new Res("opds.extlib.libraries"), (String) null, OPDS_EXT_LIB));
+
+    private final List<OPDSEntry> rootEntries = Collections.singletonList(
+            new OPDSEntryBuilder("root:libraries", null, "opds.extlib.libraries").
+                    addLink(OPDS_EXT_LIB, OPDSLink.OPDS_CATALOG).build());
 
     @Autowired
     private ExtLibService extLibService;
@@ -61,7 +63,7 @@ public class OPDSExtLibController implements RootProvider {
     }
 
     @Override
-    public List<OPDSEntryI> getRoot() {
+    public List<OPDSEntry> getRoot() {
         return rootEntries;
     }
 
@@ -100,7 +102,7 @@ public class OPDSExtLibController implements RootProvider {
             throws LibException {
         extLibService.actionExtLibData(id, action, requestParams);
         //referer header is not supported by some clients make redirect url manually
-        return "redirect:" + LinkUtils.makeURL(OPDS_EXT_LIB, id, ExtLibOPDSEntry.mapToUri("?", uri));
+        return "redirect:" + LinkUtils.makeURL(OPDS_EXT_LIB, id, LinkMapper.mapToUri("?", uri));
     }
 
     @RequestMapping(value = "runSubcriptionTask")

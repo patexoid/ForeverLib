@@ -78,4 +78,20 @@ class DownloadAllResult  extends ZMessage {
                 reduce(concat).orElse("");
         return resources.get(loc, "opds.extLib.download.all.result", authors, success, empty, failed);
     }
+
+    public List<Book> getSuccess() {
+        return success;
+    }
+
+    public List<String> getAuthors() {
+        return authors;
+    }
+
+    public List<Res> getEmptyBooks() {
+        return emptyBooks;
+    }
+
+    public List<Res> getFailed() {
+        return failed;
+    }
 }

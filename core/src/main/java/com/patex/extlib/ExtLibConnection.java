@@ -8,9 +8,12 @@ import com.patex.LibException;
 import com.patex.entities.Book;
 import com.patex.entities.ExtLibrary;
 import com.patex.entities.ZUser;
+import com.patex.opds.converters.OPDSEntry;
+import com.patex.opds.converters.OPDSLink;
 import com.patex.service.BookService;
 import com.patex.utils.ExecutorCreator;
 import com.rometools.rome.feed.synd.SyndFeed;
+import com.rometools.rome.io.FeedException;
 import com.rometools.rome.io.SyndFeedInput;
 import com.rometools.rome.io.XmlReader;
 import org.slf4j.Logger;
@@ -27,6 +30,7 @@ import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -35,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -43,8 +48,8 @@ import java.util.regex.Pattern;
 @Scope(scopeName = "extLibrary", proxyMode = ScopedProxyMode.TARGET_CLASS)
 class ExtLibConnection {
 
+    static final String AUTHORIZATION_PROP_KEY = "Authorization";
     private final static Pattern fileNamePattern = Pattern.compile("attachment; filename=\"([^\"]+)\"");
-
     private final static Logger log = LoggerFactory.getLogger(ExtLibConnection.class);
     private final Semaphore semaphore = new Semaphore(2);
     private final Cache<String, Book> bookCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
@@ -56,7 +61,6 @@ class ExtLibConnection {
     private final BookService bookService;
     private final Proxy proxy;
     private final int timeout;
-
 
     @VisibleForTesting
     ExtLibConnection(String url, String prefix, String login, String password,
@@ -83,21 +87,11 @@ class ExtLibConnection {
         this(bookService, extLibScope.getCurrentExtLib(), timeout);
     }
 
-    ExtLibConnection(BookService bookService, ExtLibrary extLibrary,int timeout) {
-        this.bookService = bookService;
-        this.url = extLibrary.getUrl();
-        this.prefix = extLibrary.getOpdsPath();
-        this.login = extLibrary.getLogin();
-        this.password = extLibrary.getPassword();
-
-        if (extLibrary.getProxyType() != null) {
-            InetSocketAddress address = new InetSocketAddress(extLibrary.getProxyHost(), extLibrary.getProxyPort());
-            proxy = new Proxy(extLibrary.getProxyType(), address);
-        } else {
-            proxy = Proxy.NO_PROXY;
-        }
-        executor = ExecutorCreator.createExecutor("ExtLib:" + extLibrary.getName() + " Connection", log);
-        this.timeout = timeout;
+    ExtLibConnection(BookService bookService, ExtLibrary extLibrary, int timeout) {
+        this(extLibrary.getUrl(), extLibrary.getOpdsPath(), extLibrary.getLogin(), extLibrary.getPassword(),
+                extLibrary.getProxyHost(), extLibrary.getProxyPort(), extLibrary.getProxyType(),
+                ExecutorCreator.createExecutor("ExtLib:" + extLibrary.getName() + " Connection", log),
+                bookService, timeout);
     }
 
     @VisibleForTesting
@@ -106,7 +100,7 @@ class ExtLibConnection {
         if (login != null) {
             String userpass = login + ":" + password;
             String basicAuth = "Basic " + new String(Base64.getEncoder().encode(userpass.getBytes()));
-            connection.setRequestProperty("Authorization", basicAuth);
+            connection.setRequestProperty(AUTHORIZATION_PROP_KEY, basicAuth);
         }
         return connection;
     }
@@ -116,9 +110,12 @@ class ExtLibConnection {
             semaphore.acquire();
             return executor.submit(() -> execute(uri, function)
             ).get(timeout, TimeUnit.SECONDS);
-        } catch (InterruptedException | TimeoutException | ExecutionException e) {
-            log.error(e.getMessage(), e);
-            throw new LibException(e.getMessage(), e);
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            if (e.getCause() instanceof LibException) {
+                throw (LibException) e.getCause();
+            } else {
+                throw new LibException(e.getMessage(), e.getCause());
+            }
         } finally {
             semaphore.release();
         }
@@ -127,13 +124,11 @@ class ExtLibConnection {
     public Book downloadBook(String uri, String type, ZUser user) {
         try {
             return bookCache.get(uri, () -> getData(uri, conn -> downloadBook(type, conn, user)));
-        } catch (ExecutionException e) {
-            throw new LibException(e.getMessage(), e);
-        } catch (UncheckedExecutionException e) {//need to add test or this exception
+        } catch (ExecutionException | UncheckedExecutionException e) {
             if (e.getCause() instanceof LibException) {
                 throw (LibException) e.getCause();
             } else {
-                throw new LibException(e.getCause().getMessage(), e.getCause());
+                throw new LibException(e.getMessage(), e.getCause());
             }
         }
     }
@@ -155,9 +150,19 @@ class ExtLibConnection {
         return bookService.uploadBook(fileName, conn.getInputStream(), user);
     }
 
-    public SyndFeed getFeed(String uri) throws LibException {
-        ExtLibFunction<URLConnection, SyndFeed> function = uc -> new SyndFeedInput().build(new XmlReader(uc));
-        return getData(uri, function);
+    public ExtLibFeed getFeed(String uri) throws LibException {
+        return getData(uri, this::getFeed);
+    }
+
+    private ExtLibFeed getFeed(URLConnection connection) throws IOException, FeedException {
+        SyndFeed feed = new SyndFeedInput().build(new XmlReader(connection));
+        List<OPDSEntry> entries = feed.getEntries().stream().map(ExtLibOPDSEntry::new).
+                collect(Collectors.toList());
+
+        List<OPDSLink> links = feed.getLinks().stream().
+                map(LinkMapper::mapLink).
+                collect(Collectors.toList());
+        return new ExtLibFeed(feed.getTitle(), entries, links);
     }
 
     private <E> E execute(String uri, ExtLibFunction<URLConnection, E> function) throws Exception {
