@@ -5,6 +5,7 @@ import com.patex.LibException;
 import com.patex.entities.Book;
 import com.patex.entities.ZUser;
 import com.patex.opds.OPDSContent;
+import com.patex.opds.converters.OPDSAuthor;
 import com.patex.opds.converters.OPDSEntry;
 import com.patex.opds.converters.OPDSLink;
 import com.patex.service.BookService;
@@ -16,6 +17,8 @@ import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.feed.synd.SyndFeedImpl;
 import com.rometools.rome.feed.synd.SyndLink;
 import com.rometools.rome.feed.synd.SyndLinkImpl;
+import com.rometools.rome.feed.synd.SyndPerson;
+import com.rometools.rome.feed.synd.SyndPersonImpl;
 import com.rometools.rome.io.SyndFeedOutput;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Test;
@@ -24,6 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URLConnection;
 import java.util.Collections;
+import java.util.Date;
 
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.*;
@@ -42,6 +46,8 @@ public class ExtLibConnectionTest {
     private static final String FEED_TYPE = "atom_1.0";
     private static final String CONTENT_VALUE = "contentValue";
     private static final String REL = "Rel";
+    public static final Date UPDATED_DATE = new Date(12345000);
+    public static final String AUTHOR_NAME = "authorName";
 
     @Test
     public void testDownloadBook() throws Exception {
@@ -86,6 +92,12 @@ public class ExtLibConnectionTest {
         SyndEntry syndEntry = new SyndEntryImpl();
         syndEntry.setUri(ENTRY_URI);
         syndEntry.setTitle(ENTRY_TITLE);
+        syndEntry.setUpdatedDate(UPDATED_DATE);
+
+        SyndPerson person = new SyndPersonImpl();
+        person.setName(AUTHOR_NAME);
+        syndEntry.setAuthors(Collections.singletonList(person));
+
 
         SyndLink syndLink = new SyndLinkImpl();
         syndLink.setType("profile=opds-catalog");
@@ -98,6 +110,8 @@ public class ExtLibConnectionTest {
         syndContent.setValue(CONTENT_VALUE);
         syndContent.setMode("xml");
         syndEntry.setContents(Collections.singletonList(syndContent));
+
+
 
         syndFeed.setEntries(Collections.singletonList(syndEntry));
         String expectedXML = new SyndFeedOutput().outputString(syndFeed);
@@ -124,6 +138,12 @@ public class ExtLibConnectionTest {
         assertThat(actualEntry.getContent(), hasSize(1));
         OPDSContent actualContent = actualEntry.getContent().get(0);
         assertEquals("Link href ", CONTENT_VALUE, actualContent.getValue());
+
+        assertEquals(UPDATED_DATE, actualEntry.getUpdated());
+
+        assertThat(actualEntry.getAuthors(), hasSize(1));
+        OPDSAuthor author = actualEntry.getAuthors().get(0);
+        assertEquals("author name", AUTHOR_NAME, author.getName());
     }
 
 
