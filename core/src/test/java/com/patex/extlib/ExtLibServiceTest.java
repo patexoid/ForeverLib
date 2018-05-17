@@ -9,6 +9,7 @@ import com.patex.opds.OPDSEntryBuilder;
 import com.patex.opds.converters.OPDSEntry;
 import com.patex.opds.converters.OPDSLink;
 import com.patex.service.ZUserService;
+import com.patex.utils.ExecutorCreator;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,6 +52,9 @@ public class ExtLibServiceTest {
 
     @Mock
     private ExtLibSubscriptionService subscriptionService;
+
+    @Mock
+    private ExecutorCreator executorCreator;
 
     @InjectMocks
     private ExtLibService extLibService;

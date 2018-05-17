@@ -9,6 +9,7 @@ import com.patex.opds.converters.OPDSAuthor;
 import com.patex.opds.converters.OPDSEntry;
 import com.patex.opds.converters.OPDSLink;
 import com.patex.service.BookService;
+import com.patex.utils.ExecutorCreator;
 import com.rometools.rome.feed.synd.SyndContent;
 import com.rometools.rome.feed.synd.SyndContentImpl;
 import com.rometools.rome.feed.synd.SyndEntry;
@@ -62,8 +63,10 @@ public class ExtLibConnectionTest {
         when(urlConnection.getInputStream()).thenReturn(is);
         when(urlConnection.getHeaderField("Content-Disposition")).thenReturn("attachment; filename=\"" + FILE_NAME + "\"");
 
+        ExecutorCreator executorCreator = mock(ExecutorCreator.class);
+        when(executorCreator.createExecutor(any(), any())).thenReturn(MoreExecutors.newDirectExecutorService());
         ExtLibConnection connectionService = spy(new ExtLibConnection(URL, "", null, null, null, 0, null,
-                MoreExecutors.newDirectExecutorService(), bookService, 300));
+                executorCreator, bookService, 300));
         when(connectionService.getConnection(URL + URI)).thenReturn(urlConnection);
         Book actual = connectionService.downloadBook(URI, TYPE, user);
 
@@ -77,8 +80,10 @@ public class ExtLibConnectionTest {
         BookService bookService = mock(BookService.class);
         when(bookService.uploadBook(any(), any(), eq(user))).thenThrow(new LibException());
         URLConnection urlConnection = mock(URLConnection.class);
+        ExecutorCreator executorCreator = mock(ExecutorCreator.class);
+        when(executorCreator.createExecutor(any(), any())).thenReturn(MoreExecutors.newDirectExecutorService());
         ExtLibConnection connectionService = spy(new ExtLibConnection(URL, "", null, null, null, 0, null,
-                MoreExecutors.newDirectExecutorService(), bookService, 300));
+                executorCreator, bookService, 300));
         when(connectionService.getConnection(URL + URI)).thenReturn(urlConnection);
         connectionService.downloadBook(URI, TYPE, user);
     }
@@ -116,9 +121,10 @@ public class ExtLibConnectionTest {
         syndFeed.setEntries(Collections.singletonList(syndEntry));
         String expectedXML = new SyndFeedOutput().outputString(syndFeed);
         byte[] bytes = expectedXML.getBytes();
-
+        ExecutorCreator executorCreator = mock(ExecutorCreator.class);
+        when(executorCreator.createExecutor(any(), any())).thenReturn(MoreExecutors.newDirectExecutorService());
         ExtLibConnection connectionService = spy(new ExtLibConnection(URL, "", null, null, null, 0, null,
-                MoreExecutors.newDirectExecutorService(), mock(BookService.class), 300));
+                executorCreator, mock(BookService.class), 300));
         URLConnection urlConnection = mock(URLConnection.class);
         when(connectionService.getConnection(URL + URI)).thenReturn(urlConnection);
         when(urlConnection.getInputStream()).thenReturn(new ByteArrayInputStream(bytes));
@@ -164,9 +170,10 @@ public class ExtLibConnectionTest {
 
         String expectedXML = new SyndFeedOutput().outputString(syndFeed);
         byte[] bytes = expectedXML.getBytes();
-
+        ExecutorCreator executorCreator = mock(ExecutorCreator.class);
+        when(executorCreator.createExecutor(any(), any())).thenReturn(MoreExecutors.newDirectExecutorService());
         ExtLibConnection connectionService = spy(new ExtLibConnection(URL, "", null, null, null, 0, null,
-                MoreExecutors.newDirectExecutorService(), mock(BookService.class), 300));
+                executorCreator, mock(BookService.class), 300));
         URLConnection urlConnection = mock(URLConnection.class);
         when(connectionService.getConnection(URL + URI)).thenReturn(urlConnection);
         when(urlConnection.getInputStream()).thenReturn(new ByteArrayInputStream(bytes));

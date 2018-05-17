@@ -1,7 +1,6 @@
 package com.patex.extlib;
 
 import com.patex.entities.Book;
-import com.patex.messaging.ZMessage;
 import com.patex.service.Resources;
 import com.patex.utils.Res;
 
@@ -17,7 +16,7 @@ import java.util.stream.Collectors;
 /**
  * Created by Alexey on 05.07.2017.
  */
-class DownloadAllResult  extends ZMessage {
+class DownloadAllResult extends Res {
 
     private final List<String> authors;
     private final List<Res> emptyBooks;
@@ -60,7 +59,7 @@ class DownloadAllResult  extends ZMessage {
     }
 
 
-    public boolean hasResult(){
+    public boolean hasResult() {
         return success.size() > 0 || failed.size() > 0;
     }
 

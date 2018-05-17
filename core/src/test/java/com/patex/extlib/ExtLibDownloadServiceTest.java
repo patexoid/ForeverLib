@@ -1,6 +1,5 @@
 package com.patex.extlib;
 
-import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.patex.LibException;
 import com.patex.entities.Book;
@@ -11,6 +10,7 @@ import com.patex.entities.ZUser;
 import com.patex.messaging.MessengerService;
 import com.patex.opds.OPDSEntryBuilder;
 import com.patex.opds.converters.OPDSEntry;
+import com.patex.utils.ExecutorCreator;
 import com.patex.utils.Res;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,10 +46,10 @@ public class ExtLibDownloadServiceTest {
                 then(i -> ((Supplier) i.getArguments()[1]).get());
         savedBookRepo = mock(SavedBookRepository.class);
         MessengerService messengerService = mock(MessengerService.class);
-        ListeningExecutorService executor = MoreExecutors.newDirectExecutorService();
+        ExecutorCreator executorCreator = mock(ExecutorCreator.class);
+        when(executorCreator.createExecutor(any(), any())).thenReturn(MoreExecutors.newDirectExecutorService());
         downloadService = new
-                ExtLibDownloadService(connection, scopeRunner, savedBookRepo, messengerService, executor);
-
+                ExtLibDownloadService(connection, scopeRunner, savedBookRepo, messengerService, executorCreator);
     }
 
     @Test
@@ -189,6 +189,5 @@ public class ExtLibDownloadServiceTest {
         DownloadAllResult books = result.get();
         assertThat(books.getSuccess(), hasSize(1));
         assertEquals(book1, books.getSuccess().get(0));
-
     }
 }

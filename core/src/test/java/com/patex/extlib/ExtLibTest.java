@@ -10,6 +10,7 @@ import com.patex.opds.OPDSContent;
 import com.patex.opds.converters.OPDSEntry;
 import com.patex.opds.converters.OPDSLink;
 import com.patex.service.BookService;
+import com.patex.utils.ExecutorCreator;
 import com.rometools.rome.feed.synd.SyndContentImpl;
 import com.rometools.rome.feed.synd.SyndEntryImpl;
 import com.rometools.rome.feed.synd.SyndFeedImpl;
@@ -52,6 +53,7 @@ public class ExtLibTest {
     private SyndContentImpl syndContent;
     private SyndEntryImpl syndEntry;
     private ExtLibrary extLibrary;
+    private ExecutorCreator executorCreator;
 
     @Before
     public void setUp() {
@@ -87,6 +89,9 @@ public class ExtLibTest {
 
         syndFeed.setEntries(Collections.singletonList(syndEntry));
 //        when(connectionService.getFeed(uri)).thenReturn(syndFeed);
+
+        executorCreator = mock(ExecutorCreator.class);
+        when(executorCreator.createExecutor(any(), any())).thenReturn(MoreExecutors.newDirectExecutorService());
     }
 
     @Test
@@ -209,7 +214,7 @@ public class ExtLibTest {
 
         connectionService =
                 spy(new ExtLibConnection(url, "", null, null, null, 0, null,
-                        MoreExecutors.newDirectExecutorService(), bookService, 300));
+                        executorCreator, bookService, 300));
         downloadService = createExtLib();
         URLConnection urlConnection1 = mock(URLConnection.class);
         String fileName1 = rsg.generate(10);
@@ -250,14 +255,14 @@ public class ExtLibTest {
         return new ExtLibDownloadService(
                 connectionService,
                 new ExtLibInScopeRunner(mock(ExtLibScopeStorage.class)),
-                mock(SavedBookRepository.class), mock(MessengerService.class));
+                mock(SavedBookRepository.class), mock(MessengerService.class), executorCreator);
     }
 
     @Test
     public void testDownloadAction() throws Exception {
         String uri = rsg.generate(10);
         connectionService = spy(new ExtLibConnection(url, "", null, null, null, 0, null,
-                MoreExecutors.newDirectExecutorService(), bookService, 300));
+                executorCreator, bookService, 300));
         URLConnection urlConnection = mock(URLConnection.class);
         String fileName = rsg.generate(10);
         when(urlConnection.getHeaderField("Content-Disposition")).thenReturn("attachment; filename=\"" + fileName + "\"");

@@ -68,6 +68,7 @@ public class DuplicateHandler {
     public DuplicateHandler(BookCheckQueueRepository bookCheckQueueRepo, TransactionService transactionService,
                             BookService bookService, MessengerService messenger, StorageService fileStorage,
                             ParserService parserService,
+                            ExecutorCreator executorCreator,
                             @Value("${duplicateCheck.threadCount:0}") int threadCount,
                             @Value("${duplicateCheck.shingleCoeff:1}") int coef,
                             @Value("${duplicateCheck.fastCacheSize:100}") int cacheSize,
@@ -85,10 +86,10 @@ public class DuplicateHandler {
             this.threadCount = availableProcessors > 1 ? availableProcessors / 2 : 1;
         }
         scheduleExecutor = Executors.
-                newSingleThreadExecutor(ExecutorCreator.createThreadFactory("scheduleExecutor-", log));
+                newSingleThreadExecutor(executorCreator.createThreadFactory("scheduleExecutor-", log));
         blockingExecutor = new BlockingExecutor(this.threadCount, this.threadCount * 5, 1,
                 TimeUnit.MINUTES, this.threadCount * 5,
-                ExecutorCreator.createThreadFactory("checkForDuplicate-", log));
+                executorCreator.createThreadFactory("checkForDuplicate-", log));
         shingleSearch = new ShingleSearch<>(this::getSameAuthorsBook,
                 ShingleableBook::new,
                 Book::getId,

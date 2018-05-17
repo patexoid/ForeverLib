@@ -11,6 +11,7 @@ import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
 
+@SuppressWarnings("NullableProblems")
 @Component
 class ExtLibScope implements Scope {
 
