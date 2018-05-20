@@ -50,15 +50,19 @@ public class ExtLibService {
     private final ExtLibraryRepository extLibRepo;
     private final ZUserService userService;
 
-    private final ExecutorService executor = ExecutorCreator.createExecutor("ExtLibService", log);
+    private final ExecutorService executor;
 
 
-    public ExtLibService(ExtLibDownloadService downloadService, ExtLibSubscriptionService subscriptionService,
-                         ExtLibraryRepository extLibRepo, ZUserService userService) {
+    public ExtLibService(ExtLibDownloadService downloadService,
+                         ExtLibSubscriptionService subscriptionService,
+                         ExtLibraryRepository extLibRepo,
+                         ZUserService userService,
+                         ExecutorCreator executorCreator) {
         this.downloadService = downloadService;
         this.subscriptionService = subscriptionService;
         this.extLibRepo = extLibRepo;
         this.userService = userService;
+        executor = executorCreator.createExecutor("ExtLibService", log);
     }
 
     public List<OPDSEntry> getRoot(String prefix) {

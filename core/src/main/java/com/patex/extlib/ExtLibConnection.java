@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
 @Scope(scopeName = "extLibrary", proxyMode = ScopedProxyMode.TARGET_CLASS)
 class ExtLibConnection {
 
-    static final String AUTHORIZATION_PROP_KEY = "Authorization";
+    private final static String AUTHORIZATION_PROP_KEY = "Authorization";
     private final static Pattern fileNamePattern = Pattern.compile("attachment; filename=\"([^\"]+)\"");
     private final static Logger log = LoggerFactory.getLogger(ExtLibConnection.class);
     private final Semaphore semaphore = new Semaphore(2);
@@ -64,10 +64,10 @@ class ExtLibConnection {
 
     @VisibleForTesting
     ExtLibConnection(String url, String prefix, String login, String password,
-                     String proxyHost, Integer proxyPort, Proxy.Type proxyType, ExecutorService executor,
+                     String proxyHost, Integer proxyPort, Proxy.Type proxyType, ExecutorCreator executorCreator,
                      BookService bookService,
                      int timeout) {
-        this.executor = executor;
+        this.executor = executorCreator.createExecutor("ExtLib:" + url + " Connection", log);
         this.url = url;
         this.prefix = prefix;
         this.login = login;
@@ -83,14 +83,14 @@ class ExtLibConnection {
 
     @Autowired
     public ExtLibConnection(BookService bookService, ExtLibScopeStorage extLibScope,
-                            @Value("${extlib.connection.timeout}") int timeout) {
-        this(bookService, extLibScope.getCurrentExtLib(), timeout);
+                            @Value("${extlib.connection.timeout}") int timeout, ExecutorCreator executorCreator) {
+        this(bookService, extLibScope.getCurrentExtLib(), timeout, executorCreator);
     }
 
-    ExtLibConnection(BookService bookService, ExtLibrary extLibrary, int timeout) {
+    ExtLibConnection(BookService bookService, ExtLibrary extLibrary, int timeout, ExecutorCreator executorCreator) {
         this(extLibrary.getUrl(), extLibrary.getOpdsPath(), extLibrary.getLogin(), extLibrary.getPassword(),
                 extLibrary.getProxyHost(), extLibrary.getProxyPort(), extLibrary.getProxyType(),
-                ExecutorCreator.createExecutor("ExtLib:" + extLibrary.getName() + " Connection", log),
+                executorCreator,
                 bookService, timeout);
     }
 

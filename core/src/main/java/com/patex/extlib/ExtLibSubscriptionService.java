@@ -25,14 +25,17 @@ public class ExtLibSubscriptionService {
 
     private final ZUserService userService;
 
-    private final  ExecutorService executor = ExecutorCreator.createExecutor("ExtLibSubscriptionService", log);
+    private final  ExecutorService executor;
 
 
-    public ExtLibSubscriptionService(SubscriptionRepository subscriptionRepo, ExtLibDownloadService downloadService,
-                                     ZUserService userService) {
+    public ExtLibSubscriptionService(SubscriptionRepository subscriptionRepo,
+                                     ExtLibDownloadService downloadService,
+                                     ZUserService userService,
+                                     ExecutorCreator executorCreator) {
         this.subscriptionRepo = subscriptionRepo;
         this.downloadService = downloadService;
         this.userService = userService;
+        executor = executorCreator.createExecutor("ExtLibSubscriptionService", log);
     }
 
     public void addSubscription(ExtLibrary library, String uri) throws LibException {

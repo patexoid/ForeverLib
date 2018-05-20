@@ -46,21 +46,17 @@ public class ExtLibDownloadService {
     private final MessengerService messengerService;
     private final ExecutorService executor;
 
-    public ExtLibDownloadService(ExtLibConnection connection, ExtLibInScopeRunner scopeRunner,
-                                 SavedBookRepository savedBookRepo, MessengerService messengerService,
-                                 ExecutorService executor) {
+    @Autowired
+    public ExtLibDownloadService(ExtLibConnection connection,
+                                 ExtLibInScopeRunner scopeRunner,
+                                 SavedBookRepository savedBookRepo,
+                                 MessengerService messengerService,
+                                 ExecutorCreator executorCreator) {
         this.connection = connection;
         this.scopeRunner = scopeRunner;
         this.savedBookRepo = savedBookRepo;
         this.messengerService = messengerService;
-        this.executor = executor;
-    }
-
-    @Autowired
-    public ExtLibDownloadService(ExtLibConnection connection, ExtLibInScopeRunner scopeRunner,
-                                 SavedBookRepository savedBookRepo, MessengerService messengerService) {
-        this(connection, scopeRunner, savedBookRepo, messengerService,
-                ExecutorCreator.createExecutor("ExtLibDownloadService", log));
+        this.executor = executorCreator.createExecutor("ExtLibDownloadService", log);
     }
 
     private static Optional<String> extractExtUri(String link) {
