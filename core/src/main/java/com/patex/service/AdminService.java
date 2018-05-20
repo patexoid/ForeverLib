@@ -1,5 +1,7 @@
 package com.patex.service;
 
+import com.patex.entities.Author;
+import com.patex.entities.AuthorBook;
 import com.patex.entities.Book;
 import com.patex.entities.FileResource;
 import com.patex.entities.ZUser;
@@ -10,18 +12,24 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @Service
 public class AdminService {
 
     private final BookService bookService;
+    private final AuthorService authorService;
     private final TransactionService transactionService;
     private final ParserService parserService;
     private final ApplicationEventPublisher publisher;
 
-    public AdminService(BookService bookService, TransactionService transactionService, ParserService parserService, ApplicationEventPublisher publisher) {
+    public AdminService(BookService bookService, AuthorService authorService,
+                        TransactionService transactionService, ParserService parserService,
+                        ApplicationEventPublisher publisher) {
         this.bookService = bookService;
+        this.authorService = authorService;
         this.transactionService = transactionService;
         this.parserService = parserService;
         this.publisher = publisher;
@@ -51,8 +59,20 @@ public class AdminService {
     public void publisEventForExistingBooks(ZUser user) {
         Iterable<Book> books = bookService.findAll();
         StreamSupport.stream(books.spliterator(), false).
-                filter(Book::isDuplicate).
+                filter(book -> !book.isDuplicate()).
                 map(book -> new BookCreationEvent(book, user)).
                 forEach(publisher::publishEvent);
+    }
+
+    public void checkDuplicatesForAuthor(ZUser user, Long authorId) {
+        transactionService.transactionRequired(
+                () -> {
+                    Author author = authorService.getAuthor(authorId);
+                    List<Book> books = author.getBooks().stream().map(AuthorBook::getBook).collect(Collectors.toList());
+                    books.forEach(book -> book.setDuplicate(false));
+                    books.stream().map(book -> new BookCreationEvent(book, user)).
+                            forEach(publisher::publishEvent);
+                }
+        );
     }
 }

@@ -24,7 +24,7 @@ class DownloadAllResult extends Res {
     private final List<Book> success;
 
     public DownloadAllResult(List<String> authors, List<Res> emptyBooks, List<Res> failed, List<Book> success) {
-        super(null);
+        super("opds.extLib.download.all.result");
         this.authors = authors;
         this.emptyBooks = emptyBooks;
         this.failed = failed;
@@ -70,12 +70,12 @@ class DownloadAllResult extends Res {
                 limit(5).map(Map.Entry::getKey).reduce(concat).orElse("");
         String success = this.success.stream().map(Book::getTitle).sorted().reduce(concat).orElse("");
         String empty = emptyBooks.stream().
-                map(res -> resources.get(loc, res.getKey(), res.getObjs())).sorted().
+                map(res -> res.getMessage(resources, loc)).sorted().
                 reduce(concat).orElse("");
         String failed = this.failed.stream().
-                map(res -> resources.get(loc, res.getKey(), res.getObjs())).sorted().
+                map(res -> res.getMessage(resources, loc)).sorted().
                 reduce(concat).orElse("");
-        return resources.get(loc, "opds.extLib.download.all.result", authors, success, empty, failed);
+        return resources.get(loc, getKey(), authors, success, empty, failed);
     }
 
     public List<Book> getSuccess() {

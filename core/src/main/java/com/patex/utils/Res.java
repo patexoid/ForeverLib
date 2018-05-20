@@ -1,6 +1,10 @@
 package com.patex.utils;
 
 
+import com.patex.service.Resources;
+
+import java.util.Locale;
+
 public class Res implements Comparable<Res>{
 
     private final String key;
@@ -20,6 +24,9 @@ public class Res implements Comparable<Res>{
         return objs;
     }
 
+    public String getMessage(Resources resources, Locale loc) {
+        return resources.get(loc, getKey(), getObjs());
+    }
 
     public int compareTo(Res other) {
         return key.compareTo(other.key);

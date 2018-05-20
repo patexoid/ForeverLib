@@ -72,7 +72,7 @@ public class ExtLibService {
     }
 
     private OPDSEntry getRootEntry(ExtLibrary library) {
-        return new OPDSEntryImpl("" + library.getId(), new Res("opds.first.value",
+        return new OPDSEntryImpl("" + library.getId(), new Res("first.value",
                 library.getName()), new OPDSLink("", OPDS_CATALOG));
     }
 
@@ -136,7 +136,7 @@ public class ExtLibService {
                 findFirst().
                 ifPresent(nextLink -> {
                     OPDSEntry nextEntry = new OPDSEntryImpl(NEXT_ID_PREFIX + ":" + uri, new Date(),
-                            new Res("opds.extlib." + NEXT_ID_PREFIX + "Page"),
+                            new Res("opds.extlib.nextPage"),
                             (String) null,
                             nextLink);
                     entries.add(nextEntry);

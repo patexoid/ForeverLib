@@ -31,6 +31,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.Base64;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -160,7 +161,7 @@ class ExtLibConnection {
                 collect(Collectors.toList());
 
         List<OPDSLink> links = feed.getLinks().stream().
-                map(LinkMapper::mapLink).
+                map(LinkMapper::mapLink).filter(Objects::nonNull).
                 collect(Collectors.toList());
         return new ExtLibFeed(feed.getTitle(), entries, links);
     }

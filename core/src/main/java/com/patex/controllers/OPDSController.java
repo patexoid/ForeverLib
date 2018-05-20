@@ -23,7 +23,6 @@ import com.patex.utils.LinkUtils;
 import com.patex.utils.Res;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -50,12 +49,21 @@ public class OPDSController {
     private static final int EXPAND_FOR_AUTHORS_COUNT = 3;
     private static final Logger log = LoggerFactory.getLogger(OPDSController.class);
     private final List<RootProvider> rootEntriesProvider = new ArrayList<>();
-    @Autowired
-    private AuthorService authorService;
-    @Autowired
-    private SequenceService sequenceService;
-    @Autowired
-    private LatestURIComponent latestURIComponent;
+
+    private final AuthorService authorService;
+
+    private final SequenceService sequenceService;
+
+    private final LatestURIComponent latestURIComponent;
+
+
+
+    public OPDSController(AuthorService authorService, SequenceService sequenceService,
+                          LatestURIComponent latestURIComponent) {
+        this.authorService = authorService;
+        this.sequenceService = sequenceService;
+        this.latestURIComponent = latestURIComponent;
+    }
 
     public static <E> ModelAndView createMav(Res title, E e, Function<E, List<OPDSEntry>> func, Date updated) {
         ModelAndView mav = new ModelAndView();
@@ -122,7 +130,7 @@ public class OPDSController {
     private Stream<OPDSEntry> expandAggrResult(AggrResult aggr) {
         if (aggr.getResult() >= EXPAND_FOR_AUTHORS_COUNT) {
             String link = LinkUtils.makeURL("opds", AUTHORSINDEX, LinkUtils.encode(aggr.getId()));
-            Res title = new Res("opds.first.value", aggr.getId());
+            Res title = new Res("first.value", aggr.getId());
             return Stream.of(new OPDSEntryImpl(aggr.getId(), title, null, link));
         } else {
             return authorService.findByName(aggr.getId()).stream().map(AuthorEntry::new);
@@ -132,7 +140,7 @@ public class OPDSController {
     @SaveLatest
     @RequestMapping(value = "author/{id}", produces = APPLICATION_ATOM_XML)
     public ModelAndView getAuthor(@PathVariable(value = "id") long id) {
-        Author authors = authorService.getAuthors(id);
+        Author authors = authorService.getAuthor(id);
         return createMav(new Res("opds.author.books", authors.getName()), authors, author ->
                 new ExpandedAuthorEntries(author).getEntries()
         );
@@ -141,7 +149,7 @@ public class OPDSController {
     @SaveLatest
     @RequestMapping(value = "author/{id}/alphabet", produces = APPLICATION_ATOM_XML)
     public ModelAndView getAuthorBookAlphabet(@PathVariable(value = "id") long id) {
-        Author bookAuthor = authorService.getAuthors(id);
+        Author bookAuthor = authorService.getAuthor(id);
         return createMav(new Res("opds.author.books.alphabet", bookAuthor.getName()), bookAuthor, author ->
                 author.getBooks().stream().
                         map(AuthorBook::getBook).
@@ -153,7 +161,7 @@ public class OPDSController {
     @SaveLatest
     @RequestMapping(value = "authorsequenceless/{id}", produces = APPLICATION_ATOM_XML)
     public ModelAndView getAuthorBookNoSequence(@PathVariable(value = "id") long id) {
-        Author bookAuthor = authorService.getAuthors(id);
+        Author bookAuthor = authorService.getAuthor(id);
         return createMav(new Res("opds.author.books.sequenceless", bookAuthor.getName()), bookAuthor, author ->
                 author.getBooksNoSequence().stream().
                         map(AuthorBook::getBook).
@@ -179,7 +187,7 @@ public class OPDSController {
     @SaveLatest
     @RequestMapping(value = "authorsequences/{id}", produces = APPLICATION_ATOM_XML)
     public ModelAndView getAuthorSequences(@PathVariable(value = "id") long id) {
-        Author author = authorService.getAuthors(id);
+        Author author = authorService.getAuthor(id);
         return createMav(new Res("opds.author.sequence", author.getName()), author,
                 a -> a.getSequencesStream().map(SequenceEntry::new).
                         collect(Collectors.toList()));

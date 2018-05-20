@@ -29,12 +29,6 @@ public class OPDSEntryBuilder {
         this.title = title;
     }
 
-    public OPDSEntryBuilder(String id, Date updated, String title, Object... resObjs) {
-        this.id = id;
-        this.updated = updated;
-        this.title = new Res(title, resObjs);
-    }
-
     public OPDSEntryBuilder addContent(OPDSContent content) {
         this.content.add(content);
         return this;

@@ -28,7 +28,7 @@ public class ExtLibOPDSEntry implements OPDSEntry {
 
     public ExtLibOPDSEntry(SyndEntry syndEntry) {
         id = syndEntry.getUri();
-        title = new Res("opds.first.value", syndEntry.getTitle());
+        title = new Res("first.value", syndEntry.getTitle());
         links = syndEntry.getLinks().stream().
                 map(LinkMapper::mapLink).filter(Objects::nonNull).collect(Collectors.toList());
         updated = syndEntry.getUpdatedDate();

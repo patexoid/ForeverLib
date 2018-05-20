@@ -78,13 +78,17 @@ public class ExtLibDownloadServiceTest {
 
         String type = "fb2";
         when(connection.downloadBook(bookUri1, type, user)).thenReturn(book1);
-        OPDSEntry entry1 = new OPDSEntryBuilder("id1", new Date(), "bookTitle1").
+        final Object[] objects = new Object[]{};
+        final Res bookTitle1 = new Res("bookTitle1", objects);
+        OPDSEntry entry1 = new OPDSEntryBuilder("id1", new Date(), bookTitle1).
                 addLink(ExtLibService.REQUEST_P_NAME + "=" + bookUri1, "application/" + type).build();
 
         Book book2 = new Book();
         String bookUri2 = "bookUri2";
         when(connection.downloadBook(bookUri2, type, user)).thenReturn(book2);
-        OPDSEntry entry2 = new OPDSEntryBuilder("id2", new Date(), "bookTitle2").
+        final Object[] objects1 = new Object[]{};
+        final Res bookTitle2 = new Res("bookTitle2", objects1);
+        OPDSEntry entry2 = new OPDSEntryBuilder("id2", new Date(), bookTitle2).
                 addLink(ExtLibService.REQUEST_P_NAME + "=" + bookUri2, "application/" + type).build();
 
         when(connection.getFeed(this.uri)).
@@ -103,7 +107,9 @@ public class ExtLibDownloadServiceTest {
     @Test
     public void testDownloadAllWithAuthor() throws Exception {
         String authorName = "authorName";
-        OPDSEntry entry = new OPDSEntryBuilder("id", new Date(), BOOK_TITLE).
+        final Object[] objects = new Object[]{};
+        final Res res = new Res(BOOK_TITLE, objects);
+        OPDSEntry entry = new OPDSEntryBuilder("id", new Date(), res).
                 addAuthor(authorName, "uri").
                 build();
         when(connection.getFeed(this.uri)).
@@ -164,13 +170,17 @@ public class ExtLibDownloadServiceTest {
         String type = "fb2";
 
         when(connection.downloadBook(bookUri1, type, user)).thenReturn(book1);
-        OPDSEntry entry1 = new OPDSEntryBuilder("id1", new Date(), "bookTitle1").
+        final Object[] objects = new Object[]{};
+        final Res bookTitle1 = new Res("bookTitle1", objects);
+        OPDSEntry entry1 = new OPDSEntryBuilder("id1", new Date(), bookTitle1).
                 addLink(ExtLibService.REQUEST_P_NAME + "=" + bookUri1, "application/" + type).build();
 
         Book book2 = new Book();
         String bookUri2 = "bookUri2";
         when(connection.downloadBook(bookUri2, type, user)).thenReturn(book2);
-        OPDSEntry entry2 = new OPDSEntryBuilder("id2", new Date(), "bookTitle2").
+        final Object[] objects1 = new Object[]{};
+        final Res bookTitle2 = new Res("bookTitle2", objects1);
+        OPDSEntry entry2 = new OPDSEntryBuilder("id2", new Date(), bookTitle2).
                 addLink(ExtLibService.REQUEST_P_NAME + "=" + bookUri2, "application/" + type).build();
 
         when(savedBookRepo.findSavedBooksByExtLibraryAndExtIdIn(library, Arrays.asList(bookUri1, bookUri2))).

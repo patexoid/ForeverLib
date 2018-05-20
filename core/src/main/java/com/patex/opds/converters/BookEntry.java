@@ -28,7 +28,7 @@ public class BookEntry implements OPDSEntry {
     public BookEntry(Book book) {
         id = "book:" + book.getId();
         updated = Date.from(book.getCreated());
-        title = new Res("opds.first.value", book.getTitle());
+        title = new Res("first.value", book.getTitle());
         authors = book.getAuthorBooks().stream().map(AuthorBook::getAuthor).map(OPDSAuthorImpl::new).
                 collect(Collectors.toList());
         // TODO entry.setCategories();

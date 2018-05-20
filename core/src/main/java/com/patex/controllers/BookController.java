@@ -138,6 +138,16 @@ public class BookController {
         return "success";
     }
 
+    @RequestMapping(value = "/duplicateCheckForAuthor/{authorId}", method = RequestMethod.GET)
+    @Secured(ADMIN_AUTHORITY)
+    public @ResponseBody
+    String duplicateCheckForAuthorExisted(@PathVariable("authorId") Long authorId) {
+        adminService.checkDuplicatesForAuthor(userService.getCurrentUser(), authorId);
+        duplicateHandler.waitForFinish();
+        return "success";
+    }
+
+
     @RequestMapping(value = "/updateCovers", method = RequestMethod.GET)
     @Secured(ADMIN_AUTHORITY)
     public @ResponseBody
