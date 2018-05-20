@@ -53,6 +53,7 @@ public class ExtLibServiceTest {
     @Mock
     private ExtLibSubscriptionService subscriptionService;
 
+    @SuppressWarnings("unused")
     @Mock
     private ExecutorCreator executorCreator;
 
