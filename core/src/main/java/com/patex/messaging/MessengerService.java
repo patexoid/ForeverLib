@@ -39,14 +39,10 @@ public class MessengerService {
         toRole(new Res("lib.stopped"), ZUserService.ADMIN_AUTHORITY);
     }
 
-    public void sendMessageToUser(ZUser user, String message, Object... objs) {
-        sendMessageToUser(new Res(message, objs), user);
-    }
-
     public void sendMessageToUser(Res message, ZUser user) {
         if (user != null && user.getUserConfig() != null) {
             Locale locale = user.getUserConfig().getLocale();
-            String messageS = res.get(locale, message.getKey(), message.getObjs());
+            String messageS = message.getMessage(res, locale);
             messengers.forEach(messenger -> messenger.sendToUser(messageS, user));
         }
     }

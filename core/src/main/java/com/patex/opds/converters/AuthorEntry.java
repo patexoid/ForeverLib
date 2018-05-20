@@ -26,7 +26,7 @@ public class AuthorEntry implements OPDSEntry {
 
     public AuthorEntry(Author author) {
         id = "author:" + author.getId();
-        title = new Res("opds.first.value", author.getName());
+        title = new Res("first.value", author.getName());
         if (author.getDescr() != null) {
             content = Collections.singletonList(new OPDSContent(author.getDescr()));
         } else {

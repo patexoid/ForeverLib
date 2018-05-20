@@ -62,7 +62,7 @@ public class OpdsView extends AbstractAtomFeedView {
         }
         Res title = opdsEntryI.getTitle();
 
-        entry.setTitle(res.get(locale, title.getKey(), title.getObjs()));
+        entry.setTitle(title.getMessage(res, locale));
         List<Content> content = toRomeContent(locale, opdsEntryI.getContent());
         entry.setContents(content);
         entry.setOtherLinks(opdsEntryI.getLinks().stream().map(this::toLink).collect(Collectors.toList()));
@@ -124,7 +124,7 @@ public class OpdsView extends AbstractAtomFeedView {
         super.buildFeedMetadata(model, feed, request);
         OPDSMetadata metadata = (OPDSMetadata) model.get(OPDS_METADATA);
         Res title = metadata.getTitle();
-        feed.setTitle(res.get(locale, title.getKey(), title.getObjs()));
+        feed.setTitle(title.getMessage(res, locale));
         feed.setId(metadata.getId());
         feed.setUpdated(metadata.getUpdated());
         feed.setIcon("favicon.ico");

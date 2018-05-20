@@ -34,7 +34,11 @@ class ShingleMatcher<T, ID> {
                 () -> {
                     try {
                         MessageDigest digest = MessageDigest.getInstance("MD5");
-                        return digest::digest;
+                        return bytes -> {
+                            byte[] result = digest.digest(bytes);
+                            digest.reset();
+                            return result;
+                        };
                     } catch (NoSuchAlgorithmException e) {
                         throw new RuntimeException(e);
                     }

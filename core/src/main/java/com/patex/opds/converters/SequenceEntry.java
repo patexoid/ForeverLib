@@ -26,7 +26,7 @@ public class SequenceEntry implements OPDSEntry {
     public SequenceEntry(Sequence sequence) {
 
         id = "sequence:" + sequence.getId();
-        title = new Res("opds.first.value", sequence.getName());
+        title = new Res("first.value", sequence.getName());
         content = Collections.
                 singletonList(new OPDSContent("Количество книг в серии: " + sequence.getBookSequences().size()));
         links = Collections.singletonList(

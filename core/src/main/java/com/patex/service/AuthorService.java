@@ -22,7 +22,7 @@ public class AuthorService {
         this.authorRepository = authorRepository;
     }
 
-    public Author getAuthors(long id) {
+    public Author getAuthor(long id) {
         return authorRepository.findById(id).get();
     }
 
@@ -42,7 +42,7 @@ public class AuthorService {
         return authorRepository.findFirstByNameIgnoreCase(name);
     }
 
-    public Page<Author> getAuthors(Pageable pageable, String prefix) {
+    public Page<Author> getAuthor(Pageable pageable, String prefix) {
         prefix = prefix == null ? "" : prefix;
         return authorRepository.getAuthorsByName(pageable, prefix);
     }

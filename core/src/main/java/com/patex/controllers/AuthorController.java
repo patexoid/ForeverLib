@@ -24,7 +24,7 @@ public class AuthorController {
     public
     @ResponseBody
     Author getAuthor(@PathVariable(value = "id") long id) {
-        return authorService.getAuthors(id);
+        return authorService.getAuthor(id);
     }
 
     @RequestMapping(method = RequestMethod.GET)
@@ -32,7 +32,7 @@ public class AuthorController {
     @ResponseBody
     Page<Author> getAuthors(Pageable pageable, @RequestParam(required = false) String prefix) {
         log.trace("prefix:{} page:{} of {}",prefix,pageable.getPageNumber(),pageable.getPageSize());
-        return authorService.getAuthors(pageable, prefix);
+        return authorService.getAuthor(pageable, prefix);
     }
 
 }

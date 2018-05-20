@@ -10,6 +10,7 @@ import com.patex.opds.converters.OPDSEntry;
 import com.patex.opds.converters.OPDSLink;
 import com.patex.service.ZUserService;
 import com.patex.utils.ExecutorCreator;
+import com.patex.utils.Res;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -79,7 +80,9 @@ public class ExtLibServiceTest {
         when(downloadService.downloadBook(library, URI, TYPE, user)).thenReturn(book);
 
 
-        OPDSEntry entry = new OPDSEntryBuilder("entryId", new Date(), "entryTitle")
+        final Object[] objects = new Object[]{};
+        final Res entryTitle = new Res("entryTitle", objects);
+        OPDSEntry entry = new OPDSEntryBuilder("entryId", new Date(), entryTitle)
                 .addLink("linHref", OPDSLink.FB2)
                 .build();
         ExtLibFeed rawFeed = new ExtLibFeed("title",
@@ -150,7 +153,9 @@ public class ExtLibServiceTest {
         HashMap<String, String> params = new HashMap<>();
         params.put(REQUEST_P_NAME, entryUrl);
 
-        OPDSEntry entry = new OPDSEntryBuilder("dd", new Date(), "entryTitle").build();
+        final Object[] objects = new Object[]{};
+        final Res entryTitle = new Res("entryTitle", objects);
+        OPDSEntry entry = new OPDSEntryBuilder("dd", new Date(), entryTitle).build();
         ExtLibFeed rawFeed = new ExtLibFeed("title",
                 Collections.singletonList(entry), Collections.emptyList());
         when(downloadService.getExtLibFeed(library, entryUrl)).thenReturn(rawFeed);

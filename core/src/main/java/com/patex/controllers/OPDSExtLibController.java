@@ -42,7 +42,7 @@ public class OPDSExtLibController implements RootProvider {
 
 
     private final List<OPDSEntry> rootEntries = Collections.singletonList(
-            new OPDSEntryBuilder("root:libraries", null, "opds.extlib.libraries").
+            new OPDSEntryBuilder("root:libraries", null, new Res("opds.extlib.libraries")).
                     addLink(OPDS_EXT_LIB, OPDSLink.OPDS_CATALOG).build());
 
     @Autowired
@@ -78,7 +78,7 @@ public class OPDSExtLibController implements RootProvider {
                                       @RequestParam(required = false) Map<String, String> requestParams) throws LibException {
         ExtLibFeed extLibFeed = extLibService.getDataForLibrary(id, requestParams);
         extLibFeed = extLibFeed.updateWithPrefix(OPDS_EXT_LIB + "/" + id + "/");
-        return createMav(new Res("opds.first.value", extLibFeed.getTitle()), extLibFeed.getEntries());
+        return createMav(new Res("first.value", extLibFeed.getTitle()), extLibFeed.getEntries());
     }
 
     @RequestMapping(value = "{id}/download")

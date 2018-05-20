@@ -1,1 +1,2 @@
 book,books
+sequence,sequences

@@ -59,13 +59,6 @@ public class MessengerServiceTest {
     }
 
     @Test
-    public void shouldSendMessage() {
-        messengerService.sendMessageToUser(user, MESSAGE_KEY, OBJS);
-        verify(messenger).sendToUser(LOCALIZED_MESSAGE, user);
-    }
-
-
-    @Test
     public void shouldSendMessageToUserWithRole() {
         ZUser user1 = new ZUser();
         user1.setUserConfig(userConfig);

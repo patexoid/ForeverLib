@@ -18,6 +18,7 @@ import com.patex.shingle.Shingleable;
 import com.patex.storage.StorageService;
 import com.patex.utils.BlockingExecutor;
 import com.patex.utils.ExecutorCreator;
+import com.patex.utils.Res;
 import com.patex.utils.StreamU;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -49,7 +50,7 @@ import java.util.stream.Collectors;
 @Component
 public class DuplicateHandler {
 
-   private static final Logger log = LoggerFactory.getLogger(DuplicateHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(DuplicateHandler.class);
 
     private final BookCheckQueueRepository bookCheckQueueRepo;
     private final TransactionService transactionService;
@@ -61,8 +62,8 @@ public class DuplicateHandler {
     private final ExecutorService scheduleExecutor;
 
     private final Semaphore lock = new Semaphore(0);
-    private int threadCount;
     private final BlockingExecutor blockingExecutor;
+    private int threadCount;
 
     @Autowired
     public DuplicateHandler(BookCheckQueueRepository bookCheckQueueRepo, TransactionService transactionService,
@@ -239,7 +240,9 @@ public class DuplicateHandler {
                     secondary.getTitle();
             log.info(message);
             if (user != null) {
-                messenger.sendMessageToUser(user, message);
+                Res messageRes = new Res("duplicate.check.result", first.getTitle(),
+                        primary.getTitle(), secondary.getTitle());
+                messenger.sendMessageToUser(messageRes, user);
             }
             this.bookService.updateBook(primary);
         } catch (Exception e) {
