@@ -26,10 +26,6 @@ public class AuthorService {
         return authorRepository.findById(id).get();
     }
 
-    public Page<Author> findByName(String name, Pageable pageable) {
-        return authorRepository.findByNameStartingWithIgnoreCase(name, pageable);
-    }
-
     public List<AggrResult> getAuthorsCount(String start) {
         return authorRepository.getAuthorsCount(start.length() + 1, start);
     }

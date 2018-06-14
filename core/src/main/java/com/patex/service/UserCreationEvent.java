@@ -1,6 +1,7 @@
 package com.patex.service;
 
 import com.patex.entities.ZUser;
+import com.patex.entities.ZUserAuthority;
 
 public class UserCreationEvent {
 
@@ -15,7 +16,9 @@ public class UserCreationEvent {
     }
 
     public boolean isAdmin() {
-        return user.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals(ZUserService.ADMIN_AUTHORITY));
+        return user.getAuthorities().stream().
+                map(ZUserAuthority::getAuthority).
+                anyMatch(ZUserService.ADMIN_AUTHORITY::equals);
     }
 
 }

@@ -30,7 +30,7 @@ public class TelegramMessenger implements Messenger {
     @Autowired
     public TelegramMessenger(@Value("${telegram.bot.token}") String botToken,
                              @Value("${telegram.bot.name}") String botName,
-                             @Value("${telegram.bot.baseurl}") String baseurl,
+                             @Value("${telegram.bot.baseurl:}") String baseurl,
                              MessengerService messagingComponent) {
         this.baseUrl = baseurl;
         this.messagingComponent = messagingComponent;

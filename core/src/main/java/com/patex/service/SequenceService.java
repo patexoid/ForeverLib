@@ -39,7 +39,7 @@ public class SequenceService {
     public Sequence mergeSequences(List<Sequence> sequences) {
         Sequence main = sequences.get(0);
         if (sequences.size() != 1) {
-            sequences.forEach(s -> entityManager.refresh(s));
+            sequences.forEach(entityManager::refresh);
             List<BookSequence> bookSequences = sequences.stream().
                     flatMap(s -> s.getBookSequences().stream()).collect(Collectors.toList());
             bookSequences.forEach(bs -> bs.setSequence(main));
