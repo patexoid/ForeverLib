@@ -63,7 +63,7 @@ public class DuplicateHandler {
 
     private final Semaphore lock = new Semaphore(0);
     private final BlockingExecutor blockingExecutor;
-    private int threadCount;
+    private final int threadCount;
 
     @Autowired
     public DuplicateHandler(BookCheckQueueRepository bookCheckQueueRepo, TransactionService transactionService,
@@ -73,27 +73,25 @@ public class DuplicateHandler {
                             @Value("${duplicateCheck.threadCount:0}") int threadCount,
                             @Value("${duplicateCheck.shingleCoeff:1}") int coef,
                             @Value("${duplicateCheck.fastCacheSize:100}") int cacheSize,
-                            @Value("${duplicateCheck.storageCacheFolder}") String storageFolder) {
+                            @Value("${duplicateCheck.storageCacheFolder:}") String storageFolder) {
         this.bookCheckQueueRepo = bookCheckQueueRepo;
         this.transactionService = transactionService;
         this.bookService = bookService;
         this.messenger = messenger;
         this.fileStorage = fileStorage;
         this.parserService = parserService;
-        this.threadCount = threadCount;
         if (threadCount == 0) {
             int availableProcessors = Runtime.getRuntime().availableProcessors();
-            this.threadCount = threadCount;
             this.threadCount = availableProcessors > 1 ? availableProcessors / 2 : 1;
+        } else {
+            this.threadCount = threadCount;
         }
         scheduleExecutor = Executors.
                 newSingleThreadExecutor(executorCreator.createThreadFactory("scheduleExecutor-", log));
         blockingExecutor = new BlockingExecutor(this.threadCount, this.threadCount * 5, 1,
                 TimeUnit.MINUTES, this.threadCount * 5,
                 executorCreator.createThreadFactory("checkForDuplicate-", log));
-        shingleSearch = new ShingleSearch<>(this::getSameAuthorsBook,
-                ShingleableBook::new,
-                Book::getId,
+        shingleSearch = new ShingleSearch<>(this::getSameAuthorsBook, ShingleableBook::new, Book::getId,
                 coef, cacheSize);
         if (StringUtils.isNotEmpty(storageFolder)) {
             shingleSearch.setStorage(new BookShingleCacheStorage(storageFolder));
@@ -108,7 +106,6 @@ public class DuplicateHandler {
             } catch (InterruptedException e) {
                 log.error(e.getMessage(), e);
             }
-
         });
         scheduler.setName("Duplicate handler scheduler");
         scheduler.setDaemon(true);
@@ -130,7 +127,7 @@ public class DuplicateHandler {
                 lastId = checkQueue.get(checkQueue.size() - 1).getId();
                 for (BookCheckQueue bcq : checkQueue) {
                     blockingExecutor.execute(
-                            () -> transactionService.newTransaction(() -> checkForDuplicate(bcq)));
+                            () -> transactionService.transactionRequired(() -> checkForDuplicate(bcq)));
                 }
             }
         }
@@ -151,22 +148,18 @@ public class DuplicateHandler {
         }
     }
 
-
     @EventListener
     public void onBookCreation(BookCreationEvent event) {
-        scheduleExecutor.execute(() -> {
-            if (transactionService.newTransaction(() -> scheduleCheck(event)))
-                lock.release();
-        });
+        scheduleExecutor.execute(() ->
+                transactionService.transactionRequired(() ->
+                        scheduleCheck(event)));
     }
 
-    private synchronized boolean scheduleCheck(BookCreationEvent event) {
+    private synchronized void scheduleCheck(BookCreationEvent event) {
         Book newBook = bookService.getBook(event.getBook().getId());
-        if (newBook.isDuplicate()) {
-            return false;
-        } else {
+        if (!newBook.isDuplicate()) {
             bookCheckQueueRepo.saveAndFlush(new BookCheckQueue(newBook, event.getUser()));
-            return true;
+            lock.release();
         }
     }
 
@@ -184,10 +177,8 @@ public class DuplicateHandler {
     private BookCheckQueue checkForDuplicate(BookCheckQueue bookCheckQueue) {
         Book primary = bookService.getBook(bookCheckQueue.getBook().getId());
         try {
-            shingleSearch.findSimilar(primary).ifPresent(
-                    book -> {
-                        markDuplications(primary, book, bookCheckQueue.getUser());
-                    });
+            shingleSearch.findSimilar(primary).
+                    ifPresent(book -> markDuplications(primary, book, bookCheckQueue.getUser()));
             bookCheckQueueRepo.deleteById(bookCheckQueue.getId());
             log.trace("duplicate id=" + bookCheckQueue.getId());
             return bookCheckQueue;

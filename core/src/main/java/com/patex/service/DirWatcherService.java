@@ -1,6 +1,7 @@
 package com.patex.service;
 
 import com.patex.entities.ZUser;
+import com.patex.utils.ExecutorCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +16,6 @@ import java.io.FileInputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
-import java.nio.file.WatchEvent.Kind;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.Objects;
@@ -27,26 +26,29 @@ import java.util.concurrent.Executors;
 @Component
 @ConditionalOnExpression("!'${bulkUploadDir}'.isEmpty()")
 public class DirWatcherService {
-   private static final Logger log = LoggerFactory.getLogger(DirWatcherService.class);
+    private static final Logger log = LoggerFactory.getLogger(DirWatcherService.class);
+
     private final Path directoryPath;
     private final BookService bookService;
     private final ZUserService zUserService;
-    private final Executor executor = Executors.newSingleThreadExecutor(r -> {
-        Thread thread = new Thread(r);
-        thread.setName("DirWatcherService");
-        thread.setDaemon(true);
-        thread.setUncaughtExceptionHandler((t, e) -> log.error(e.getMessage(), e));
-        return thread;
-    });
+    private final Executor executor;
 
-    private boolean isRunning = false;
+    private volatile boolean running = false;
 
     @Autowired
     public DirWatcherService(@Value("${bulkUploadDir}") String path,
-                             BookService bookService, ZUserService zUserService) {
-        directoryPath = FileSystems.getDefault().getPath(path);
+                             BookService bookService, ZUserService zUserService,
+                             ExecutorCreator executorCreator) {
+        this(FileSystems.getDefault().getPath(path), bookService, zUserService,
+                Executors.newSingleThreadExecutor(executorCreator.createThreadFactory("DirWatcherService", log)));
+    }
+
+    public DirWatcherService(Path directoryPath, BookService bookService,
+                             ZUserService zUserService, Executor executor) {
+        this.directoryPath = directoryPath;
         this.bookService = bookService;
         this.zUserService = zUserService;
+        this.executor = executor;
     }
 
     @PostConstruct
@@ -56,8 +58,8 @@ public class DirWatcherService {
     }
 
     private synchronized void run() {
-        if (!isRunning) {
-            isRunning = true;
+        if (!running) {
+            running = true;
             executor.execute(this::initStart);
             executor.execute(this::watch);
         }
@@ -75,32 +77,22 @@ public class DirWatcherService {
             WatchService watchService = directoryPath.getFileSystem().newWatchService();
             directoryPath.register(watchService, StandardWatchEventKinds.ENTRY_CREATE,
                     StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE);
-            while (true) {
+            while (running) {
                 WatchKey watchKey = watchService.take();
-                for (final WatchEvent<?> event : watchKey.pollEvents()) {
-                    takeActionOnChangeEvent(event);
-                }
+                Optional<ZUser> user = getAdminUser();
+                assert user.isPresent();
+                watchKey.pollEvents().stream().
+                        filter(e -> StandardWatchEventKinds.ENTRY_CREATE.equals(e.kind())).
+                        map(e -> (Path) e.context()).
+                        map(directoryPath::resolve).
+                        map(Path::toFile).
+                        filter(File::exists).
+                        forEach(file -> processFile(file, user.get()));
             }
-
-        } catch (InterruptedException interruptedException) {
-            System.out.println("Thread got interrupted:" + interruptedException);
-        } catch (Exception exception) {
-            exception.printStackTrace();
-        }
-
-    }
-
-    private void takeActionOnChangeEvent(WatchEvent<?> event) {
-
-        Kind<?> kind = event.kind();
-
-        if (kind.equals(StandardWatchEventKinds.ENTRY_CREATE)) {
-            Path entry = (Path) event.context();
-            Optional<ZUser> user = getAdminUser();
-            File file = directoryPath.resolve(entry).toFile();
-            if (file.exists()) {
-                user.ifPresent(zUser -> processFile(file, zUser));
-            }
+        } catch (InterruptedException e) {
+            log.error("Thread got interrupted:" + e.getMessage());
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
         }
     }
 
@@ -119,13 +111,13 @@ public class DirWatcherService {
     }
 
     private void processFile(File file, ZUser adminUser) {
-            try (FileInputStream fis = new FileInputStream(file)) {
-                bookService.uploadBook(file.getName(), fis, adminUser);
-            }  catch (Exception e) {
+        try (FileInputStream fis = new FileInputStream(file)) {
+            bookService.uploadBook(file.getName(), fis, adminUser);
+        } catch (Exception e) {
             log.error(e.getMessage(), e);
             return;
         }
+        //noinspection ResultOfMethodCallIgnored
         file.delete();
     }
-
 }

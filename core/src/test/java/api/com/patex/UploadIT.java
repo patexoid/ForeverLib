@@ -337,20 +337,14 @@ public class UploadIT {
                         limit(20).reduce((s, s2) -> s + " " + s2).get()).
                 getFbook();
 
-        ResponseEntity<List<BookUploadInfo>> response = uploadBooks(
-                t(randomAlphanumeric(10) + ".fb2", fbook1),
-                t(randomAlphanumeric(10) + ".fb2", fbook2)
-        );
+        ResponseEntity<List<BookUploadInfo>> response1 = uploadBooks(t(randomAlphanumeric(10) + ".fb2", fbook1));
+        ResponseEntity<List<BookUploadInfo>> response2 = uploadBooks(t(randomAlphanumeric(10) + ".fb2", fbook2));
+
         httpClient.get("book/waitForDuplicateCheck", String.class);
-        Book book1 = httpClient.get("book/" + response.getBody().get(0).getId(), Book.class);
-        Book book2 = httpClient.get("book/" + response.getBody().get(1).getId(), Book.class);
-        if (book1.getContentSize() > book2.getContentSize()) {
-            Assert.assertTrue(book2.isDuplicate());
-            Assert.assertTrue(!book1.isDuplicate());
-        } else {
-            Assert.assertTrue(book1.isDuplicate());
-            Assert.assertTrue(!book2.isDuplicate());
-        }
+        Book book1 = httpClient.get("book/" + response1.getBody().get(0).getId(), Book.class);
+        Book book2 = httpClient.get("book/" + response2.getBody().get(0).getId(), Book.class);
+        Assert.assertTrue(book1.isDuplicate());
+        Assert.assertTrue(!book2.isDuplicate());
     }
 
     public Tuple<String, InputStream> t(String _1, InputStream _2) {
