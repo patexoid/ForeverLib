@@ -20,7 +20,7 @@ public class OPDSEntryImpl implements OPDSEntry {
     private final Res title;
     private final List<OPDSContent> content;
     private final List<OPDSLink> links;
-    private List<OPDSAuthor> authors;
+    private final List<OPDSAuthor> authors;
 
     public OPDSEntryImpl(String id, Date updated, Res title, List<OPDSContent> content, List<OPDSLink> links, List<OPDSAuthor> authors) {
         this.id = id;
@@ -54,12 +54,10 @@ public class OPDSEntryImpl implements OPDSEntry {
     }
 
     public OPDSEntryImpl(String id, Date updated, Res title, String content, OPDSLink link) {
-        this.id = id;
-        this.updated = updated;
-        this.title = title;
-        this.content = Collections.singletonList(new OPDSContent(content));
-        this.links = Collections.singletonList(link);
-        authors = Collections.emptyList();
+        this(id, updated, title,
+                Collections.singletonList(new OPDSContent(content)),
+                Collections.singletonList(link),
+                Collections.emptyList());
     }
 
     public OPDSEntryImpl(String id, Res title, OPDSLink link) {
