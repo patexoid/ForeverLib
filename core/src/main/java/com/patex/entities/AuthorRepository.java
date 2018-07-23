@@ -22,7 +22,7 @@ public interface AuthorRepository extends CrudRepository<Author, Long> {
     Optional<Author> findFirstByNameIgnoreCase(String name);
 
     @Query(value = "SELECT " +
-            "  upper(substring(a.name, 0, :prefixLength)) AS id, " +
+            "  substring(a.name, 0, :prefixLength) AS id, " +
             "  count(*)                            AS result " +
             "FROM Author a WHERE name LIKE :prefix% GROUP BY id ORDER BY id",nativeQuery = true)
     List<AggrResult> getAuthorsCount(@Param("prefixLength")int length, @Param("prefix") String name);
