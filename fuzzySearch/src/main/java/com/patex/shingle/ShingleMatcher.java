@@ -9,6 +9,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -55,7 +56,26 @@ class ShingleMatcher<T, ID> {
         return isSimilar(firstS, secondS);
     }
 
-    private boolean isSimilar(Shingler first, Shingler second) {
+    private Boolean isSimilar(Shingler first, Shingler second) {
+        return matcher(first, second, (bigger, smaller) -> {
+            if (((float) smaller.size()) / ((float) bigger.size()) < 0.7f) {
+                return false;
+            }
+            int notmatch = smaller.size() / 5;
+            for (byte[] shingleHash : smaller) {
+                if (!bigger.contains(shingleHash)) {
+                    notmatch--;
+                    if (notmatch < 0) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        });
+
+    }
+
+    private <RESULT> RESULT matcher(Shingler first, Shingler second, BiFunction<Shingler, Shingler, RESULT> func){
         Shingler bigger, smaller;
         if (first.size() > second.size()) {
             bigger = first;
@@ -64,20 +84,10 @@ class ShingleMatcher<T, ID> {
             smaller = first;
             bigger = second;
         }
-        if (((float) smaller.size()) / ((float) bigger.size()) < 0.7f) {
-            return false;
-        }
-        int notmatch = smaller.size() / 5;
-        for (byte[] shingleHash : smaller) {
-            if (!bigger.contains(shingleHash)) {
-                notmatch--;
-                if (notmatch < 0) {
-                    return false;
-                }
-            }
-        }
-        return true;
+        return func.apply(bigger, smaller);
     }
+
+
 
     private Shingler getShingler(T t) {
         ID id = idFunc.apply(t);
