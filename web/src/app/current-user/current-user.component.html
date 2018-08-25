@@ -1,0 +1,14 @@
+<div class="usertop" *ngIf="user">
+  <div *ngIf="loggedIn">
+    <label class="username">
+      {{user.username}}
+    </label>
+    <button (click)="logout()">Logout</button>
+  </div>
+  <div *ngIf="!loggedIn">
+    <input [(ngModel)]="user.username" placeholder="Login">
+    <input [(ngModel)]="user.password" placeholder="Password" type="password">
+    <button (click)="login()">Login</button>
+  </div>
+</div>
+

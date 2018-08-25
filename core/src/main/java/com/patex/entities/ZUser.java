@@ -1,5 +1,6 @@
 package com.patex.entities;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.annotations.Fetch;
@@ -18,6 +19,8 @@ import javax.persistence.Table;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "users")
@@ -26,6 +29,7 @@ public class ZUser implements UserDetails, CredentialsContainer {
     @Id
     private String username;
 
+    @JsonIgnore
     private boolean enabled;
 
     @Column(nullable = false)
@@ -34,6 +38,7 @@ public class ZUser implements UserDetails, CredentialsContainer {
 
     @OneToMany(fetch = FetchType.EAGER, cascade = {CascadeType.ALL}, mappedBy = "user")
     @Fetch(value = FetchMode.SUBSELECT)
+    @JsonIgnore
     private List<ZUserAuthority> authorities = new ArrayList<>();
 
     @OneToOne(fetch = FetchType.EAGER, cascade = {CascadeType.ALL}, mappedBy = "user")
@@ -107,6 +112,11 @@ public class ZUser implements UserDetails, CredentialsContainer {
 
     public void setUserConfig(ZUserConfig userConfig) {
         this.userConfig = userConfig;
+    }
+
+    @JsonGetter
+    public Set<String> getPermissions(){
+        return authorities.stream().map(ZUserAuthority::getAuthority).collect(Collectors.toSet());
     }
 
 }
