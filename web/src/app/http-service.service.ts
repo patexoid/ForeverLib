@@ -8,12 +8,12 @@ import {CookieService} from "./cookie.service";
 export class HttpService {
 
   url = 'http://localhost:8080';
-  private COOKIE_NAME="basic_cookie";
+  private COOKIE_NAME = "basic_cookie";
 
   basic: string;
 
   constructor(private http: HttpClient, private cookie: CookieService) {
-    this.basic=this.cookie.getCookie(this.COOKIE_NAME);
+    this.basic = this.cookie.getCookie(this.COOKIE_NAME);
   }
 
   get(uri: string): Promise<any> {
@@ -23,8 +23,19 @@ export class HttpService {
   }
 
   post(uri: string, object: any): Promise<any> {
-    const headers = this.getHeaders();
-    headers.append('content-type', 'application/json');
+    let headers = this.getHeaders();
+    headers = headers.append('content-type', 'application/json');
+    return this.http.post(this.getFullUrl(uri), JSON.stringify(object), {
+      headers: headers,
+    }).toPromise()
+      .then(response => response)
+      .catch(HttpService.handleError);
+  }
+
+  postNoAuth(uri: string, object: any): Promise<any> {
+    let headers = this.getHeaders();
+    headers = headers.delete(this.AUTHORIZATIN_HEADER);
+    headers = headers.append('content-type', 'application/json');
     return this.http.post(this.getFullUrl(uri), JSON.stringify(object), {
       headers: headers,
     }).toPromise()
@@ -51,17 +62,19 @@ export class HttpService {
     return Promise.reject(error.message || error);
   }
 
+  private AUTHORIZATIN_HEADER = 'Authorization';
+
   private getHeaders(): HttpHeaders {
     let headers = new HttpHeaders();
     if (this.basic != null) {
-      headers = headers.append('Authorization', 'Basic ' + this.basic);
+      headers = headers.append(this.AUTHORIZATIN_HEADER, 'Basic ' + this.basic);
     }
     return headers
   }
 
   login(username: string, password: string) {
     this.basic = btoa(username + ':' + password);
-    this.cookie.setCookie(this.COOKIE_NAME, this.basic,1)//TODO is it secure? of course not
+    this.cookie.setCookie(this.COOKIE_NAME, this.basic, 1)//TODO is it secure? of course not
   }
 
   uploadFiles(uri: string, files: Array<File>) {

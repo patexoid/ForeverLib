@@ -12,12 +12,17 @@ export class CurrentUserComponent implements OnInit {
   constructor(private userService: UserService) {
   }
 
-  user: User;
+  username: string;
+  password: string;
   loggedIn: boolean;
 
   private currentUser(user: User) {
-    this.user = user;
     this.loggedIn = user.permissions.indexOf('ROLE_USER') != -1;
+    if (this.loggedIn) {
+      this.username = user.username
+    } else {
+      this.username = null;
+    }
   }
 
   ngOnInit() {
@@ -25,7 +30,8 @@ export class CurrentUserComponent implements OnInit {
   }
 
   login() {
-    this.userService.login(this.user);
+    this.userService.login(this.username, this.password);
+    this.password = null;
     this.ngOnInit()
   }
 
@@ -34,4 +40,8 @@ export class CurrentUserComponent implements OnInit {
     this.ngOnInit()
   }
 
+  signup(){
+    this.userService.signup(this.username, this.password).then(() => this.ngOnInit());
+    this.password = null;
+  }
 }

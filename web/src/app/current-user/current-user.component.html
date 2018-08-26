@@ -1,14 +1,44 @@
-<div class="usertop" *ngIf="user">
+<div class="usertop" >
   <div *ngIf="loggedIn">
     <label class="username">
-      {{user.username}}
+      {{username}}
     </label>
     <button (click)="logout()">Logout</button>
   </div>
   <div *ngIf="!loggedIn">
-    <input [(ngModel)]="user.username" placeholder="Login">
-    <input [(ngModel)]="user.password" placeholder="Password" type="password">
+    <input [(ngModel)]="username" placeholder="Login">
+    <input [(ngModel)]="password" placeholder="Password" type="password">
     <button (click)="login()">Login</button>
+    <button onclick="document.getElementById('idSignup').style.display='block'">Sign Up</button>
   </div>
+  <div id="idSignup" class="modal">
+    <span onclick="document.getElementById('idSignup').style.display='none'" class="close" title="Close Modal">&times;</span>
+    <div class="modal-content">
+      <div class="container">
+        <h1>Sign Up</h1>
+        <p>Please fill in this form to create an account.</p>
+        <hr>
+        <input class="signUpInput"  [(ngModel)]="username" placeholder="Enter username" required>
+        <input class="signUpInput"  [(ngModel)]="password" placeholder="Enter Password" type="password" required>
+
+        <div class="clearfix">
+          <button type="button" onclick="document.getElementById('idSignup').style.display='none'" class="cancelbtn">Cancel</button>
+          <button (click)="signup()" onclick="document.getElementById('idSignup').style.display='none'" class="signupbtn">Sign Up</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Get the modal
+    var modal = document.getElementById('idSignup');
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+      if (event.target === modal) {
+        modal.style.display = "none";
+      }
+    }
+  </script>
 </div>
 

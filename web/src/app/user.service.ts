@@ -10,7 +10,6 @@ export class UserService implements OnInit {
   constructor(private http: HttpService) {
   }
 
-  private user: User;
   private _userPromise = this.getCurrentUser();
 
   ngOnInit() {
@@ -18,7 +17,7 @@ export class UserService implements OnInit {
   }
 
   private getCurrentUser(): Promise<User> {
-    return this.http.get('user/current').then(obj => obj as User).then(value => this.user = value)
+    return this.http.get('user/current').then(obj => obj as User);
   }
 
   get userPromise(): Promise<User> {
@@ -32,9 +31,22 @@ export class UserService implements OnInit {
   //   this.http.postForm("user/updatePassword", urlSearchParams)
   // }
 
-  login(user: User) {
-    this.http.login(user.username, user.password);
+  login(username: string, password: string) {
+    this.http.login(username, password);
     this.ngOnInit()
+  }
+
+  signup(username: string, password: string): Promise<User> {
+    let user = new User();
+    user.username = username;
+    user.password = password;
+
+    return this.http.postNoAuth('user/create', user).then(obj => this.loginU(obj, user));
+  }
+
+  private loginU(newUser: User, user: User): User {
+    this.login(user.username, user.password);
+    return newUser;
   }
 
   logout() {
