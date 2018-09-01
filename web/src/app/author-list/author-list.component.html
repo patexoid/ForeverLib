@@ -1,0 +1,11 @@
+<div class="author-list">
+  <input class="filter" type="text" [(ngModel)]="filter" (ngModelChange)="refreshListFilter()" placeholder="Filter"/>
+  <ul class="authors-ul">
+    <li *ngFor="let author of authors">
+      <a href="#" (click)="onSelect(author)">{{author.name}}</a>
+    </li>
+  </ul>
+  <input name="page-number" class="filter" type="number" size="3" [attr.max]="pageCount"
+         [(ngModel)]="pageNumber" (ngModelChange)="refreshList()">/{{pageCount}}/>
+
+</div>

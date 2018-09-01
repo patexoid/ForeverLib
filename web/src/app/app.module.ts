@@ -8,12 +8,16 @@ import { SettingsComponent } from './settings/settings.component';
 import { AppRoutingModule } from './app-routing.module';
 import { HttpClientModule }    from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { AuthorListComponent } from './author-list/author-list.component';
+import { BookUploadComponent } from './book-upload/book-upload.component';
 @NgModule({
   declarations: [
     AppComponent,
     CurrentUserComponent,
     AuthorsComponent,
-    SettingsComponent
+    SettingsComponent,
+    AuthorListComponent,
+    BookUploadComponent
   ],
   imports: [
     BrowserModule,

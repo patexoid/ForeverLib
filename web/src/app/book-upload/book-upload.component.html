@@ -1,0 +1,6 @@
+<div>
+  <form>
+    <input class="upload-button" type="button"  value="Upload books..." (click)="fileupload.click()"/>
+    <input #fileupload type="file" hidden name="book" multiple (change)="fileChangeEvent($event)" accept=".fb2, .fb2.zip"/>
+  </form>
+</div>
