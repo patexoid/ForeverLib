@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {HttpService} from "./http-service.service";
 import {Author} from "./author";
 import {Page} from "./page";
@@ -19,8 +19,6 @@ export class AuthorService {
   }
 
   getAuthor(id: number): Promise<Author> {
-    return this.http.get(this.url + '/' + id)
-      .then(obj =>
-        obj as Author);
+    return this.http.get(this.url + '/' + id).then(obj => obj as Author);
   }
 }

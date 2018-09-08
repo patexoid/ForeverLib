@@ -1,0 +1,25 @@
+
+.sequence a {
+  color: black; /* Black text color */
+  display: block; /* Make the links appear below each other */
+  padding: 6px; /* Add some padding */
+  text-decoration: none; /* Remove underline from links */
+  width: 100%;
+}
+
+.sequence a.book {
+  padding: 6px 6px 6px 15px;
+}
+
+.book {
+  background-color: #eee; /* Grey background color */
+}
+
+a:hover {
+  background-color: #ccc; /* Dark grey background on mouse-over */
+}
+
+.sequence a.sequenceName {
+  background-color: #4CAF50; /* Add a green color to the "active/current" link */
+  color: white;
+}

@@ -1,14 +1,27 @@
 .author-list {
   width: 15%;
+  float: left;
+}
+
+.author {
+  width: 85%;
+  float: left;
 
 }
+
+.author-row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
 .filter {
   /*background-image: url('/css/searchicon.png'); !* Add a search icon to input *!*/
-  background-position: 10px 12px; /* Position the search icon */
-  background-repeat: no-repeat; /* Do not repeat the icon image */
+  /*background-position: 10px 12px; !* Position the search icon *!*/
+  /*background-repeat: no-repeat; !* Do not repeat the icon image *!*/
   width: 100%; /* Full-width */
   font-size: 16px; /* Increase font-size */
-  padding: 12px 20px 12px 40px; /* Add some padding */
+  padding: 6px 0; /* Add some padding */
   border: 1px solid #ddd; /* Add a grey border */
   margin-bottom: 12px; /* Add some space below the input */
 }
@@ -24,7 +37,7 @@
   border: 1px solid #ddd; /* Add a border to all links */
   margin-top: -1px; /* Prevent double borders */
   background-color: #f6f6f6; /* Grey background color */
-  padding: 12px; /* Add some padding */
+  padding: 6px; /* Add some padding */
   text-decoration: none; /* Remove default text underline */
   font-size: 18px; /* Increase the font-size */
   color: black; /* Add a black text color */

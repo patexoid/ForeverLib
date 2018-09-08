@@ -1,0 +1,14 @@
+<div *ngIf="author" class="author">
+  <h1>{{author.name}}</h1>
+  <div>{{author.descr}}</div>
+
+
+  <div class="sequence" *ngFor="let sequence of author.sequences">
+    <a class="sequenceName"> {{sequence.name}}</a>
+    <a class="book" *ngFor="let bookSequence of sequence.bookSequences" (click)="onSelect(bookSequence.book)">
+      {{bookSequence.seqOrder}}. {{bookSequence.book.title}}</a>
+  </div>
+  <a *ngFor="let book of author.booksNoSequence" (click)="onSelect(book)">{{book.title}}</a>
+
+  <!--<lib-book  *ngIf="selectedBook" [book] = "selectedBook"> </lib-book>-->
+</div>
