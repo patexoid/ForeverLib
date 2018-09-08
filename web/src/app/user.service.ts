@@ -1,5 +1,5 @@
 import {Injectable, OnInit} from "@angular/core";
-import {User} from "./User";
+import {User} from "./user";
 import {HttpService} from "./http-service.service";
 
 @Injectable({
