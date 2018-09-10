@@ -61,9 +61,9 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>ng build --prod</id>
+                        <id>npm ng build -- --prod</id>
                         <goals>
-                            <goal>ng</goal>
+                            <goal>npm</goal>
                         </goals>
                         <phase>generate-resources</phase>
                         <configuration>
