@@ -61,7 +61,7 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>npm ng build -- --prod</id>
+                        <id>npm run ng -- build  --prod</id>
                         <goals>
                             <goal>npm</goal>
                         </goals>
