@@ -41,3 +41,7 @@ addons:
     build_command_prepend: "mvn clean"
     build_command:   "mvn compile"
     branch_pattern: coverity_scan
+
+branches:
+  except:
+  - java_11
