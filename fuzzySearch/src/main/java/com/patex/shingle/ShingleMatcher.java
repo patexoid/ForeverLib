@@ -32,16 +32,19 @@ class ShingleMatcher<T, ID> {
                 expireAfterAccess(10, TimeUnit.MINUTES).build();
         shinglerCreator = new LoadedShinglerFactory(coef, byteArraySize,
                 () -> {
-                    try {
-                        MessageDigest digest = MessageDigest.getInstance("MD5");
-                        return bytes -> {
-                            byte[] result = digest.digest(bytes);
-                            digest.reset();
-                            return result;
-                        };
-                    } catch (NoSuchAlgorithmException e) {
-                        throw new RuntimeException(e);
-                    }
+                    ThreadLocal<MessageDigest> digestTL = ThreadLocal.withInitial(() -> {
+                        try {
+                            return MessageDigest.getInstance("MD5");
+                        } catch (NoSuchAlgorithmException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                    return bytes -> {
+                        MessageDigest digest = digestTL.get();
+                        byte[] result = digest.digest(bytes);
+                        digest.reset();
+                        return result;
+                    };
                 });
     }
 
