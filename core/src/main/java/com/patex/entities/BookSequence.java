@@ -33,7 +33,7 @@ public class BookSequence {
     private Sequence sequence;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false, cascade = {CascadeType.PERSIST})
-    @JsonIgnoreProperties(value = {Book.AUTHORS_BOOKS, Book.SEQUENCES, Book.GENRES, Book.DESCR})
+    @JsonIgnoreProperties(value = {Book.AUTHORS_BOOKS, Book.SEQUENCES})
     @JsonDeserialize(using = MyDeserializer.class)
 //TODO workaround for Could not read document: No _valueDeserializer assigned
     private Book book;

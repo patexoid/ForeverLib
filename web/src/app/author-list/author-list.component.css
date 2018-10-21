@@ -3,6 +3,11 @@
   float: left;
 }
 
+.container {
+  overflow-x:scroll;
+  white-space: nowrap;
+}
+
 .author {
   width: 85%;
   float: left;
@@ -31,9 +36,14 @@
   list-style-type: none;
   padding: 0;
   margin: 0;
+
 }
 
-.authors-ul li a {
+ul.authors-ul li a.selected {
+  background-color: #7f7f7f;
+}
+
+ul.authors-ul li a {
   border: 1px solid #ddd; /* Add a border to all links */
   margin-top: -1px; /* Prevent double borders */
   background-color: #f6f6f6; /* Grey background color */

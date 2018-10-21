@@ -5,10 +5,17 @@
 
   <div class="sequence" *ngFor="let sequence of author.sequences">
     <a class="sequenceName"> {{sequence.name}}</a>
-    <a class="book" *ngFor="let bookSequence of sequence.bookSequences" (click)="onSelect(bookSequence.book)">
+    <a class="book" [class.selected]="bookSequence.book == selectedBook"
+       *ngFor="let bookSequence of sequence.bookSequences"
+       (click)="onSelect(bookSequence.book)">
       {{bookSequence.seqOrder}}. {{bookSequence.book.title}}</a>
   </div>
-  <a *ngFor="let book of author.booksNoSequence" (click)="onSelect(book)">{{book.title}}</a>
+  <div class="sequence">
+    <a class="sequenceName">Книги вне серий</a>
+    <a class="book" [class.selected]="authorBook.book == selectedBook"
+       *ngFor="let authorBook of author.booksNoSequence"
+       (click)="onSelect(authorBook.book)">{{authorBook.book.title}} </a>
+  </div>
 
-  <!--<lib-book  *ngIf="selectedBook" [book] = "selectedBook"> </lib-book>-->
+  <app-book *ngIf="selectedBook" [book]="selectedBook"></app-book>
 </div>

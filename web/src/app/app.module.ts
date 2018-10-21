@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthorListComponent } from './author-list/author-list.component';
 import { BookUploadComponent } from './book-upload/book-upload.component';
 import { AuthorComponent } from './author/author.component';
+import { BookComponent } from './book/book.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -17,7 +18,8 @@ import { AuthorComponent } from './author/author.component';
     SettingsComponent,
     AuthorListComponent,
     BookUploadComponent,
-    AuthorComponent
+    AuthorComponent,
+    BookComponent
   ],
   imports: [
     BrowserModule,

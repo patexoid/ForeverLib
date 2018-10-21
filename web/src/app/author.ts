@@ -1,5 +1,6 @@
 import {Sequence} from "./sequence";
 import {Book} from "./book";
+import {AuthorBook} from "./author-book";
 
 export class Author {
 
@@ -8,6 +9,6 @@ export class Author {
   descr: string;
 
   sequences: Array<Sequence>;
-  booksNoSequence: Array<Book>;
+  booksNoSequence: Array<AuthorBook>;
 
 }

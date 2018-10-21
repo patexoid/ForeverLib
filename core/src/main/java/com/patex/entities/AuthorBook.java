@@ -25,7 +25,7 @@ public class AuthorBook {
     private Author author;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST}, optional = false)
-    @JsonIgnoreProperties({Book.AUTHORS_BOOKS, Book.SEQUENCES, Book.GENRES, Book.DESCR})
+    @JsonIgnoreProperties({Book.AUTHORS_BOOKS, Book.SEQUENCES})
     private Book book;
 
     public AuthorBook() {

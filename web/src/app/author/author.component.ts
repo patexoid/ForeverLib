@@ -22,7 +22,7 @@ export class AuthorComponent implements OnInit, Resolve<Author> {
 
 
   ngOnInit(): void {
-    this.getHero();
+    this.getAuthor();
   }
 
 
@@ -30,7 +30,7 @@ export class AuthorComponent implements OnInit, Resolve<Author> {
     return null;
   }
 
-  getHero(): void {
+  getAuthor(): void {
     const id = +this.route.snapshot.paramMap.get('id');
     this.route.paramMap.subscribe(params => {
       let id = params.get('id');
@@ -50,7 +50,8 @@ export class AuthorComponent implements OnInit, Resolve<Author> {
   }
 
   onSelect(book: Book): void {
-
+    this.selectedBook = book;
+    console.error(this.selectedBook)
   }
 
 

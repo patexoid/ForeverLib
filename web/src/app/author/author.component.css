@@ -11,6 +11,10 @@
   padding: 6px 6px 6px 15px;
 }
 
+.selected {
+  background: #7f7f7f;
+}
+
 .book {
   background-color: #eee; /* Grey background color */
 }
