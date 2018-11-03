@@ -17,7 +17,7 @@
                 </activeByDefault>
             </activation>
             <properties>
-                <nmpArgument>run build</nmpArgument>
+                <nmpArgument>run prod</nmpArgument>
             </properties>
 
         </profile>
@@ -61,7 +61,7 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>npm run ng -- build  --prod</id>
+                        <id>npm prod</id>
                         <goals>
                             <goal>npm</goal>
                         </goals>
