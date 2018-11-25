@@ -1,11 +1,6 @@
 package com.patex.entities;
 
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 
 /**
  * Created by Alexey on 07.05.2017.
@@ -17,6 +12,7 @@ public class SavedBook {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private int failedDownloadCount;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     private ExtLibrary extLibrary;
@@ -54,5 +50,21 @@ public class SavedBook {
 
     public void setExtId(String extId) {
         this.extId = extId;
+    }
+
+    public int getFailedDownloadCount() {
+        return failedDownloadCount;
+    }
+
+    public void setFailedDownloadCount(int failedDownloadCount) {
+        this.failedDownloadCount = failedDownloadCount;
+    }
+
+    public void failed() {
+        failedDownloadCount++;
+    }
+
+    public void success() {
+        failedDownloadCount = 0;
     }
 }

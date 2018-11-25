@@ -10,6 +10,7 @@ import com.patex.entities.ZUser;
 import com.patex.messaging.MessengerService;
 import com.patex.opds.OPDSEntryBuilder;
 import com.patex.opds.converters.OPDSEntry;
+import com.patex.service.TransactionService;
 import com.patex.utils.ExecutorCreator;
 import com.patex.utils.Res;
 import org.junit.Before;
@@ -48,17 +49,59 @@ public class ExtLibDownloadServiceTest {
         MessengerService messengerService = mock(MessengerService.class);
         ExecutorCreator executorCreator = mock(ExecutorCreator.class);
         when(executorCreator.createExecutor(any(), any())).thenReturn(MoreExecutors.newDirectExecutorService());
+        TransactionService transactionService = new TransactionService();
         downloadService = new
-                ExtLibDownloadService(connection, scopeRunner, savedBookRepo, messengerService, executorCreator);
+                ExtLibDownloadService(connection, scopeRunner, savedBookRepo, messengerService, executorCreator,
+                transactionService);
     }
 
     @Test
-    public void testDownloadBook() {
+    public void testDownloadBookSuccess() {
         Book book = new Book();
         when(connection.downloadBook(uri, type, user)).thenReturn(book);
 
-        Book downloadedBook = downloadService.downloadBook(new ExtLibrary(), uri, type, user);
+        ExtLibrary library = new ExtLibrary();
+        Book downloadedBook = downloadService.downloadBook(library, uri, type, user);
         assertEquals(book, downloadedBook);
+        SavedBook savedBook = new SavedBook(library, uri);
+        savedBook.success();
+        verify(savedBookRepo).save(refEq(savedBook,"id"));
+    }
+
+    @Test
+    public void testDownloadBookFailed() {
+        when(connection.downloadBook(uri, type, user)).thenThrow(new LibException());
+        ExtLibrary library = new ExtLibrary();
+        try {
+            downloadService.downloadBook(library, uri, type, user);
+        } catch (LibException e) {
+            SavedBook savedBook = new SavedBook(library, uri);
+            savedBook.failed();
+            verify(savedBookRepo).save(refEq(savedBook,"id"));
+            return;
+        }
+        fail();
+    }
+
+    @Test
+    public void testDownloadBookFailedTwice() {
+        ExtLibrary library = new ExtLibrary();
+        SavedBook initialSavedBook = new SavedBook(library, uri);
+        initialSavedBook.failed();
+
+        when(connection.downloadBook(uri, type, user)).thenThrow(new LibException());
+        when(savedBookRepo.findSavedBooksByExtLibraryAndExtId(library, uri)).thenReturn(Optional.of(initialSavedBook));
+
+        try {
+            downloadService.downloadBook(library, uri, type, user);
+        } catch (LibException e) {
+            SavedBook savedBook = new SavedBook(library, uri);
+            savedBook.failed();
+            savedBook.failed();
+            verify(savedBookRepo).save(refEq(savedBook,"id"));
+            return;
+        }
+        fail();
     }
 
     @Test
@@ -183,7 +226,8 @@ public class ExtLibDownloadServiceTest {
         OPDSEntry entry2 = new OPDSEntryBuilder("id2", new Date(), bookTitle2).
                 addLink(ExtLibService.REQUEST_P_NAME + "=" + bookUri2, "application/" + type).build();
 
-        when(savedBookRepo.findSavedBooksByExtLibraryAndExtIdIn(library, Arrays.asList(bookUri1, bookUri2))).
+        when(savedBookRepo.findSavedBooksByExtLibraryAndFailedDownloadCountLessThanAndExtIdIn(eq(library),anyInt(),
+                eq(Arrays.asList(bookUri1, bookUri2)))).
                 thenReturn(Collections.singletonList(new SavedBook(library, bookUri2)));
         when(connection.getFeed(this.uri)).
                 thenReturn(new ExtLibFeed("title", Arrays.asList(entry1, entry2), Collections.emptyList()));
