@@ -34,10 +34,35 @@ export class AuthorComponent implements OnInit, Resolve<Author> {
     const id = +this.route.snapshot.paramMap.get('id');
     this.route.paramMap.subscribe(params => {
       let id = params.get('id');
+      let bookId = params.get('bookId');
       if (id != null) {
-        this.authorsService.getAuthor(parseInt(id)).then(a => this.author = a)
+        this.authorsService.getAuthor(parseInt(id)).then(a => {
+          this.author = a;
+          if (bookId != null) {
+            this.selectBook(parseInt(bookId))
+          }
+        })
       }
     });
+  }
+
+  private selectBook(id: number) {
+    if (this.selectedBook == null || this.selectedBook.id == id) {
+      return;
+    }
+    let authorBook = this.author.booksNoSequence.find(value => value.book.id == id);
+    let book;
+    if (authorBook != null) {
+      book = authorBook.book
+    } else {
+      for (let sequence of this.author.sequences) {
+        let bookSequence = sequence.bookSequences.find(value => value.book.id == id);
+        if (bookSequence != null) {
+          book = bookSequence.book;
+        }
+      }
+    }
+    this.selectedBook = book;
   }
 
   @Input()
@@ -51,7 +76,6 @@ export class AuthorComponent implements OnInit, Resolve<Author> {
 
   onSelect(book: Book): void {
     this.selectedBook = book;
-    console.error(this.selectedBook)
   }
 
 

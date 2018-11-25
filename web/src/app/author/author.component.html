@@ -5,14 +5,16 @@
 
   <div class="sequence" *ngFor="let sequence of author.sequences">
     <a class="sequenceName"> {{sequence.name}}</a>
-    <a class="book" [class.selected]="bookSequence.book == selectedBook"
+    <a routerLink="/authors/{{author.id}}/book/{{bookSequence.book.id}}"
+      class="book" [class.selected]="bookSequence.book == selectedBook"
        *ngFor="let bookSequence of sequence.bookSequences"
        (click)="onSelect(bookSequence.book)">
       {{bookSequence.seqOrder}}. {{bookSequence.book.title}}</a>
   </div>
   <div class="sequence">
     <a class="sequenceName">Книги вне серий</a>
-    <a class="book" [class.selected]="authorBook.book == selectedBook"
+    <a routerLink="/authors/{{author.id}}/{{authorBook.book.id}}"
+      class="book" [class.selected]="authorBook.book == selectedBook"
        *ngFor="let authorBook of author.booksNoSequence"
        (click)="onSelect(authorBook.book)">{{authorBook.book.title}} </a>
   </div>

@@ -8,12 +8,15 @@ const routes: Routes = [
   {path: '', redirectTo: '/authors', pathMatch: 'full'},
   {
     path: 'authors', component: AuthorListComponent,
-    children:[
+    children: [
       {
-        path:':id',
-        component:AuthorComponent
+        path: ':id',
+        component: AuthorComponent
+      }, {
+        path: ':id/book/:bookId',
+        component: AuthorComponent
       }
-      ]
+    ]
   },
   {path: 'settings', component: SettingsComponent},
 ];
