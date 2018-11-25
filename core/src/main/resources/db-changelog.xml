@@ -27,4 +27,9 @@
     <changeSet id="2" author="patex">
         <dropColumn tableName="BOOK" columnName="SIZE"/>
     </changeSet>
+    <changeSet id="3" author="patex">
+        <addColumn tableName="SAVED_BOOK">
+            <column name="FAILED_DOWNLOAD_COUNT" type="INTEGER" defaultValueNumeric="0"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

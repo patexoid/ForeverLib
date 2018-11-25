@@ -10,6 +10,7 @@ import com.patex.opds.OPDSContent;
 import com.patex.opds.converters.OPDSEntry;
 import com.patex.opds.converters.OPDSLink;
 import com.patex.service.BookService;
+import com.patex.service.TransactionService;
 import com.patex.utils.ExecutorCreator;
 import com.rometools.rome.feed.synd.SyndContentImpl;
 import com.rometools.rome.feed.synd.SyndEntryImpl;
@@ -255,7 +256,8 @@ public class ExtLibTest {
         return new ExtLibDownloadService(
                 connectionService,
                 new ExtLibInScopeRunner(mock(ExtLibScopeStorage.class)),
-                mock(SavedBookRepository.class), mock(MessengerService.class), executorCreator);
+                mock(SavedBookRepository.class), mock(MessengerService.class), executorCreator,
+                new TransactionService());
     }
 
     @Test

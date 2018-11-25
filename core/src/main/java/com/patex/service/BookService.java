@@ -67,7 +67,7 @@ public class BookService {
     }
 
     public synchronized Book uploadBook(String fileName, InputStream is, ZUser user) throws LibException {
-        Book result = transactionService.newTransaction(() -> {
+        Book result = transactionService.transactionRequired(() -> {
             byte[] byteArray = loadFromStream(is);
             byte[] checksum = getChecksum(byteArray);
             BookInfo bookInfo = parserService.getBookInfo(fileName, new ByteArrayInputStream(byteArray));

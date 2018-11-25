@@ -2,15 +2,12 @@ package com.patex.extlib;
 
 
 import com.patex.LibException;
-import com.patex.entities.Book;
-import com.patex.entities.ExtLibrary;
-import com.patex.entities.SavedBook;
-import com.patex.entities.SavedBookRepository;
-import com.patex.entities.ZUser;
+import com.patex.entities.*;
 import com.patex.messaging.MessengerService;
 import com.patex.opds.converters.OPDSAuthor;
 import com.patex.opds.converters.OPDSEntry;
 import com.patex.opds.converters.OPDSLink;
+import com.patex.service.TransactionService;
 import com.patex.utils.ExecutorCreator;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -45,18 +42,21 @@ public class ExtLibDownloadService {
     private final SavedBookRepository savedBookRepo;
     private final MessengerService messengerService;
     private final ExecutorService executor;
+    private final TransactionService transactionService;
 
     @Autowired
     public ExtLibDownloadService(ExtLibConnection connection,
                                  ExtLibInScopeRunner scopeRunner,
                                  SavedBookRepository savedBookRepo,
                                  MessengerService messengerService,
-                                 ExecutorCreator executorCreator) {
+                                 ExecutorCreator executorCreator,
+                                 TransactionService transactionService) {
         this.connection = connection;
         this.scopeRunner = scopeRunner;
         this.savedBookRepo = savedBookRepo;
         this.messengerService = messengerService;
         this.executor = executorCreator.createExecutor("ExtLibDownloadService", log);
+        this.transactionService = transactionService;
     }
 
     private static Optional<String> extractExtUri(String link) {
@@ -69,10 +69,21 @@ public class ExtLibDownloadService {
         return uriO.map(NameValuePair::getValue);
     }
 
-    public Book downloadBook(ExtLibrary library, String uri, String type, ZUser user) {
-        Book book = scopeRunner.runInScope(library, () -> connection.downloadBook(uri, type, user));
-        savedBookRepo.save(new SavedBook(library, uri));
-        return book;
+    public Book downloadBook(ExtLibrary library, String uri, String type, ZUser user)  throws LibException{
+        return transactionService.transactionRequired(() -> {
+            SavedBook savedInfo =
+                    savedBookRepo.findSavedBooksByExtLibraryAndExtId(library, uri).orElse(new SavedBook(library, uri));
+            try {
+                Book book = scopeRunner.runInScope(library, () -> connection.downloadBook(uri, type, user));
+                savedInfo.success();
+                savedBookRepo.save(savedInfo);
+                return book;
+            } catch (LibException e) {
+                savedInfo.failed();
+                savedBookRepo.save(savedInfo);
+                throw e;
+            }
+        });
     }
 
     public ExtLibFeed getExtLibFeed(ExtLibrary library, String uri) throws LibException {
@@ -132,8 +143,9 @@ public class ExtLibDownloadService {
                 flatMap(Collection::stream).map(OPDSLink::getHref).
                 map(ExtLibDownloadService::extractExtUri).filter(Optional::isPresent).map(Optional::get).
                 distinct().collect(Collectors.toList());
-        return savedBookRepo.findSavedBooksByExtLibraryAndExtIdIn(library, links).
-                stream().map(SavedBook::getExtId).distinct().collect(Collectors.toSet());
+        return savedBookRepo.
+                findSavedBooksByExtLibraryAndFailedDownloadCountLessThanAndExtIdIn(library, 5, links).
+                stream().map(SavedBook::getExtId).collect(Collectors.toSet());
     }
 
     private DownloadAllResult download(OPDSEntry entry, ZUser user, ExtLibrary library) {
