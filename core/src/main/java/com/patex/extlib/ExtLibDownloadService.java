@@ -17,19 +17,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static com.patex.extlib.ExtLibService.FB2_TYPE;
-import static com.patex.extlib.ExtLibService.REL_NEXT;
-import static com.patex.extlib.ExtLibService.REQUEST_P_NAME;
+import static com.patex.extlib.ExtLibService.*;
 
 @Service
 public class ExtLibDownloadService {
@@ -69,10 +63,11 @@ public class ExtLibDownloadService {
         return uriO.map(NameValuePair::getValue);
     }
 
-    public Book downloadBook(ExtLibrary library, String uri, String type, ZUser user)  throws LibException{
+    public Book downloadBook(ExtLibrary library, String uri, String type, ZUser user) throws LibException {
         return transactionService.transactionRequired(() -> {
             SavedBook savedInfo =
-                    savedBookRepo.findSavedBooksByExtLibraryAndExtId(library, uri).orElse(new SavedBook(library, uri));
+                    savedBookRepo.findSavedBooksByExtLibraryAndExtId(library, uri).
+                            orElseGet(() -> new SavedBook(library, uri));
             try {
                 Book book = scopeRunner.runInScope(library, () -> connection.downloadBook(uri, type, user));
                 savedInfo.success();
