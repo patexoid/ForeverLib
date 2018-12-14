@@ -8,7 +8,6 @@ import com.patex.utils.Res;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -20,11 +19,7 @@ public class ExpandedAuthorEntries {
 
     public ExpandedAuthorEntries(Author author) {
         List<OPDSEntry> entries0 = new ArrayList<>();
-        Date date = author.getBooks().stream().map(AuthorBook::getBook).
-                filter(Book::isPrimary).
-                map(Book::getCreated).
-                max(Instant::compareTo).
-                map(Date::from).orElse(null);
+        Instant date = author.getUpdated();
         entries0.add(new OPDSEntryImpl("author" + author.getId(), date,
                 new Res("opds.author.books", author.getName()), author.getDescr()));
 
@@ -41,23 +36,22 @@ public class ExpandedAuthorEntries {
                 map(BookSequence::getBook).
                 filter(Book::isPrimary).
                 count();
-        Date sequencesDate = sequences.stream().
+        Instant sequencesDate = sequences.stream().
                 map(Sequence::getBookSequences).
                 flatMap(List::stream).
                 map(BookSequence::getBook).
                 filter(Book::isPrimary).
-                map(Book::getCreated).max(Instant::compareTo).map(Date::from).orElse(null);
+                map(Book::getCreated).max(Instant::compareTo).orElse(Instant.now());
         entries0.add(new OPDSEntryImpl("authorsequences" + author.getId(), sequencesDate,
                 new Res("opds.author.books.sequence", author.getName()),
                 new ODPSContentRes("opds.book.and.series.count", sequences.size(), sequnceBookCount),
                 LinkUtils.makeURL("opds", "authorsequences", author.getId())));
 
-        Date sequencelessDate = author.getBooksNoSequence().stream().
+        Instant sequencelessDate = author.getBooksNoSequence().stream().
                 map(AuthorBook::getBook).
                 filter(Book::isPrimary).
                 map(Book::getCreated).
-                max(Instant::compareTo).
-                map(Date::from).orElse(null);
+                max(Instant::compareTo).orElse(Instant.now());
         int booknoSequenceCount = (int) author.getBooksNoSequence().stream().
                 map(AuthorBook::getBook).
                 filter(Book::isPrimary).

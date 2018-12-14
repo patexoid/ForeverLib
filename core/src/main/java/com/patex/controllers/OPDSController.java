@@ -1,20 +1,10 @@
 package com.patex.controllers;
 
-import com.patex.entities.AggrResult;
-import com.patex.entities.Author;
-import com.patex.entities.AuthorBook;
-import com.patex.entities.BookSequence;
-import com.patex.entities.Sequence;
+import com.patex.entities.*;
 import com.patex.opds.OPDSMetadata;
 import com.patex.opds.OpdsView;
 import com.patex.opds.RootProvider;
-import com.patex.opds.converters.AuthorEntry;
-import com.patex.opds.converters.BookEntry;
-import com.patex.opds.converters.ExpandedAuthorEntries;
-import com.patex.opds.converters.OPDSEntry;
-import com.patex.opds.converters.OPDSEntryImpl;
-import com.patex.opds.converters.OPDSLink;
-import com.patex.opds.converters.SequenceEntry;
+import com.patex.opds.converters.*;
 import com.patex.opds.latest.LatestURIComponent;
 import com.patex.opds.latest.SaveLatest;
 import com.patex.service.AuthorService;
@@ -29,9 +19,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletResponse;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -57,7 +47,6 @@ public class OPDSController {
     private final LatestURIComponent latestURIComponent;
 
 
-
     public OPDSController(AuthorService authorService, SequenceService sequenceService,
                           LatestURIComponent latestURIComponent) {
         this.authorService = authorService;
@@ -65,7 +54,7 @@ public class OPDSController {
         this.latestURIComponent = latestURIComponent;
     }
 
-    public static <E> ModelAndView createMav(Res title, E e, Function<E, List<OPDSEntry>> func, Date updated) {
+    public static <E> ModelAndView createMav(Res title, E e, Function<E, List<OPDSEntry>> func, Instant updated) {
         ModelAndView mav = new ModelAndView();
         mav.setViewName(OpdsView.OPDS_VIEW);
         if (e != null) {
@@ -73,7 +62,7 @@ public class OPDSController {
             mav.addObject(OpdsView.ENTRIES, entries);
             if (updated == null) {
                 updated = entries.stream().map(OPDSEntry::getUpdated).filter(Objects::nonNull).
-                        max(Date::compareTo).orElse(null);
+                        max(Instant::compareTo).orElse(Instant.now());
             }
         } else {
             log.warn("empty obj:" + title);
@@ -90,7 +79,7 @@ public class OPDSController {
         return createMav(title, entries, e -> e);
     }
 
-    public static ModelAndView createMav(Res title, List<OPDSEntry> entries, Date updated) {
+    public static ModelAndView createMav(Res title, List<OPDSEntry> entries, Instant updated) {
         return createMav(title, entries, e -> e, updated);
     }
 

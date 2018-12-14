@@ -32,4 +32,17 @@
             <column name="FAILED_DOWNLOAD_COUNT" type="INTEGER" defaultValueNumeric="0"/>
         </addColumn>
     </changeSet>
+    <changeSet id="4" author="patex">
+        <addColumn tableName="AUTHOR">
+            <column name="UPDATED" type="TIMESTAMP"/>
+        </addColumn>
+        <sql>
+            UPDATE AUTHOR a
+            set UPDATED = (SELECT max(b.CREATED)
+            FROM AUTHOR_BOOK ab,
+            BOOK b
+            where ab.AUTHOR_ID = a.ID
+            AND ab.BOOK_ID = b.ID);
+        </sql>
+    </changeSet>
 </databaseChangeLog>

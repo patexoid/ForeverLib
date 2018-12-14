@@ -1,10 +1,6 @@
 package com.patex.extlib;
 
-import com.patex.entities.Book;
-import com.patex.entities.ExtLibrary;
-import com.patex.entities.ExtLibraryRepository;
-import com.patex.entities.Subscription;
-import com.patex.entities.ZUser;
+import com.patex.entities.*;
 import com.patex.opds.OPDSEntryBuilder;
 import com.patex.opds.converters.OPDSEntry;
 import com.patex.opds.converters.OPDSLink;
@@ -18,8 +14,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.time.Instant;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -82,7 +78,7 @@ public class ExtLibServiceTest {
 
         final Object[] objects = new Object[]{};
         final Res entryTitle = new Res("entryTitle", objects);
-        OPDSEntry entry = new OPDSEntryBuilder("entryId", new Date(), entryTitle)
+        OPDSEntry entry = new OPDSEntryBuilder("entryId", Instant.now(), entryTitle)
                 .addLink("linHref", OPDSLink.FB2)
                 .build();
         ExtLibFeed rawFeed = new ExtLibFeed("title",
@@ -155,7 +151,7 @@ public class ExtLibServiceTest {
 
         final Object[] objects = new Object[]{};
         final Res entryTitle = new Res("entryTitle", objects);
-        OPDSEntry entry = new OPDSEntryBuilder("dd", new Date(), entryTitle).build();
+        OPDSEntry entry = new OPDSEntryBuilder("dd", Instant.now(), entryTitle).build();
         ExtLibFeed rawFeed = new ExtLibFeed("title",
                 Collections.singletonList(entry), Collections.emptyList());
         when(downloadService.getExtLibFeed(library, entryUrl)).thenReturn(rawFeed);

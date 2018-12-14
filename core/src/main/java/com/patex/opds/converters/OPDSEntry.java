@@ -3,7 +3,7 @@ package com.patex.opds.converters;
 import com.patex.opds.OPDSContent;
 import com.patex.utils.Res;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -13,7 +13,7 @@ public interface OPDSEntry {
 
     String getId();
 
-    Date getUpdated();
+    Instant getUpdated();
 
     Res getTitle();
 

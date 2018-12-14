@@ -7,7 +7,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 import static com.patex.opds.converters.EntryVerifier.*;
@@ -25,6 +24,7 @@ public class ExpandedAuthorEntryTest {
         author.setName(name);
         String descr = "descr";
         author.setDescr(descr);
+        author.setUpdated(Instant.now());
         List<OPDSEntry> entries = new ExpandedAuthorEntries(author).getEntries();
         assertThat(entries, hasSize(4));
         entries.forEach(entry -> verifyId("" + id, entry));
@@ -43,12 +43,12 @@ public class ExpandedAuthorEntryTest {
         Instant createdLater = Instant.now();
         book2.setCreated(createdLater);
         author.setBooks(Arrays.asList(new AuthorBook(author, book1), new AuthorBook(author, book2)));
-
+        Instant authorUpdated = Instant.now();
+        author.setUpdated(authorUpdated);
         List<OPDSEntry> entries = new ExpandedAuthorEntries(author).getEntries();
-        verifyDate(Date.from(createdLater), entries.get(0));
-        verifyDate(Date.from(createdLater), entries.get(1));
-        verifyDate(null, entries.get(2));
-        verifyDate(Date.from(createdLater), entries.get(3));
+        verifyDate(authorUpdated, entries.get(0));
+        verifyDate(authorUpdated, entries.get(1));
+        verifyDate(createdLater, entries.get(3));
         verifyNumberInContent(author.getBooks().size(), entries.get(1));
         verifyNumberInContent(0, entries.get(2));
         verifyNumberInContent(author.getBooks().size(), entries.get(3));
@@ -64,18 +64,20 @@ public class ExpandedAuthorEntryTest {
         Book book2 = new Book();
         BookSequence bookSequence2 = new BookSequence(2, sequence, book2);
         book2.setSequences(Collections.singletonList(bookSequence2));
-        sequence.setBookSequences(Arrays.asList(bookSequence1,bookSequence2));
+        sequence.setBookSequences(Arrays.asList(bookSequence1, bookSequence2));
         Instant created = Instant.now().minus(30, ChronoUnit.DAYS);
         book1.setCreated(created);
         Instant createdLater = Instant.now();
         book2.setCreated(createdLater);
         author.setBooks(Arrays.asList(new AuthorBook(author, book1), new AuthorBook(author, book2)));
 
+        Instant authorUpdated = Instant.now();
+        author.setUpdated(authorUpdated);
+
         List<OPDSEntry> entries = new ExpandedAuthorEntries(author).getEntries();
-        verifyDate(Date.from(createdLater), entries.get(0));
-        verifyDate(Date.from(createdLater), entries.get(1));
-        verifyDate(Date.from(createdLater), entries.get(2));
-        verifyDate(null, entries.get(3));
+        verifyDate(authorUpdated, entries.get(0));
+        verifyDate(authorUpdated, entries.get(1));
+        verifyDate(authorUpdated, entries.get(2));
         verifyNumberInContent(author.getBooks().size(), entries.get(1));
         verifyNumberInContent(author.getBooks().size(), entries.get(2));
         verifyNumberInContent(0, entries.get(3));

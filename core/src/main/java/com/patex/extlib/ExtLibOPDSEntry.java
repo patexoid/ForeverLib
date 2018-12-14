@@ -8,7 +8,7 @@ import com.patex.opds.converters.OPDSLink;
 import com.patex.utils.Res;
 import com.rometools.rome.feed.synd.SyndEntry;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -22,7 +22,7 @@ public class ExtLibOPDSEntry implements OPDSEntry {
     private final String id;
     private final Res title;
     private final List<OPDSLink> links;
-    private final Date updated;
+    private final Instant updated;
     private final List<OPDSContent> content;
     private final List<OPDSAuthor> authors;
 
@@ -31,7 +31,7 @@ public class ExtLibOPDSEntry implements OPDSEntry {
         title = new Res("first.value", syndEntry.getTitle());
         links = syndEntry.getLinks().stream().
                 map(LinkMapper::mapLink).filter(Objects::nonNull).collect(Collectors.toList());
-        updated = syndEntry.getUpdatedDate();
+        updated = syndEntry.getUpdatedDate() == null ? null : syndEntry.getUpdatedDate().toInstant();
         content = syndEntry.getContents().stream().
                 map(sc -> new OPDSContent(sc.getType(), sc.getValue(), null)).collect(Collectors.toList());
 
@@ -51,7 +51,7 @@ public class ExtLibOPDSEntry implements OPDSEntry {
     }
 
     @Override
-    public Date getUpdated() {
+    public Instant getUpdated() {
         return updated;
     }
 

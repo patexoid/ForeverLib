@@ -1,29 +1,25 @@
 package com.patex.opds;
 
-import com.patex.opds.converters.OPDSAuthor;
-import com.patex.opds.converters.OPDSAuthorImpl;
-import com.patex.opds.converters.OPDSEntry;
-import com.patex.opds.converters.OPDSEntryImpl;
-import com.patex.opds.converters.OPDSLink;
+import com.patex.opds.converters.*;
 import com.patex.utils.Res;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 public class OPDSEntryBuilder {
 
 
     private final String id;
-    private final Date updated;
+    private final Instant updated;
     private final Res title;
     private List<OPDSContent> content = new ArrayList<>();
     private List<OPDSLink> links = new ArrayList<>();
     private List<OPDSAuthor> authors = new ArrayList<>();
 
 
-    public OPDSEntryBuilder(String id, Date updated, Res title) {
+    public OPDSEntryBuilder(String id, Instant updated, Res title) {
         this.id = id;
         this.updated = updated;
         this.title = title;

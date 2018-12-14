@@ -5,7 +5,6 @@ import com.patex.entities.FileResource;
 import org.junit.Test;
 
 import java.time.Instant;
-import java.util.Date;
 
 public class BookEntryTest {
 
@@ -49,6 +48,6 @@ public class BookEntryTest {
         Instant created = Instant.now();
         book.setCreated(created);
         BookEntry entry = new BookEntry(book);
-        EntryVerifier.verifyDate(Date.from(created), entry);
+        EntryVerifier.verifyDate(created, entry);
     }
 }

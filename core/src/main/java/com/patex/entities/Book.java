@@ -6,16 +6,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.patex.utils.BooleanJson;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
+import javax.persistence.*;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -217,5 +208,11 @@ public class Book {
 
     public void setCover(FileResource cover) {
         this.cover = cover;
+    }
+
+    @PostUpdate
+    public void postUpdate() {
+        getAuthorBooks().stream().map(AuthorBook::getAuthor).forEach(author -> author.setUpdated(getCreated()));
+//        getSequences().stream().map(BookSequence::getSequence).forEach(sequence -> sequence.setUpdated(getCreated()));
     }
 }
