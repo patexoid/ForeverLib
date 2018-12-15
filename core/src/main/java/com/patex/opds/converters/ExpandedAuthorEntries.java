@@ -41,7 +41,7 @@ public class ExpandedAuthorEntries {
                 flatMap(List::stream).
                 map(BookSequence::getBook).
                 filter(Book::isPrimary).
-                map(Book::getCreated).max(Instant::compareTo).orElse(Instant.now());
+                map(Book::getCreated).max(Instant::compareTo).orElse(date);
         entries0.add(new OPDSEntryImpl("authorsequences" + author.getId(), sequencesDate,
                 new Res("opds.author.books.sequence", author.getName()),
                 new ODPSContentRes("opds.book.and.series.count", sequences.size(), sequnceBookCount),
@@ -51,7 +51,7 @@ public class ExpandedAuthorEntries {
                 map(AuthorBook::getBook).
                 filter(Book::isPrimary).
                 map(Book::getCreated).
-                max(Instant::compareTo).orElse(Instant.now());
+                max(Instant::compareTo).orElse(date);
         int booknoSequenceCount = (int) author.getBooksNoSequence().stream().
                 map(AuthorBook::getBook).
                 filter(Book::isPrimary).
