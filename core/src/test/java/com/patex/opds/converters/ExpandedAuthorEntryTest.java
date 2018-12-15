@@ -77,7 +77,6 @@ public class ExpandedAuthorEntryTest {
         List<OPDSEntry> entries = new ExpandedAuthorEntries(author).getEntries();
         verifyDate(authorUpdated, entries.get(0));
         verifyDate(authorUpdated, entries.get(1));
-        verifyDate(authorUpdated, entries.get(2));
         verifyNumberInContent(author.getBooks().size(), entries.get(1));
         verifyNumberInContent(author.getBooks().size(), entries.get(2));
         verifyNumberInContent(0, entries.get(3));
