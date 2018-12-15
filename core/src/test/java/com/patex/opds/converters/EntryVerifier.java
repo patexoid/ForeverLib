@@ -4,8 +4,8 @@ import com.patex.opds.ODPSContentRes;
 import com.patex.opds.OPDSContent;
 import org.hamcrest.Matchers;
 
+import java.time.Instant;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -36,7 +36,7 @@ public class EntryVerifier {
         }
     }
 
-    static void verifyDate(Date expectedDate, OPDSEntry entry) {
+    static void verifyDate(Instant expectedDate, OPDSEntry entry) {
         assertEquals(expectedDate, entry.getUpdated());
     }
 
@@ -45,6 +45,6 @@ public class EntryVerifier {
                 map(c -> (ODPSContentRes) c).
                 flatMap(c -> Stream.of(c.getObjs())).
                 anyMatch(number::equals);
-        assertTrue(number+"is not in content",containsINContent);
+        assertTrue(number + "is not in content", containsINContent);
     }
 }

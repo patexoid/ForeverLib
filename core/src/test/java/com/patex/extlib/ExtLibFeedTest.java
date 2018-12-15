@@ -6,8 +6,8 @@ import com.patex.opds.converters.OPDSLink;
 import com.patex.utils.Res;
 import org.junit.Test;
 
+import java.time.Instant;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -25,7 +25,7 @@ public class ExtLibFeedTest {
 
         final Object[] objects = new Object[]{};
         final Res bookTitle1 = new Res("bookTitle1", objects);
-        OPDSEntry entry1 = new OPDSEntryBuilder("id1", new Date(), bookTitle1).
+        OPDSEntry entry1 = new OPDSEntryBuilder("id1", Instant.now(), bookTitle1).
                 addLink(entryLinkHref, "application/typ").build();
         OPDSLink link = new OPDSLink(linkHref, "typ");
         ExtLibFeed feed = new ExtLibFeed("title", Collections.singletonList(entry1),

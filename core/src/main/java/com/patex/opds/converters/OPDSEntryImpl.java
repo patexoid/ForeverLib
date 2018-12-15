@@ -3,9 +3,9 @@ package com.patex.opds.converters;
 import com.patex.opds.OPDSContent;
 import com.patex.utils.Res;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -16,13 +16,13 @@ import java.util.stream.Collectors;
 public class OPDSEntryImpl implements OPDSEntry {
 
     private final String id;
-    private final Date updated;
+    private final Instant updated;
     private final Res title;
     private final List<OPDSContent> content;
     private final List<OPDSLink> links;
     private final List<OPDSAuthor> authors;
 
-    public OPDSEntryImpl(String id, Date updated, Res title, List<OPDSContent> content, List<OPDSLink> links, List<OPDSAuthor> authors) {
+    public OPDSEntryImpl(String id, Instant updated, Res title, List<OPDSContent> content, List<OPDSLink> links, List<OPDSAuthor> authors) {
         this.id = id;
         this.updated = updated;
         this.title = title;
@@ -31,7 +31,7 @@ public class OPDSEntryImpl implements OPDSEntry {
         this.authors = authors;
     }
 
-    public OPDSEntryImpl(String id, Date updated, Res title, List<String> content, String... links) {
+    public OPDSEntryImpl(String id, Instant updated, Res title, List<String> content, String... links) {
         this.id = id;
         this.updated = updated;
         this.title = title;
@@ -45,7 +45,7 @@ public class OPDSEntryImpl implements OPDSEntry {
         authors = Collections.emptyList();
     }
 
-    public OPDSEntryImpl(String id, Date updated, Res title, String content, String... links) {
+    public OPDSEntryImpl(String id, Instant updated, Res title, String content, String... links) {
         this(id, updated, title, Collections.singletonList(content), links);
     }
 
@@ -53,7 +53,7 @@ public class OPDSEntryImpl implements OPDSEntry {
         this(id, null, title, Collections.singletonList(content), links);
     }
 
-    public OPDSEntryImpl(String id, Date updated, Res title, String content, OPDSLink link) {
+    public OPDSEntryImpl(String id, Instant updated, Res title, String content, OPDSLink link) {
         this(id, updated, title,
                 Collections.singletonList(new OPDSContent(content)),
                 Collections.singletonList(link),
@@ -64,7 +64,7 @@ public class OPDSEntryImpl implements OPDSEntry {
         this(id, null, title, (String) null, link);
     }
 
-    public OPDSEntryImpl(String id, Date updated, Res title, OPDSContent content, String... links) {
+    public OPDSEntryImpl(String id, Instant updated, Res title, OPDSContent content, String... links) {
         this.id = id;
         this.updated = updated;
         this.title = title;
@@ -78,7 +78,7 @@ public class OPDSEntryImpl implements OPDSEntry {
         authors = Collections.emptyList();
     }
 
-    public OPDSEntryImpl(String id, Date updated, Res title, OPDSContent content, OPDSLink link) {
+    public OPDSEntryImpl(String id, Instant updated, Res title, OPDSContent content, OPDSLink link) {
         this.id = id;
         this.updated = updated;
         this.title = title;
@@ -97,7 +97,7 @@ public class OPDSEntryImpl implements OPDSEntry {
     }
 
     @Override
-    public Date getUpdated() {
+    public Instant getUpdated() {
         return updated;
     }
 

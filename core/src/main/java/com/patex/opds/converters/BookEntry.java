@@ -6,10 +6,10 @@ import com.patex.opds.OPDSContent;
 import com.patex.utils.LinkUtils;
 import com.patex.utils.Res;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 public class BookEntry implements OPDSEntry {
 
     private final String id;
-    private final Date updated;
+    private final Instant updated;
     private final Res title;
     private final List<OPDSAuthor> authors;
     private final List<OPDSContent> content;
@@ -27,7 +27,7 @@ public class BookEntry implements OPDSEntry {
 
     public BookEntry(Book book) {
         id = "book:" + book.getId();
-        updated = Date.from(book.getCreated());
+        updated = book.getCreated();
         title = new Res("first.value", book.getTitle());
         authors = book.getAuthorBooks().stream().map(AuthorBook::getAuthor).map(OPDSAuthorImpl::new).
                 collect(Collectors.toList());
@@ -63,7 +63,7 @@ public class BookEntry implements OPDSEntry {
     }
 
     @Override
-    public Date getUpdated() {
+    public Instant getUpdated() {
         return updated;
     }
 

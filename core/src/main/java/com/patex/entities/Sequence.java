@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import javax.persistence.*;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +27,9 @@ public class Sequence {
     @Column(nullable = false)
     @JsonProperty
     private String name;
+
+    @Transient
+    private Instant updated;
 
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, fetch = FetchType.EAGER, mappedBy = "sequence")
     @JsonProperty(BOOK_SEQUENCES)
@@ -66,5 +70,13 @@ public class Sequence {
 
     public void setBookSequences(List<BookSequence> bookSequences) {
         this.bookSequences = bookSequences;
+    }
+
+    public Instant getUpdated() {
+        return updated;
+    }
+
+    public void setUpdated(Instant updated) {
+        this.updated = updated;
     }
 }

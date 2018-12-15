@@ -2,11 +2,7 @@ package com.patex.extlib;
 
 import com.google.common.util.concurrent.MoreExecutors;
 import com.patex.LibException;
-import com.patex.entities.Book;
-import com.patex.entities.ExtLibrary;
-import com.patex.entities.SavedBook;
-import com.patex.entities.SavedBookRepository;
-import com.patex.entities.ZUser;
+import com.patex.entities.*;
 import com.patex.messaging.MessengerService;
 import com.patex.opds.OPDSEntryBuilder;
 import com.patex.opds.converters.OPDSEntry;
@@ -16,9 +12,9 @@ import com.patex.utils.Res;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -65,7 +61,7 @@ public class ExtLibDownloadServiceTest {
         assertEquals(book, downloadedBook);
         SavedBook savedBook = new SavedBook(library, uri);
         savedBook.success();
-        verify(savedBookRepo).save(refEq(savedBook,"id"));
+        verify(savedBookRepo).save(refEq(savedBook, "id"));
     }
 
     @Test
@@ -77,7 +73,7 @@ public class ExtLibDownloadServiceTest {
         } catch (LibException e) {
             SavedBook savedBook = new SavedBook(library, uri);
             savedBook.failed();
-            verify(savedBookRepo).save(refEq(savedBook,"id"));
+            verify(savedBookRepo).save(refEq(savedBook, "id"));
             return;
         }
         fail();
@@ -98,7 +94,7 @@ public class ExtLibDownloadServiceTest {
             SavedBook savedBook = new SavedBook(library, uri);
             savedBook.failed();
             savedBook.failed();
-            verify(savedBookRepo).save(refEq(savedBook,"id"));
+            verify(savedBookRepo).save(refEq(savedBook, "id"));
             return;
         }
         fail();
@@ -123,7 +119,7 @@ public class ExtLibDownloadServiceTest {
         when(connection.downloadBook(bookUri1, type, user)).thenReturn(book1);
         final Object[] objects = new Object[]{};
         final Res bookTitle1 = new Res("bookTitle1", objects);
-        OPDSEntry entry1 = new OPDSEntryBuilder("id1", new Date(), bookTitle1).
+        OPDSEntry entry1 = new OPDSEntryBuilder("id1", Instant.now(), bookTitle1).
                 addLink(ExtLibService.REQUEST_P_NAME + "=" + bookUri1, "application/" + type).build();
 
         Book book2 = new Book();
@@ -131,7 +127,7 @@ public class ExtLibDownloadServiceTest {
         when(connection.downloadBook(bookUri2, type, user)).thenReturn(book2);
         final Object[] objects1 = new Object[]{};
         final Res bookTitle2 = new Res("bookTitle2", objects1);
-        OPDSEntry entry2 = new OPDSEntryBuilder("id2", new Date(), bookTitle2).
+        OPDSEntry entry2 = new OPDSEntryBuilder("id2", Instant.now(), bookTitle2).
                 addLink(ExtLibService.REQUEST_P_NAME + "=" + bookUri2, "application/" + type).build();
 
         when(connection.getFeed(this.uri)).
@@ -152,7 +148,7 @@ public class ExtLibDownloadServiceTest {
         String authorName = "authorName";
         final Object[] objects = new Object[]{};
         final Res res = new Res(BOOK_TITLE, objects);
-        OPDSEntry entry = new OPDSEntryBuilder("id", new Date(), res).
+        OPDSEntry entry = new OPDSEntryBuilder("id", Instant.now(), res).
                 addAuthor(authorName, "uri").
                 build();
         when(connection.getFeed(this.uri)).
@@ -170,7 +166,7 @@ public class ExtLibDownloadServiceTest {
     @Test
     public void testDownloadAllWithEmptyEntry() throws Exception {
         Res title = new Res(BOOK_TITLE);
-        OPDSEntry entry = new OPDSEntryBuilder("id", new Date(), title).
+        OPDSEntry entry = new OPDSEntryBuilder("id", Instant.now(), title).
                 build();
         when(connection.getFeed(this.uri)).
                 thenReturn(new ExtLibFeed("title", Collections.singletonList(entry), Collections.emptyList()));
@@ -189,7 +185,7 @@ public class ExtLibDownloadServiceTest {
         Res title = new Res(BOOK_TITLE);
         String bookUri = "bookUri";
         String type = "fb2";
-        OPDSEntry entry = new OPDSEntryBuilder("id", new Date(), title).
+        OPDSEntry entry = new OPDSEntryBuilder("id", Instant.now(), title).
                 addLink(ExtLibService.REQUEST_P_NAME + "=" + bookUri, "application/" + type).
                 build();
         when(connection.downloadBook(bookUri, type, user)).thenThrow(new LibException());
@@ -215,7 +211,7 @@ public class ExtLibDownloadServiceTest {
         when(connection.downloadBook(bookUri1, type, user)).thenReturn(book1);
         final Object[] objects = new Object[]{};
         final Res bookTitle1 = new Res("bookTitle1", objects);
-        OPDSEntry entry1 = new OPDSEntryBuilder("id1", new Date(), bookTitle1).
+        OPDSEntry entry1 = new OPDSEntryBuilder("id1", Instant.now(), bookTitle1).
                 addLink(ExtLibService.REQUEST_P_NAME + "=" + bookUri1, "application/" + type).build();
 
         Book book2 = new Book();
@@ -223,10 +219,10 @@ public class ExtLibDownloadServiceTest {
         when(connection.downloadBook(bookUri2, type, user)).thenReturn(book2);
         final Object[] objects1 = new Object[]{};
         final Res bookTitle2 = new Res("bookTitle2", objects1);
-        OPDSEntry entry2 = new OPDSEntryBuilder("id2", new Date(), bookTitle2).
+        OPDSEntry entry2 = new OPDSEntryBuilder("id2", Instant.now(), bookTitle2).
                 addLink(ExtLibService.REQUEST_P_NAME + "=" + bookUri2, "application/" + type).build();
 
-        when(savedBookRepo.findSavedBooksByExtLibraryAndFailedDownloadCountLessThanAndExtIdIn(eq(library),anyInt(),
+        when(savedBookRepo.findSavedBooksByExtLibraryAndFailedDownloadCountLessThanAndExtIdIn(eq(library), anyInt(),
                 eq(Arrays.asList(bookUri1, bookUri2)))).
                 thenReturn(Collections.singletonList(new SavedBook(library, bookUri2)));
         when(connection.getFeed(this.uri)).

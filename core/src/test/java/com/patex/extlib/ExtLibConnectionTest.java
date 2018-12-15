@@ -145,7 +145,7 @@ public class ExtLibConnectionTest {
         OPDSContent actualContent = actualEntry.getContent().get(0);
         assertEquals("Link href ", CONTENT_VALUE, actualContent.getValue());
 
-        assertEquals(UPDATED_DATE, actualEntry.getUpdated());
+        assertEquals(UPDATED_DATE.toInstant(), actualEntry.getUpdated());
 
         assertThat(actualEntry.getAuthors(), hasSize(1));
         OPDSAuthor author = actualEntry.getAuthors().get(0);

@@ -1,15 +1,12 @@
 package com.patex.opds.converters;
 
 import com.patex.entities.Author;
-import com.patex.entities.AuthorBook;
-import com.patex.entities.Book;
 import com.patex.opds.OPDSContent;
 import com.patex.utils.LinkUtils;
 import com.patex.utils.Res;
 
 import java.time.Instant;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -21,7 +18,7 @@ public class AuthorEntry implements OPDSEntry {
     private final Res title;
     private final List<OPDSContent> content;
     private final List<OPDSLink> links;
-    private final Date date;
+    private final Instant date;
 
 
     public AuthorEntry(Author author) {
@@ -35,8 +32,7 @@ public class AuthorEntry implements OPDSEntry {
         links = Collections.singletonList(
                 new OPDSLink(LinkUtils.makeURL("opds", "author", author.getId()), OPDSLink.OPDS_CATALOG)
         );
-        date = author.getBooks().stream().map(AuthorBook::getBook).
-                map(Book::getCreated).max(Instant::compareTo).map(Date::from).orElse(null);
+        date = author.getUpdated();
 
     }
 
@@ -61,7 +57,7 @@ public class AuthorEntry implements OPDSEntry {
     }
 
     @Override
-    public Date getUpdated() {
+    public Instant getUpdated() {
         return date;
     }
 

@@ -9,7 +9,6 @@ import com.patex.utils.Res;
 
 import java.time.Instant;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -21,7 +20,7 @@ public class SequenceEntry implements OPDSEntry {
     private final Res title;
     private final List<OPDSContent> content;
     private final List<OPDSLink> links;
-    private final Date date;
+    private final Instant date;
 
     public SequenceEntry(Sequence sequence) {
 
@@ -32,9 +31,8 @@ public class SequenceEntry implements OPDSEntry {
         links = Collections.singletonList(
                 new OPDSLink(LinkUtils.makeURL("/opds/sequence", sequence.getId()), OPDSLink.OPDS_CATALOG));
         date = sequence.getBookSequences().stream().map(BookSequence::getBook).map(Book::getCreated).
-                max(Instant::compareTo).map(Date::from).orElse(null);
+                max(Instant::compareTo).orElse(Instant.now());
     }
-
 
     @Override
     public String getId() {
@@ -57,7 +55,7 @@ public class SequenceEntry implements OPDSEntry {
     }
 
     @Override
-    public Date getUpdated() {
+    public Instant getUpdated() {
         return date;
     }
 

@@ -10,7 +10,6 @@ import com.patex.service.ZUserService;
 import com.patex.utils.Res;
 import com.rometools.rome.feed.atom.*;
 import com.rometools.rome.feed.synd.SyndPerson;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.view.feed.AbstractAtomFeedView;
 
@@ -27,14 +26,14 @@ public class OpdsView extends AbstractAtomFeedView {
     public static final String ENTRIES = "Entries";
     public static final String OPDS_METADATA = "opdsMetaData";
 
-    @Autowired
-    private ZUserService userService;
+    private final ZUserService userService;
 
-    @Autowired
-    private Resources res;
+    private final Resources res;
 
-    public OpdsView() {
+    public OpdsView(ZUserService userService, Resources res) {
         setFeedType("opds.atom_1.0");
+        this.userService = userService;
+        this.res = res;
     }
 
     @SuppressWarnings("unchecked")
@@ -58,7 +57,7 @@ public class OpdsView extends AbstractAtomFeedView {
         Entry entry = new Entry();
         entry.setId(String.valueOf(opdsEntryI.getId()));
         if (opdsEntryI.getUpdated() != null) {
-            entry.setUpdated(opdsEntryI.getUpdated());
+            entry.setUpdated(Date.from(opdsEntryI.getUpdated()));
         }
         Res title = opdsEntryI.getTitle();
 
@@ -126,7 +125,7 @@ public class OpdsView extends AbstractAtomFeedView {
         Res title = metadata.getTitle();
         feed.setTitle(title.getMessage(res, locale));
         feed.setId(metadata.getId());
-        feed.setUpdated(metadata.getUpdated());
+        feed.setUpdated(Date.from(metadata.getUpdated()));
         feed.setIcon("favicon.ico");
         feed.setEncoding("utf-8");
         //noinspection unchecked

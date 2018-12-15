@@ -4,15 +4,8 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.patex.utils.StreamU;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,7 +31,15 @@ public class Author {
     @Lob
     private String descr;
 
+    private Instant updated;
+
     public Author() {
+    }
+
+    public Author(Long id, String name, Instant updated) {
+        this.id = id;
+        this.name = name;
+        this.updated = updated;
     }
 
     public Author(Long id, String name) {
@@ -102,4 +103,11 @@ public class Author {
     }
 
 
+    public Instant getUpdated() {
+        return updated;
+    }
+
+    public void setUpdated(Instant updated) {
+        this.updated = updated;
+    }
 }
