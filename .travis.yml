@@ -1,6 +1,6 @@
 language: java
 install: true
-script: mvn -P prod verify
+script: mvn -P prod,web verify
 jdk:
   - openjdk11
 cache:

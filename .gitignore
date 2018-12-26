@@ -68,3 +68,4 @@ web/app/*.js
 /web/dev/
 /web/node/
 /core/telegram.config
+/web2

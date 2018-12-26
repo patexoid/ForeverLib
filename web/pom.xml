@@ -17,7 +17,7 @@
                 </activeByDefault>
             </activation>
             <properties>
-                <nmpArgument>run build</nmpArgument>
+                <nmpArgument>run prod</nmpArgument>
             </properties>
 
         </profile>
@@ -37,8 +37,8 @@
                 <artifactId>frontend-maven-plugin</artifactId>
                 <version>1.5</version>
                 <configuration>
-                    <nodeVersion>v6.9.4</nodeVersion>
-                    <npmVersion>3.10.10</npmVersion>
+                    <nodeVersion>v10.0.0</nodeVersion>
+                    <npmVersion>6.5.0</npmVersion>
                 </configuration>
                 <executions>
                     <execution>
@@ -61,7 +61,7 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>npm run build</id>
+                        <id>npm prod</id>
                         <goals>
                             <goal>npm</goal>
                         </goals>

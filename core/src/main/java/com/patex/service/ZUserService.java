@@ -62,8 +62,7 @@ public class ZUserService implements UserDetailsService {
 
     @Override
     public ZUser loadUserByUsername(String username) throws UsernameNotFoundException {
-        ZUser user = userRepo.findById(username).get();
-        return user == null ? anonim : user;
+        return userRepo.findById(username).orElse(anonim);
     }
 
     public ZUser getCurrentUser() {
