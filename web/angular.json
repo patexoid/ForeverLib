@@ -35,7 +35,7 @@
                   "with": "src/environments/environment.prod.ts"
                 }
               ],
-              "outputPath": "./target/classes/static",
+              "outputPath": "./target/classes/web",
               "optimization": true,
               "outputHashing": "all",
               "sourceMap": false,

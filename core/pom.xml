@@ -248,8 +248,8 @@
                                         <artifactItem>
                                             <groupId>com.patex.zombielib2</groupId>
                                             <artifactId>web</artifactId>
-                                            <outputDirectory>${project.build.directory}/classes/static/web</outputDirectory>
-                                            <includes>static/*.*</includes>
+                                            <outputDirectory>${project.build.directory}/classes/static</outputDirectory>
+                                            <includes>web/*.*</includes>
                                         </artifactItem>
                                     </artifactItems>
                                 </configuration>
