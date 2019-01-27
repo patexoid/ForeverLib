@@ -76,6 +76,7 @@ public class ExtLibDownloadService {
             } catch (LibException e) {
                 savedInfo.failed();
                 transactionService.newTransaction(() -> savedBookRepo.save(savedInfo));
+
                 throw e;
             }
         });
@@ -139,8 +140,9 @@ public class ExtLibDownloadService {
                 map(ExtLibDownloadService::extractExtUri).filter(Optional::isPresent).map(Optional::get).
                 distinct().collect(Collectors.toList());
         return savedBookRepo.
-                findSavedBooksByExtLibraryAndFailedDownloadCountLessThanAndExtIdIn(library, 5, links).
-                stream().map(SavedBook::getExtId).collect(Collectors.toSet());
+                findSavedBooksByExtLibraryAndExtIdIn(library, links).stream().
+                filter(sb -> sb.getFailedDownloadCount() > 5 || sb.getFailedDownloadCount() == 0).
+                map(SavedBook::getExtId).collect(Collectors.toSet());
     }
 
     private DownloadAllResult download(OPDSEntry entry, ZUser user, ExtLibrary library) {
