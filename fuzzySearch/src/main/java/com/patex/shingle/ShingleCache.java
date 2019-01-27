@@ -39,7 +39,7 @@ class ShingleCache<T> {
             int size = readInt(is);
             int byteArrayLength = readInt(is);
             ByteHashSet set = ByteSetFactory.createByteSet(size, byteArrayLength);
-            byte buffer[] = new byte[128 * 128];
+            byte[] buffer = new byte[128 * 128];
             int bufferReadOff = 0;
             while (true) {
                 int readBytesCount = is.read(buffer, bufferReadOff, buffer.length - bufferReadOff);

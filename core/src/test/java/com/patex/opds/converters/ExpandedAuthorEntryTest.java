@@ -1,6 +1,7 @@
 package com.patex.opds.converters;
 
 import com.patex.entities.*;
+import com.patex.opds.OPDSEntry;
 import org.junit.Test;
 
 import java.time.Instant;
@@ -9,7 +10,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static com.patex.opds.converters.EntryVerifier.*;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.assertThat;
 
@@ -27,9 +27,9 @@ public class ExpandedAuthorEntryTest {
         author.setUpdated(Instant.now());
         List<OPDSEntry> entries = new ExpandedAuthorEntries(author).getEntries();
         assertThat(entries, hasSize(4));
-        entries.forEach(entry -> verifyId("" + id, entry));
-        entries.forEach(entry -> verifyName(name, entry));
-        verifyContent(entries.get(0), descr);
+        entries.forEach(entry -> EntryVerifier.verifyId("" + id, entry));
+        entries.forEach(entry -> EntryVerifier.verifyName(name, entry));
+        EntryVerifier.verifyContent(entries.get(0), descr);
     }
 
 
@@ -46,12 +46,12 @@ public class ExpandedAuthorEntryTest {
         Instant authorUpdated = Instant.now();
         author.setUpdated(authorUpdated);
         List<OPDSEntry> entries = new ExpandedAuthorEntries(author).getEntries();
-        verifyDate(authorUpdated, entries.get(0));
-        verifyDate(authorUpdated, entries.get(1));
-        verifyDate(createdLater, entries.get(3));
-        verifyNumberInContent(author.getBooks().size(), entries.get(1));
-        verifyNumberInContent(0, entries.get(2));
-        verifyNumberInContent(author.getBooks().size(), entries.get(3));
+        EntryVerifier.verifyDate(authorUpdated, entries.get(0));
+        EntryVerifier.verifyDate(authorUpdated, entries.get(1));
+        EntryVerifier.verifyDate(createdLater, entries.get(3));
+        EntryVerifier.verifyNumberInContent(author.getBooks().size(), entries.get(1));
+        EntryVerifier.verifyNumberInContent(0, entries.get(2));
+        EntryVerifier.verifyNumberInContent(author.getBooks().size(), entries.get(3));
     }
 
     @Test
@@ -75,10 +75,10 @@ public class ExpandedAuthorEntryTest {
         author.setUpdated(authorUpdated);
 
         List<OPDSEntry> entries = new ExpandedAuthorEntries(author).getEntries();
-        verifyDate(authorUpdated, entries.get(0));
-        verifyDate(authorUpdated, entries.get(1));
-        verifyNumberInContent(author.getBooks().size(), entries.get(1));
-        verifyNumberInContent(author.getBooks().size(), entries.get(2));
-        verifyNumberInContent(0, entries.get(3));
+        EntryVerifier.verifyDate(authorUpdated, entries.get(0));
+        EntryVerifier.verifyDate(authorUpdated, entries.get(1));
+        EntryVerifier.verifyNumberInContent(author.getBooks().size(), entries.get(1));
+        EntryVerifier.verifyNumberInContent(author.getBooks().size(), entries.get(2));
+        EntryVerifier.verifyNumberInContent(0, entries.get(3));
     }
 }

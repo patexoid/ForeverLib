@@ -69,19 +69,18 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
-                <version>3.8</version>
+                <version>3.11.0</version>
                 <configuration>
                     <sourceEncoding>utf-8</sourceEncoding>
                     <minimumTokens>100</minimumTokens>
                     <printFailingErrors>true</printFailingErrors>
-                    <targetJdk>1.8</targetJdk>
                     <failOnViolation>true</failOnViolation>
                     <includeTests>true</includeTests>
                 </configuration>
                 <executions>
                     <execution>
                         <id>pmd</id>
-                        <phase>validate</phase>
+                        <phase>test</phase>
                         <goals>
                             <goal>check</goal>
                         </goals>

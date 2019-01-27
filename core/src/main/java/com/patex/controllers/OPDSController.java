@@ -1,10 +1,11 @@
 package com.patex.controllers;
 
 import com.patex.entities.*;
-import com.patex.opds.OPDSMetadata;
-import com.patex.opds.OpdsView;
-import com.patex.opds.RootProvider;
-import com.patex.opds.converters.*;
+import com.patex.opds.*;
+import com.patex.opds.converters.AuthorEntry;
+import com.patex.opds.converters.BookEntry;
+import com.patex.opds.converters.ExpandedAuthorEntries;
+import com.patex.opds.converters.SequenceEntry;
 import com.patex.opds.latest.LatestURIComponent;
 import com.patex.opds.latest.SaveLatest;
 import com.patex.service.AuthorService;
@@ -24,13 +25,12 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletResponse;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static com.patex.utils.LinkUtils.makeURL;
 
 
 @Controller
@@ -61,7 +61,7 @@ public class OPDSController {
         this.latestURIComponent = latestURIComponent;
     }
 
-    public static <E> ModelAndView createMav(Res title, E e, Function<E, List<OPDSEntry>> func, Instant updated) {
+    private static <E> ModelAndView createMav(Res title, E e, Function<E, List<OPDSEntry>> func, Instant updated) {
         ModelAndView mav = new ModelAndView();
         mav.setViewName(OpdsView.OPDS_VIEW);
         if (e != null) {
@@ -78,11 +78,11 @@ public class OPDSController {
         return mav;
     }
 
-    public static <E> ModelAndView createMav(Res title, E e, Function<E, List<OPDSEntry>> func) {
+    private static <E> ModelAndView createMav(Res title, E e, Function<E, List<OPDSEntry>> func) {
         return createMav(title, e, func, null);
     }
 
-    public static ModelAndView createMav(Res title, List<OPDSEntry> entries) {
+    static ModelAndView createMav(Res title, List<OPDSEntry> entries) {
         return createMav(title, entries, e -> e);
     }
 
@@ -97,16 +97,20 @@ public class OPDSController {
     @RequestMapping(produces = APPLICATION_ATOM_XML)
     public ModelAndView getMain() {
         List<OPDSEntry> rootEntries = new ArrayList<>();
-        rootEntries.add(new OPDSEntryImpl("root:latest", new Res("opds.latest"),
-                new OPDSLink(LinkUtils.makeURL(PREFIX, "latest"), OPDSLink.OPDS_CATALOG)));
-        rootEntries.add(new OPDSEntryImpl("root:newBooks", new Res("opds.newBooks"),
-                new OPDSLink(LinkUtils.makeURL(PREFIX, "newBooks"), OPDSLink.OPDS_CATALOG)));
-
-        rootEntries.add(new OPDSEntryImpl("root:authors", new Res("opds.all.authors"),
-                new OPDSLink(LinkUtils.makeURL(PREFIX, AUTHORSINDEX), OPDSLink.OPDS_CATALOG)));
-        for (RootProvider rootProvider : rootEntriesProvider) {
-            rootEntries.addAll(rootProvider.getRoot());
-        }
+        rootEntries.add(OPDSEntry.builder("root:latest", "opds.latest").
+                addLink(makeURL(PREFIX, "latest"), OPDSLink.OPDS_CATALOG).
+                build());
+        rootEntries.add(OPDSEntry.builder("root:newBooks", "opds.newBooks").
+                addLink(makeURL(PREFIX, "newBooks"), OPDSLink.OPDS_CATALOG).
+                build());
+        rootEntries.add(OPDSEntry.builder("root:authors", "opds.all.authors").
+                addLink(makeURL(PREFIX, AUTHORSINDEX), OPDSLink.OPDS_CATALOG).
+                build());
+        rootEntries.addAll(
+                rootEntriesProvider.stream().
+                        map(RootProvider::getRoot).
+                        flatMap(Collection::stream).
+                        collect(Collectors.toList()));
         return createMav(new Res("opds.catalog"), rootEntries);
     }
 
@@ -128,9 +132,9 @@ public class OPDSController {
 
     private Stream<OPDSEntry> expandAggrResult(AggrResult aggr) {
         if (aggr.getResult() >= EXPAND_FOR_AUTHORS_COUNT) {
-            String link = LinkUtils.makeURL("opds", AUTHORSINDEX, LinkUtils.encode(aggr.getId()));
-            Res title = new Res("first.value", aggr.getId());
-            return Stream.of(new OPDSEntryImpl(aggr.getId(), title, null, link));
+            return Stream.of(OPDSEntry.builder(aggr.getId(),"first.value", aggr.getId()).
+                    addLink(makeURL("opds", AUTHORSINDEX, LinkUtils.encode(aggr.getId())))
+                    .build());
         } else {
             return authorService.findByName(aggr.getId()).stream().map(AuthorEntry::new);
         }

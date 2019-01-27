@@ -1,6 +1,6 @@
 package com.patex.extlib;
 
-import com.patex.opds.converters.OPDSLink;
+import com.patex.opds.OPDSLink;
 import com.rometools.rome.feed.synd.SyndLink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +10,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.patex.opds.converters.OPDSLink.FB2;
+import static com.patex.opds.OPDSLink.FB2;
 
 public class LinkMapper {
 

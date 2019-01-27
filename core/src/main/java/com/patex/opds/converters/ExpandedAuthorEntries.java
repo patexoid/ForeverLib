@@ -2,8 +2,8 @@ package com.patex.opds.converters;
 
 import com.patex.entities.*;
 import com.patex.opds.ODPSContentRes;
+import com.patex.opds.OPDSEntry;
 import com.patex.utils.LinkUtils;
-import com.patex.utils.Res;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -20,14 +20,17 @@ public class ExpandedAuthorEntries {
     public ExpandedAuthorEntries(Author author) {
         List<OPDSEntry> entries0 = new ArrayList<>();
         Instant date = author.getUpdated();
-        entries0.add(new OPDSEntryImpl("author" + author.getId(), date,
-                new Res("opds.author.books", author.getName()), author.getDescr()));
+        entries0.add(OPDSEntry.builder("author:" + author.getId(), "opds.author.books", author.getName()).
+                withUpdated(date).
+                addContent(author.getDescr()).
+                build());
 
         int bookCount = (int) author.getBooks().stream().map(AuthorBook::getBook).filter(Book::isPrimary).count();
-        entries0.add(new OPDSEntryImpl("author_alphabet" + author.getId(), date,
-                new Res("opds.author.books.alphabet", author.getName()),
-                new ODPSContentRes("opds.book.count", bookCount),
-                LinkUtils.makeURL("opds", "author", author.getId(), "alphabet")));
+        entries0.add(OPDSEntry.builder("author_alphabet" + author.getId(), "opds.author.books.alphabet", author.getName()).
+                withUpdated(date).
+                addContent(new ODPSContentRes("opds.book.count", bookCount)).
+                addLink(LinkUtils.makeURL("opds", "author", author.getId(), "alphabet")).
+                build());
 
         List<Sequence> sequences = author.getSequences();
 
@@ -42,10 +45,12 @@ public class ExpandedAuthorEntries {
                 map(BookSequence::getBook).
                 filter(Book::isPrimary).
                 map(Book::getCreated).max(Instant::compareTo).orElse(Instant.now());
-        entries0.add(new OPDSEntryImpl("authorsequences" + author.getId(), sequencesDate,
-                new Res("opds.author.books.sequence", author.getName()),
-                new ODPSContentRes("opds.book.and.series.count", sequences.size(), sequnceBookCount),
-                LinkUtils.makeURL("opds", "authorsequences", author.getId())));
+
+        entries0.add(OPDSEntry.builder("authorsequences" + author.getId(), "opds.author.books.sequence", author.getName()).
+                withUpdated(sequencesDate).
+                addContent(new ODPSContentRes("opds.book.and.series.count", sequences.size(), sequnceBookCount)).
+                addLink(LinkUtils.makeURL("opds", "authorsequences", author.getId())).
+                build());
 
         Instant sequencelessDate = author.getBooksNoSequence().stream().
                 map(AuthorBook::getBook).
@@ -57,10 +62,11 @@ public class ExpandedAuthorEntries {
                 filter(Book::isPrimary).
                 count();
 
-        entries0.add(new OPDSEntryImpl("authorsequenceless" + author.getId(), sequencelessDate,
-                new Res("opds.author.books.sequenceless", author.getName()),
-                new ODPSContentRes("opds.book.count", booknoSequenceCount),
-                LinkUtils.makeURL("opds", "authorsequenceless", author.getId())));
+        entries0.add(OPDSEntry.builder("authorsequenceless" + author.getId(), "opds.author.books.sequenceless", author.getName()).
+                withUpdated(sequencelessDate).
+                addContent(new ODPSContentRes("opds.book.count", booknoSequenceCount)).
+                addLink(LinkUtils.makeURL("opds", "authorsequenceless", author.getId())).
+                build());
         entries = Collections.unmodifiableList(entries0);
     }
 

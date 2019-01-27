@@ -1,6 +1,5 @@
 package com.patex.opds;
 
-import com.patex.opds.converters.*;
 import com.patex.utils.Res;
 
 import java.time.Instant;
@@ -12,17 +11,30 @@ public class OPDSEntryBuilder {
 
 
     private final String id;
-    private final Instant updated;
     private final Res title;
+    private  Instant updated;
     private List<OPDSContent> content = new ArrayList<>();
     private List<OPDSLink> links = new ArrayList<>();
     private List<OPDSAuthor> authors = new ArrayList<>();
 
 
-    public OPDSEntryBuilder(String id, Instant updated, Res title) {
+    OPDSEntryBuilder(String id, String keyTitle, Object... objs) {
+        this(id, new Res(keyTitle, objs));
+    }
+
+    OPDSEntryBuilder(String id, String keyTitle) {
+        this(id, new Res(keyTitle));
+    }
+
+    OPDSEntryBuilder(String id, Res title) {
         this.id = id;
-        this.updated = updated;
+
         this.title = title;
+    }
+
+    public OPDSEntryBuilder withUpdated(Instant updated) {
+        this.updated = updated;
+        return this;
     }
 
     public OPDSEntryBuilder addContent(OPDSContent content) {
@@ -45,6 +57,10 @@ public class OPDSEntryBuilder {
         return this;
     }
 
+    public OPDSEntryBuilder addLink(String href) {
+        this.links.add(new OPDSLink(href, OPDSLink.OPDS_CATALOG));
+        return this;
+    }
     public OPDSEntryBuilder addLink(OPDSLink link) {
         this.links.add(link);
         return this;

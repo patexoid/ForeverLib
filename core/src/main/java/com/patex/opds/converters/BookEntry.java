@@ -2,7 +2,7 @@ package com.patex.opds.converters;
 
 import com.patex.entities.AuthorBook;
 import com.patex.entities.Book;
-import com.patex.opds.OPDSContent;
+import com.patex.opds.*;
 import com.patex.utils.LinkUtils;
 import com.patex.utils.Res;
 
