@@ -18,4 +18,6 @@ public interface BookRepository extends CrudRepository<Book, Long> {
 
     Optional<Book> findFirstByTitleAndChecksum(String title, byte[] checksum);
 
+    Page<Book> findAllByOrderByCreatedDesc(Pageable pageable);
+
 }
