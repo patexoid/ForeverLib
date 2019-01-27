@@ -8,14 +8,18 @@ import com.patex.opds.converters.*;
 import com.patex.opds.latest.LatestURIComponent;
 import com.patex.opds.latest.SaveLatest;
 import com.patex.service.AuthorService;
+import com.patex.service.BookService;
 import com.patex.service.SequenceService;
 import com.patex.utils.LinkUtils;
 import com.patex.utils.Res;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletResponse;
@@ -42,14 +46,17 @@ public class OPDSController {
 
     private final AuthorService authorService;
 
+    private final BookService bookService;
+
     private final SequenceService sequenceService;
 
     private final LatestURIComponent latestURIComponent;
 
 
-    public OPDSController(AuthorService authorService, SequenceService sequenceService,
+    public OPDSController(AuthorService authorService, BookService bookService, SequenceService sequenceService,
                           LatestURIComponent latestURIComponent) {
         this.authorService = authorService;
+        this.bookService = bookService;
         this.sequenceService = sequenceService;
         this.latestURIComponent = latestURIComponent;
     }
@@ -91,7 +98,10 @@ public class OPDSController {
     public ModelAndView getMain() {
         List<OPDSEntry> rootEntries = new ArrayList<>();
         rootEntries.add(new OPDSEntryImpl("root:latest", new Res("opds.latest"),
-                new OPDSLink(LinkUtils.makeURL(PREFIX, "opds.latest"), OPDSLink.OPDS_CATALOG)));
+                new OPDSLink(LinkUtils.makeURL(PREFIX, "latest"), OPDSLink.OPDS_CATALOG)));
+        rootEntries.add(new OPDSEntryImpl("root:newBooks", new Res("opds.newBooks"),
+                new OPDSLink(LinkUtils.makeURL(PREFIX, "newBooks"), OPDSLink.OPDS_CATALOG)));
+
         rootEntries.add(new OPDSEntryImpl("root:authors", new Res("opds.all.authors"),
                 new OPDSLink(LinkUtils.makeURL(PREFIX, AUTHORSINDEX), OPDSLink.OPDS_CATALOG)));
         for (RootProvider rootProvider : rootEntriesProvider) {
@@ -189,5 +199,14 @@ public class OPDSController {
         response.setHeader("Expires", "0"); // Proxies.
         response.setHeader("Content-Type", APPLICATION_ATOM_XML);
         return latestURIComponent.getLatestForCurrentUser();
+    }
+
+    @RequestMapping(value = "newBooks")
+    public ModelAndView getNewBooks(@RequestParam(required = false, defaultValue = "0", name = "page") int page,
+                                    @RequestParam(required = false, defaultValue = "20", name = "pageSize") int pageSize) {
+        Page<Book> bookPage = bookService.getNewBooks(PageRequest.of(page, pageSize));
+
+        return createMav(new Res("opds.newBooks"), bookPage.getContent(), b -> b.stream().map(BookEntry::new).
+                collect(Collectors.toList()));
     }
 }
