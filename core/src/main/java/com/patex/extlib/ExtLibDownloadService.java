@@ -75,7 +75,7 @@ public class ExtLibDownloadService {
                 return book;
             } catch (LibException e) {
                 savedInfo.failed();
-                savedBookRepo.save(savedInfo);
+                transactionService.newTransaction(() -> savedBookRepo.save(savedInfo));
                 throw e;
             }
         });
