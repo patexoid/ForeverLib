@@ -27,6 +27,12 @@ public class SavedBook {
         this.extId = extId;
     }
 
+    public SavedBook(ExtLibrary extLibrary, String extId, int failedDownloadCount) {
+        this.failedDownloadCount = failedDownloadCount;
+        this.extLibrary = extLibrary;
+        this.extId = extId;
+    }
+
     public Long getId() {
         return id;
     }

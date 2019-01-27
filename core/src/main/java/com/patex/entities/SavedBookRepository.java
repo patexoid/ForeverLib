@@ -16,9 +16,7 @@ public interface SavedBookRepository extends CrudRepository<SavedBook, Long> {
 
     List<SavedBook> findSavedBooksByExtLibrary(ExtLibrary library);
 
-    List<SavedBook> findSavedBooksByExtLibraryAndFailedDownloadCountLessThanAndExtIdIn(ExtLibrary library,
-                                                                                       int failedCount,
-                                                                                       Collection<String> extIds);
+    List<SavedBook> findSavedBooksByExtLibraryAndExtIdIn(ExtLibrary library, Collection<String> extIds);
 
     Optional<SavedBook> findSavedBooksByExtLibraryAndExtId(ExtLibrary library, String extId);
 
