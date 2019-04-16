@@ -1,0 +1,114 @@
+
+options {
+    MULTI = true;
+    NODE_PREFIX = "";
+
+}
+
+PARSER_BEGIN(LibRequestBuilder)
+package  com.patex.lrequest;
+
+public class LibRequestBuilder {
+
+  /** Main entry point. */
+  public static void main(String args[]) {
+    System.out.println("Reading from standard input...");
+    java.io.InputStream is=new java.io.ByteArrayInputStream("OPDS:Author:page(number=2):alphabet".getBytes());
+    LibRequestBuilder t = new LibRequestBuilder(is, java.nio.charset.Charset.forName("UTF-8"));
+    try {
+          SimpleNode n = t.Request();
+          n.dump("");
+          System.out.println("Thank you.");
+        } catch (Exception e) {
+          System.out.println("Oops.");
+          System.out.println(e.getMessage());
+          e.printStackTrace();
+        }
+  }
+}
+
+PARSER_END(LibRequestBuilder)
+
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| <"//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+| <"/*" (~["*"])* "*" (~["/"] (~["*"])* "*")* "/">
+}
+
+TOKEN : /* LITERALS */
+{
+
+  < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
+|
+< VALUE: (<LETTER>|<DIGIT>)+ >
+|
+  < #LETTER: ["_","a"-"z","A"-"Z"] >
+|
+  < #DIGIT: ["0"-"9"] >
+}
+
+
+SimpleNode Request():{}{
+Area()":"Actions()
+{ return jjtThis; }
+}
+
+void Area():
+{
+   Token t;
+}
+{
+   t=<IDENTIFIER>{jjtThis.jjtSetValue(t.image);}
+}
+
+void Actions():{}{
+Action()(":"Action())*
+}
+
+void Action():{}
+{
+
+  ActionId() ("(" ParamList() ")")?
+}
+
+
+void ActionId():
+{
+   Token t;
+}
+{
+   t=<IDENTIFIER>{jjtThis.jjtSetValue(t.image);}
+}
+
+void ParamList():{}
+{
+ Param() (","Param())*
+}
+
+
+void Param():{}
+{
+ ParamId()("="ParamValue())?
+}
+
+void ParamId():
+{
+   Token t;
+}
+{
+   t=<IDENTIFIER>{jjtThis.jjtSetValue(t.image);}
+}
+
+void ParamValue():
+{
+   Token t;
+}
+{
+   t=<VALUE> {jjtThis.jjtSetValue(t.image);}
+}
+

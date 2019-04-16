@@ -16,6 +16,7 @@
         <module>localization</module>
         <module>fuzzySearch</module>
         <module>core</module>
+        <module>lrequest</module>
     </modules>
     <profiles>
         <profile>
