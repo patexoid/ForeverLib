@@ -13,7 +13,7 @@ public class LibRequestBuilder {
   /** Main entry point. */
   public static void main(String args[]) {
     System.out.println("Reading from standard input...");
-    java.io.InputStream is=new java.io.ByteArrayInputStream("OPDS:Author:page(number=2):alphabet".getBytes());
+    java.io.InputStream is=new java.io.ByteArrayInputStream("Author:page(number=2, jk=перевава):alphabet".getBytes());
     LibRequestBuilder t = new LibRequestBuilder(is, java.nio.charset.Charset.forName("UTF-8"));
     try {
           SimpleNode n = t.Request();
@@ -45,70 +45,40 @@ TOKEN : /* LITERALS */
 
   < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
 |
-< VALUE: (<LETTER>|<DIGIT>)+ >
+< VALUE: (<LETTER>|<DIGIT>|<CYRILIC> )+ >
 |
   < #LETTER: ["_","a"-"z","A"-"Z"] >
+|
+  < #CYRILIC: ["а"-"я","А"-"Я"] >
 |
   < #DIGIT: ["0"-"9"] >
 }
 
 
-SimpleNode Request():{}{
-Area()":"Actions()
+SimpleNode Request():
+{
+   Token t;
+}
+{
+   t=<IDENTIFIER>{jjtThis.jjtSetValue(t.image);}
+   ":"Action()(":"Action())*
 { return jjtThis; }
 }
 
-void Area():
+void Action():
 {
    Token t;
 }
 {
-   t=<IDENTIFIER>{jjtThis.jjtSetValue(t.image);}
+  t=<IDENTIFIER>{jjtThis.jjtSetValue(t.image);} ("("  Param() (","Param())* ")")?
 }
 
-void Actions():{}{
-Action()(":"Action())*
-}
-
-void Action():{}
-{
-
-  ActionId() ("(" ParamList() ")")?
-}
-
-
-void ActionId():
+void Param():
 {
    Token t;
 }
 {
-   t=<IDENTIFIER>{jjtThis.jjtSetValue(t.image);}
+ t=<IDENTIFIER>{jjtThis.setName(t.image);}
+ "="
+ t=<VALUE> {jjtThis.setValue(t.image);}
 }
-
-void ParamList():{}
-{
- Param() (","Param())*
-}
-
-
-void Param():{}
-{
- ParamId()("="ParamValue())?
-}
-
-void ParamId():
-{
-   Token t;
-}
-{
-   t=<IDENTIFIER>{jjtThis.jjtSetValue(t.image);}
-}
-
-void ParamValue():
-{
-   Token t;
-}
-{
-   t=<VALUE> {jjtThis.jjtSetValue(t.image);}
-}
-

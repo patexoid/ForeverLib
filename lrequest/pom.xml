@@ -39,4 +39,11 @@
     </plugin>
   </plugins>
 </build>
+  <dependencies>
+    <dependency>
+      <groupId>com.patex.zombielib2</groupId>
+      <artifactId>core</artifactId>
+      <version>0.38</version>
+    </dependency>
+  </dependencies>
 </project>
