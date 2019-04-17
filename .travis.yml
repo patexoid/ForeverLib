@@ -16,7 +16,7 @@ deploy:
   api_key:
       secure: "$GITHUB_DEPLOY_TOKEN"
   file:
-     $TRAVIS_BUILD_DIR/core/target/zombieCore.jar
+     $TRAVIS_BUILD_DIR/it/target/zombieCore.jar
   on:
     tags: true
     
