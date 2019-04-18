@@ -2,9 +2,9 @@ package com.patex.lrequest;
 
 import java.util.function.Supplier;
 
-public interface ActionProcessor<R> {
+public interface ActionHandler<R> {
 
-  ActionResult execute(Object... params);
+  ActionResult execute(Supplier... params);
 
   boolean isApplicableParams(Class... types);
 

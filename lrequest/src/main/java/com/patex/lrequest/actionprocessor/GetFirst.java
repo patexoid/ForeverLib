@@ -1,13 +1,16 @@
-package com.patex.lrequest;
+package com.patex.lrequest.actionprocessor;
 
+import com.patex.lrequest.ActionHandler;
+import com.patex.lrequest.ActionResult;
 import java.util.List;
+import java.util.function.Supplier;
 import org.springframework.stereotype.Service;
 
 @Service
-public class GetFirst implements ActionProcessor {
+public class GetFirst implements ActionHandler {
 
   @Override
-  public ActionResult execute(Object... params) {
+  public ActionResult execute(Supplier... params) {
     return new ActionResult(l -> ((List) l).get(0), Object.class);
   }
 
