@@ -1,16 +1,20 @@
 package com.patex.lrequest.actionprocessor;
 
+import static com.patex.lrequest.ResultType.Type.FlatMap;
+
 import com.patex.entities.Author;
-import com.patex.lrequest.ActionHandler;
-import com.patex.lrequest.ActionResult;
+import com.patex.lrequest.LazyActionHandler;
+import com.patex.lrequest.RequestResult;
+import com.patex.lrequest.ResultType;
+import com.patex.lrequest.WrongActionSyntaxException;
 import com.patex.service.AuthorService;
-import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 
 @Service
-public class FindAuthor implements ActionHandler {
+public class FindAuthor implements LazyActionHandler {
 
   private final AuthorService service;
 
@@ -19,28 +23,35 @@ public class FindAuthor implements ActionHandler {
   }
 
   @Override
-  public ActionResult<String, List> execute(Supplier... params) {
-
-    Function<String, List> function = input -> {
+  public Function<Object, Stream> execute(Supplier... params) {
+    if (true) {
+      Author a = new Author();
+      a.setName("dsdsdsdsd");
+      return o -> Stream.of(a);
+    }
+    return input -> {
       String authorName;
       if (params.length == 1) {
-        authorName = (String)params[0].get();
+        authorName = (String) params[0].get();
       } else {
-        authorName = input;
+        authorName = (String) input;
       }
-      return service.findByName(authorName);
+      return service.findByName(authorName).stream();
     };
-    return new ActionResult<>(function, List.class, Author.class);
-  }
-
-
-  @Override
-  public boolean isApplicableParams(Class[] types) {
-    return types.length == 0 || (types.length == 1 && String.class.isAssignableFrom(types[0]));
   }
 
   @Override
-  public boolean isApplicableData(Class type) {
-    return String.class.equals(type) || Void.class.equals(type);
+  public ResultType preprocess(ResultType input, RequestResult... paramTypes) {
+    if (
+        (!(Void.class.isAssignableFrom(input.getReturnType()) &&
+            paramTypes.length == 1 &&
+            String.class.isAssignableFrom(paramTypes[0].getResultClass()))
+            &&
+            !(String.class.isAssignableFrom(input.getReturnType()) &&
+                paramTypes.length == 0))
+    ) {
+      throw new WrongActionSyntaxException("String.FindAuthor() or Void.Find(String)");
+    }
+    return new ResultType(FlatMap, Author.class);
   }
 }

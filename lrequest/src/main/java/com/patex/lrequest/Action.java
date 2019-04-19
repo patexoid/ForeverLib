@@ -16,17 +16,17 @@ class Action extends SimpleNode {
     super(p, id);
   }
 
-  public Function getFunction(ActionHandlerStorage builder) {
-    ActionHandler actionHandler = builder.getAction((String) jjtGetValue());
+  public ActionHandler getFunction(ActionHandlerStorage builder) {
+    return builder.getAction((String) jjtGetValue());
+  }
 
-    Supplier[] params = new Supplier[jjtGetNumChildren()];
+  public RequestResult[] getParams(ActionHandlerStorage builder) {
+    RequestResult[] params = new RequestResult[jjtGetNumChildren()];
 
     for (int i = 0; i < jjtGetNumChildren(); i++) {
       params[i]= ((ValueSupplier) jjtGetChild(i)).getValueSupplier(builder);
     }
-
-    ActionResult actionResult = actionHandler.execute(params);
-    return actionResult.getResult();
+    return params;
   }
 }
 /* ParserGeneratorCC - OriginalChecksum=362c6b7426f3edb783c45a9947662f69 (do not edit this line) */

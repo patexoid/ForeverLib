@@ -1,26 +1,30 @@
 package com.patex.lrequest.actionprocessor;
 
-import com.patex.lrequest.ActionHandler;
-import com.patex.lrequest.ActionResult;
+import static com.patex.lrequest.ResultType.Type.One;
+
+import com.patex.lrequest.LazyActionHandler;
+import com.patex.lrequest.RequestResult;
+import com.patex.lrequest.ResultType;
+import com.patex.lrequest.WrongActionSyntaxException;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import org.springframework.stereotype.Service;
 
 @Service
-public class GetFirst implements ActionHandler {
+public class GetFirst implements LazyActionHandler {
 
   @Override
-  public ActionResult execute(Supplier... params) {
-    return new ActionResult(l -> ((List) l).get(0), Object.class);
+  public Function execute(Supplier... params) {
+    return l -> ((List) l).get(0);
   }
 
   @Override
-  public boolean isApplicableParams(Class[] types) {
-    return types.length == 0;
+  public ResultType preprocess(ResultType input, RequestResult... paramTypes) {
+    if (paramTypes.length != 0) {
+      throw new WrongActionSyntaxException("List.GetFirst");
+    }
+    return new ResultType(One, input.getReturnType());
   }
 
-  @Override
-  public boolean isApplicableData(Class type) {
-    return List.class.isAssignableFrom(type);
-  }
 }

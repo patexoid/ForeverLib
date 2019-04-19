@@ -2,11 +2,22 @@
 /* ParserGeneratorCCOptions:MULTI=true,NODE_USES_PARSER=false,VISITOR=false,TRACK_TOKENS=false,NODE_PREFIX=,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package com.patex.lrequest;
 
+import static com.patex.lrequest.ResultType.Type.FlatMap;
+import static com.patex.lrequest.ResultType.Type.Map;
+import static com.patex.lrequest.ResultType.Type.None;
+import static com.patex.lrequest.ResultType.Type.One;
+import static java.util.stream.Collectors.toList;
+
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public
 class Request extends SimpleNode implements ValueSupplier {
+
+  private static final List initial = Collections.singletonList(new Object());
 
   public Request(int id) {
     super(id);
@@ -16,15 +27,42 @@ class Request extends SimpleNode implements ValueSupplier {
     super(p, id);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  public Supplier getValueSupplier(ActionHandlerStorage handlerStorage) {
-    Function result = o -> o;
+  public RequestResult getValueSupplier(ActionHandlerStorage handlerStorage) {
+    Stream stream = initial.stream();
+    ResultType inputType = new ResultType(None, Void.class);
+    Supplier resultSupplier = null;
     for (int i = 0; i < jjtGetNumChildren(); i++) {
       Action action = (Action) jjtGetChild(i);
-      result=result.andThen(action.getFunction(handlerStorage));
+      ActionHandler actionHandler = action.getFunction(handlerStorage);
+      RequestResult[] paramTypes = action.getParams(handlerStorage);
+      Supplier[] params = Stream.of(paramTypes).map(RequestResult::getResultSupplier).toArray(Supplier[]::new);
+      Function mapFunc;
+      if (actionHandler instanceof LazyActionHandler) {
+        LazyActionHandler lazy = (LazyActionHandler) actionHandler;
+        inputType = lazy.preprocess(inputType, paramTypes);
+        mapFunc = lazy.execute(params);
+
+      } else {
+        ActionResult actionResult = actionHandler.execute(params, inputType, paramTypes);
+        inputType = actionResult.getResultType();
+        mapFunc = actionResult.getResult();
+      }
+
+      if (Map.equals(inputType.getType())) {
+        stream = stream.map(mapFunc);
+      } else if (FlatMap.equals(inputType.getType())) {
+        stream = stream.flatMap(mapFunc);
+      } else if (One.equals(inputType.getType())) {//TODO just proof of concept
+        Stream s = stream;
+        resultSupplier = () -> {
+          List collect = (List)s.collect(toList());
+          return mapFunc.apply(collect);
+        };
+      }
     }
-    Function r=result;
-    return ()->r.apply(null);
+    return new RequestResult(inputType.getClass(), resultSupplier);
   }
 }
 /* ParserGeneratorCC - OriginalChecksum=a48974d8142e543c3be7b9546cd90bc3 (do not edit this line) */

@@ -11,12 +11,12 @@ public class ActionBuilder {
 
   private final ActionHandlerStorage actionHandlerStorage;
 
-  public Object exetute(String requestString) throws ParseException {
+  public RequestResult exetute(String requestString) throws ParseException {
     java.io.InputStream is = new java.io.ByteArrayInputStream(requestString.getBytes());
     LibRequestBuilder t = new LibRequestBuilder(is, java.nio.charset.Charset.forName("UTF-8"));
     SimpleNode request = t.Request();
 
-    return ((Request) request).getValueSupplier(actionHandlerStorage).get();
+    return ((Request) request).getValueSupplier(actionHandlerStorage);
   }
 
 }

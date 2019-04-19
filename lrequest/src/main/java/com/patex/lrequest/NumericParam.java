@@ -21,8 +21,8 @@ class NumericParam extends DummyNode implements ValueSupplier {
   }
 
   @Override
-  public Supplier<Integer> getValueSupplier(ActionHandlerStorage handlerStorage) {
-    return this::getValue;
+  public RequestResult<Integer> getValueSupplier(ActionHandlerStorage handlerStorage) {
+    return new RequestResult<>(Integer.class, this::getValue);
   }
 }
 /* ParserGeneratorCC - OriginalChecksum=d4d0c825e7f346b60c9de8672dade3d2 (do not edit this line) */

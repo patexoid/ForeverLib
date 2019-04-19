@@ -1,77 +1,105 @@
 package com.patex.lrequest.actionprocessor;
 
+import static com.patex.lrequest.ResultType.Type.FlatMap;
+import static com.patex.lrequest.ResultType.Type.Map;
+
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.patex.lrequest.ActionHandler;
 import com.patex.lrequest.ActionResult;
+import com.patex.lrequest.RequestResult;
+import com.patex.lrequest.ResultType;
+import com.patex.lrequest.WrongActionSyntaxException;
 import java.lang.invoke.CallSite;
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import lombok.Data;
 import lombok.SneakyThrows;
+import org.springframework.stereotype.Service;
 
+@Service
 public class GetField implements ActionHandler {
 
-  private final LambdaStorage lambdaStorage = new LambdaStorage();
+  private final ResultStorage lambdaStorage = new ResultStorage();
 
   @Override
-  public ActionResult execute(Supplier... params) {
-    return null;
+  public ActionResult execute(Supplier[] params, ResultType input, RequestResult... paramTypes) {
+    Class inputType = input.getReturnType();
+    if (Void.class.isAssignableFrom(inputType) ||
+        paramTypes.length != 1 ||
+        !String.class.isAssignableFrom(paramTypes[0].getResultClass())) {
+      throw new WrongActionSyntaxException("Object.GetField(\"FieldName\") or List.GetField(\"FieldName\")");
+    }
+
+    String fieldName = (String) params[0].get();
+
+    return lambdaStorage.getLambda(inputType,fieldName);
   }
 
-  @Override
-  public boolean isApplicableParams(Class[] types) {
-    return types.length == 1;
-  }
 
-  @Override
-  public boolean isApplicableData(Class type) {
-    return false;
-  }
+  private class ResultStorage {
 
-  private Object getField(Object obj, String field) {
-    Function lambda = lambdaStorage.getLambda(obj.getClass(), field);
-    return lambda.apply(obj);
-  }
-
-  private class LambdaStorage {
-
-    Cache<LambdaKey, Function> lambdaCache = CacheBuilder.newBuilder().weakKeys().build(
+    private final Lookup lookup = MethodHandles.lookup();
+    LoadingCache<LambdaKey, ActionResult> lambdaCache = CacheBuilder.newBuilder().weakKeys().build(
         new CacheLoader<>() {
           @Override
-          public Function load(LambdaKey key) {
+          public ActionResult load(LambdaKey key) {
             return getLambda(key);
           }
         });
 
-    public Function getLambda(Class type, String field) {
-      return lambdaCache.getIfPresent(new LambdaKey(type, field));
+    @SneakyThrows
+    private ResultType getResultType(Method method) {
+      Class<?> returnType = method.getReturnType();
+      if (Collection.class.isAssignableFrom(returnType)) {
+        Type type = method.getGenericReturnType();
+        if (type instanceof ParameterizedType) {
+          Type elementType = ((ParameterizedType) type).getActualTypeArguments()[0];
+          return new ResultType(FlatMap, Class.forName(elementType.getTypeName()));
+        }
+      }
+      return new ResultType(Map, returnType);
     }
 
     @SneakyThrows
-    private Function getLambda(LambdaKey key) {
-      String field = key.getField();
-      Class type = key.getType();
-      MethodHandles.Lookup caller = MethodHandles.lookup();
+    public ActionResult getLambda(Class type, String field) {
+      return lambdaCache.get(new LambdaKey(type, field));
+    }
 
-      String getterName = "get" + field.substring(0, 1).toUpperCase() + field.substring(1);
-      Method reflected = type.getDeclaredMethod(getterName);
-      MethodHandle methodHandle = caller.unreflect(reflected);
+
+    @SneakyThrows
+    private ActionResult getLambda(LambdaKey key) {
+      Method reflected = getMethod(key);
+
+      MethodHandle methodHandle = lookup.unreflect(reflected);
 
       MethodType func = methodHandle.type();
-      CallSite site = LambdaMetafactory.metafactory(caller,
+      CallSite site = LambdaMetafactory.metafactory(lookup,
           "apply",
           MethodType.methodType(Function.class),
           func.generic(), methodHandle, func);
 
       MethodHandle factory = site.getTarget();
-      return (Function) factory.invoke();
+      Function function = (Function) factory.invoke();
+      return new ActionResult(function, getResultType(reflected));
+    }
+
+    private Method getMethod(LambdaKey key) throws NoSuchMethodException {
+      String field = key.getField();
+      Class type = key.getType();
+      String getterName = "get" + field.substring(0, 1).toUpperCase() + field.substring(1);
+      return type.getMethod(getterName);
     }
   }
 

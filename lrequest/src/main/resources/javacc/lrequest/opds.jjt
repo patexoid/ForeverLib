@@ -49,7 +49,7 @@ SimpleNode Request():
    Token t;
 }
 {
-   Action()(":"Action())*
+   Action()("."Action())*
 { return jjtThis; }
 }
 

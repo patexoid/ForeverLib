@@ -4,5 +4,5 @@ import java.util.function.Supplier;
 
 public interface ValueSupplier {
 
-  public Supplier getValueSupplier(ActionHandlerStorage handlerStorage);
+  RequestResult getValueSupplier(ActionHandlerStorage handlerStorage);
 }
