@@ -7,8 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public
-class StringParam extends DummyNode implements ValueSupplier {
+public class StringParam extends DummyNode implements ValueSupplier {
 
   private String value;
 
@@ -17,8 +16,8 @@ class StringParam extends DummyNode implements ValueSupplier {
   }
 
   @Override
-  public RequestResult<String> getValueSupplier(ActionHandlerStorage handlerStorage) {
-    return new RequestResult<>(String.class, this::getValue);
+  public Value<String> getValueSupplier(ActionHandlerStorage handlerStorage) {
+    return new Value<>(String.class, this::getValue);
   }
 }
 /* ParserGeneratorCC - OriginalChecksum=fa9e40956f268a8a3ee6f411b16f1850 (do not edit this line) */

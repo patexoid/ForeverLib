@@ -44,22 +44,20 @@ TOKEN : /* LITERALS */
 }
 
 
-SimpleNode Request():
-{
-   Token t;
-}
+Request Request():{}
 {
    Action()("."Action())*
 { return jjtThis; }
 }
 
-void Action():
+Action Action():
 {
    Token t;
 }
 {
   t=<IDENTIFIER>{jjtThis.jjtSetValue(t.image);}
   ("("  (Request() |NumericParam()|StringParam()) (","Request()|NumericParam()|StringParam())* ")")?
+  { return jjtThis; }
 }
 
 void NumericParam():

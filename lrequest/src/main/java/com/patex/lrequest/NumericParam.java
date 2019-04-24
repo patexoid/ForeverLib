@@ -2,9 +2,7 @@
 /* ParserGeneratorCCOptions:MULTI=true,NODE_USES_PARSER=false,VISITOR=false,TRACK_TOKENS=false,NODE_PREFIX=,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package com.patex.lrequest;
 
-import java.util.function.Supplier;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 public
@@ -21,8 +19,8 @@ class NumericParam extends DummyNode implements ValueSupplier {
   }
 
   @Override
-  public RequestResult<Integer> getValueSupplier(ActionHandlerStorage handlerStorage) {
-    return new RequestResult<>(Integer.class, this::getValue);
+  public Value<Integer> getValueSupplier(ActionHandlerStorage handlerStorage) {
+    return new Value<>(Integer.class, this::getValue);
   }
 }
 /* ParserGeneratorCC - OriginalChecksum=d4d0c825e7f346b60c9de8672dade3d2 (do not edit this line) */

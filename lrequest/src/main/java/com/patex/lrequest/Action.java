@@ -2,9 +2,6 @@
 /* ParserGeneratorCCOptions:MULTI=true,NODE_USES_PARSER=false,VISITOR=false,TRACK_TOKENS=false,NODE_PREFIX=,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package com.patex.lrequest;
 
-import java.util.function.Function;
-import java.util.function.Supplier;
-
 public
 class Action extends SimpleNode {
 
@@ -12,16 +9,12 @@ class Action extends SimpleNode {
     super(id);
   }
 
-  public Action(LibRequestBuilder p, int id) {
-    super(p, id);
-  }
-
   public ActionHandler getFunction(ActionHandlerStorage builder) {
     return builder.getAction((String) jjtGetValue());
   }
 
-  public RequestResult[] getParams(ActionHandlerStorage builder) {
-    RequestResult[] params = new RequestResult[jjtGetNumChildren()];
+  public Value[] getParams(ActionHandlerStorage builder) {
+    Value[] params = new Value[jjtGetNumChildren()];
 
     for (int i = 0; i < jjtGetNumChildren(); i++) {
       params[i]= ((ValueSupplier) jjtGetChild(i)).getValueSupplier(builder);

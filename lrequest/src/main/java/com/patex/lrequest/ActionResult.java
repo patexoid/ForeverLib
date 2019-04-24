@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public class ActionResult<I, O> {
 
-  private final Function<I, O> result;
+  private final Function<I, O> resultFunc;
 
-  private final ResultType resultType;
+  private final FlowType flowType;
 }

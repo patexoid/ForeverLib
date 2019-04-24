@@ -1,20 +1,21 @@
 package com.patex.lrequest.actionprocessor;
 
-import static com.patex.lrequest.ResultType.Type.FlatMap;
-
 import com.patex.entities.Author;
-import com.patex.lrequest.LazyActionHandler;
-import com.patex.lrequest.RequestResult;
-import com.patex.lrequest.ResultType;
+import com.patex.lrequest.ActionHandler;
+import com.patex.lrequest.ActionResult;
+import com.patex.lrequest.FlowType;
+import com.patex.lrequest.FlowType.Type;
+import com.patex.lrequest.Value;
 import com.patex.lrequest.WrongActionSyntaxException;
 import com.patex.service.AuthorService;
+import java.util.Collection;
+import java.util.List;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 
 @Service
-public class FindAuthor implements LazyActionHandler {
+public class FindAuthor implements ActionHandler {
 
   private final AuthorService service;
 
@@ -22,36 +23,36 @@ public class FindAuthor implements LazyActionHandler {
     this.service = service;
   }
 
-  @Override
-  public Function<Object, Stream> execute(Supplier... params) {
-    if (true) {
-      Author a = new Author();
-      a.setName("dsdsdsdsd");
-      return o -> Stream.of(a);
-    }
-    return input -> {
-      String authorName;
-      if (params.length == 1) {
-        authorName = (String) params[0].get();
-      } else {
-        authorName = (String) input;
-      }
-      return service.findByName(authorName).stream();
-    };
-  }
 
   @Override
-  public ResultType preprocess(ResultType input, RequestResult... paramTypes) {
-    if (
-        (!(Void.class.isAssignableFrom(input.getReturnType()) &&
-            paramTypes.length == 1 &&
-            String.class.isAssignableFrom(paramTypes[0].getResultClass()))
-            &&
-            !(String.class.isAssignableFrom(input.getReturnType()) &&
-                paramTypes.length == 0))
+  public ActionResult createFuncton(FlowType flowType, Value... values)
+      throws WrongActionSyntaxException {
+
+    if ((flowType.is(Type.stream) || flowType.is(Type.object)) &&
+        (!String.class.isAssignableFrom(flowType.getReturnType()) || values.length != 0)
+        ||
+        flowType.is(Type.initial) && (values.length != 1 || !String.class.isAssignableFrom(values[0].getResultClass()))
     ) {
-      throw new WrongActionSyntaxException("String.FindAuthor() or Void.Find(String)");
+      throw new WrongActionSyntaxException("String.FindAuthor() or Stream<String>.FindAuthor or FindAuthor(String)");
     }
-    return new ResultType(FlatMap, Author.class);
+
+    FlowType newFlowType = FlowType.streamResult(Author.class);
+    if (flowType.is(Type.stream)) {
+      return new ActionResult<Stream<String>, Stream<Author>>(
+          s -> s.map(service::findByName).flatMap(Collection::stream), newFlowType);
+    } else if (flowType.is(Type.object)) {
+      Function<String, List<Author>> findByName = service::findByName;
+      return new ActionResult<>(findByName.andThen(Collection::stream),
+          newFlowType);
+    } else if (flowType.is(Type.initial)) {
+      return new ActionResult<>(o -> {
+        Value value = values[0];
+        String authorPrefix = (String) value.getResultSupplier().get();
+        return service.findByName(authorPrefix).stream();
+      }, newFlowType);
+    }
+    throw new WrongActionSyntaxException("String.FindAuthor() or Stream<String>.FindAuthor or FindAuthor(String)");
   }
+
+
 }

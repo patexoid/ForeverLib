@@ -2,67 +2,35 @@
 /* ParserGeneratorCCOptions:MULTI=true,NODE_USES_PARSER=false,VISITOR=false,TRACK_TOKENS=false,NODE_PREFIX=,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package com.patex.lrequest;
 
-import static com.patex.lrequest.ResultType.Type.FlatMap;
-import static com.patex.lrequest.ResultType.Type.Map;
-import static com.patex.lrequest.ResultType.Type.None;
-import static com.patex.lrequest.ResultType.Type.One;
-import static java.util.stream.Collectors.toList;
+import static com.patex.lrequest.FlowType.INITIAL;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 public
 class Request extends SimpleNode implements ValueSupplier {
 
-  private static final List initial = Collections.singletonList(new Object());
+  private static final Object initial = new Object();
 
   public Request(int id) {
     super(id);
   }
 
-  public Request(LibRequestBuilder p, int id) {
-    super(p, id);
-  }
-
   @SuppressWarnings("unchecked")
   @Override
-  public RequestResult getValueSupplier(ActionHandlerStorage handlerStorage) {
-    Stream stream = initial.stream();
-    ResultType inputType = new ResultType(None, Void.class);
-    Supplier resultSupplier = null;
+  public Value getValueSupplier(ActionHandlerStorage handlerStorage) {
+    Function resultFunction = Function.identity();
+    FlowType inputType = INITIAL;
     for (int i = 0; i < jjtGetNumChildren(); i++) {
       Action action = (Action) jjtGetChild(i);
       ActionHandler actionHandler = action.getFunction(handlerStorage);
-      RequestResult[] paramTypes = action.getParams(handlerStorage);
-      Supplier[] params = Stream.of(paramTypes).map(RequestResult::getResultSupplier).toArray(Supplier[]::new);
-      Function mapFunc;
-      if (actionHandler instanceof LazyActionHandler) {
-        LazyActionHandler lazy = (LazyActionHandler) actionHandler;
-        inputType = lazy.preprocess(inputType, paramTypes);
-        mapFunc = lazy.execute(params);
-
-      } else {
-        ActionResult actionResult = actionHandler.execute(params, inputType, paramTypes);
-        inputType = actionResult.getResultType();
-        mapFunc = actionResult.getResult();
-      }
-
-      if (Map.equals(inputType.getType())) {
-        stream = stream.map(mapFunc);
-      } else if (FlatMap.equals(inputType.getType())) {
-        stream = stream.flatMap(mapFunc);
-      } else if (One.equals(inputType.getType())) {//TODO just proof of concept
-        Stream s = stream;
-        resultSupplier = () -> {
-          List collect = (List)s.collect(toList());
-          return mapFunc.apply(collect);
-        };
-      }
+      Value[] params = action.getParams(handlerStorage);
+      ActionResult actionResult = actionHandler.createFuncton(inputType, params);
+      inputType = actionResult.getFlowType();
+      Function mapFunc = actionResult.getResultFunc();
+      resultFunction = resultFunction.andThen(mapFunc);
     }
-    return new RequestResult(inputType.getClass(), resultSupplier);
+    Function r = resultFunction;
+    return new Value(inputType.getClass(), () -> r.apply(initial));
   }
 }
 /* ParserGeneratorCC - OriginalChecksum=a48974d8142e543c3be7b9546cd90bc3 (do not edit this line) */

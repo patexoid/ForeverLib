@@ -1,16 +1,12 @@
 package com.patex.lrequest.actionprocessor;
 
-import static com.patex.lrequest.ResultType.Type.FlatMap;
-import static com.patex.lrequest.ResultType.Type.Map;
-
-import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.patex.lrequest.ActionHandler;
 import com.patex.lrequest.ActionResult;
-import com.patex.lrequest.RequestResult;
-import com.patex.lrequest.ResultType;
+import com.patex.lrequest.FlowType;
+import com.patex.lrequest.Value;
 import com.patex.lrequest.WrongActionSyntaxException;
 import java.lang.invoke.CallSite;
 import java.lang.invoke.LambdaMetafactory;
@@ -23,63 +19,70 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.stream.Stream;
 import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
+@SuppressWarnings("unchecked")
 @Service
 public class GetField implements ActionHandler {
 
-  private final ResultStorage lambdaStorage = new ResultStorage();
+  private final LambdaInfoStorage lambdaStorage = new LambdaInfoStorage();
 
   @Override
-  public ActionResult execute(Supplier[] params, ResultType input, RequestResult... paramTypes) {
+  public ActionResult createFuncton(FlowType input, Value... values)
+      throws WrongActionSyntaxException {
     Class inputType = input.getReturnType();
-    if (Void.class.isAssignableFrom(inputType) ||
-        paramTypes.length != 1 ||
-        !String.class.isAssignableFrom(paramTypes[0].getResultClass())) {
-      throw new WrongActionSyntaxException("Object.GetField(\"FieldName\") or List.GetField(\"FieldName\")");
+    if (input.is(FlowType.Type.initial) ||
+        values.length != 1 ||
+        !String.class.isAssignableFrom(values[0].getResultClass())) {
+      throw new WrongActionSyntaxException("Object.GetField(\"FieldName\") or Stream.GetField(\"FieldName\")");
     }
+    String fieldName = (String) values[0].getResultSupplier().get();
+    LambdaInfo lambda = lambdaStorage.getLambda(inputType, fieldName);
 
-    String fieldName = (String) params[0].get();
-
-    return lambdaStorage.getLambda(inputType,fieldName);
+    if (input.is((FlowType.Type.stream))) {
+      return new ActionResult(s -> {
+        Stream inputS = (Stream) s;
+        if (lambda.isCollection()) {
+          Function<Object, Collection> result = lambda.getFunction();
+          return inputS.flatMap(result.andThen(Collection::stream));
+        } else {
+          return inputS.map(lambda.getFunction());
+        }
+      }, FlowType.streamResult(lambda.getReturnType()));
+    } else {
+      if (lambda.isCollection()) {
+        Function<Object, Collection> result = lambda.getFunction();
+        return new ActionResult(result.andThen(Collection::stream), FlowType.streamResult(lambda.getReturnType()));
+      } else {
+        return new ActionResult(lambda.getFunction(), FlowType.objResult(lambda.getReturnType()));
+      }
+    }
   }
 
-
-  private class ResultStorage {
+  private static class LambdaInfoStorage {
 
     private final Lookup lookup = MethodHandles.lookup();
-    LoadingCache<LambdaKey, ActionResult> lambdaCache = CacheBuilder.newBuilder().weakKeys().build(
+    LoadingCache<LambdaKey, LambdaInfo> lambdaCache = CacheBuilder.newBuilder().weakKeys().build(
         new CacheLoader<>() {
           @Override
-          public ActionResult load(LambdaKey key) {
+          public LambdaInfo load(LambdaKey key) {
             return getLambda(key);
           }
         });
 
     @SneakyThrows
-    private ResultType getResultType(Method method) {
-      Class<?> returnType = method.getReturnType();
-      if (Collection.class.isAssignableFrom(returnType)) {
-        Type type = method.getGenericReturnType();
-        if (type instanceof ParameterizedType) {
-          Type elementType = ((ParameterizedType) type).getActualTypeArguments()[0];
-          return new ResultType(FlatMap, Class.forName(elementType.getTypeName()));
-        }
-      }
-      return new ResultType(Map, returnType);
-    }
-
-    @SneakyThrows
-    public ActionResult getLambda(Class type, String field) {
+    public LambdaInfo getLambda(Class type, String field) {
       return lambdaCache.get(new LambdaKey(type, field));
     }
 
 
     @SneakyThrows
-    private ActionResult getLambda(LambdaKey key) {
+    private LambdaInfo getLambda(LambdaKey key) {
       Method reflected = getMethod(key);
 
       MethodHandle methodHandle = lookup.unreflect(reflected);
@@ -92,7 +95,16 @@ public class GetField implements ActionHandler {
 
       MethodHandle factory = site.getTarget();
       Function function = (Function) factory.invoke();
-      return new ActionResult(function, getResultType(reflected));
+
+      Class returnType = reflected.getReturnType();
+      if (Collection.class.isAssignableFrom(returnType)) {
+        Type type = reflected.getGenericReturnType();
+        if (type instanceof ParameterizedType) {
+          Type elementType = ((ParameterizedType) type).getActualTypeArguments()[0];
+          return new LambdaInfo(function, Class.forName(elementType.getTypeName()), true);
+        }
+      }
+      return new LambdaInfo(function, returnType, false);
     }
 
     private Method getMethod(LambdaKey key) throws NoSuchMethodException {
@@ -103,8 +115,17 @@ public class GetField implements ActionHandler {
     }
   }
 
+  @RequiredArgsConstructor
+  @Getter
+  private static class LambdaInfo {
+
+    private final Function function;
+    private final Class returnType;
+    private final boolean collection;
+  }
+
   @Data
-  private class LambdaKey {
+  private static class LambdaKey {
 
     private final Class type;
     private final String field;

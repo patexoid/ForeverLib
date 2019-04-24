@@ -1,30 +1,26 @@
 package com.patex.lrequest.actionprocessor;
 
-import static com.patex.lrequest.ResultType.Type.One;
-
-import com.patex.lrequest.LazyActionHandler;
-import com.patex.lrequest.RequestResult;
-import com.patex.lrequest.ResultType;
+import com.patex.lrequest.ActionHandler;
+import com.patex.lrequest.ActionResult;
+import com.patex.lrequest.FlowType;
+import com.patex.lrequest.FlowType.Type;
+import com.patex.lrequest.Value;
 import com.patex.lrequest.WrongActionSyntaxException;
-import java.util.List;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 
 @Service
-public class GetFirst implements LazyActionHandler {
+public class GetFirst implements ActionHandler {
 
   @Override
-  public Function execute(Supplier... params) {
-    return l -> ((List) l).get(0);
-  }
-
-  @Override
-  public ResultType preprocess(ResultType input, RequestResult... paramTypes) {
-    if (paramTypes.length != 0) {
-      throw new WrongActionSyntaxException("List.GetFirst");
+  public ActionResult createFuncton(FlowType input, Value... values)
+      throws WrongActionSyntaxException {
+    if (!input.is(Type.stream) || values.length != 0) {
+      throw new WrongActionSyntaxException("Stream.GetFirst");
     }
-    return new ResultType(One, input.getReturnType());
+
+    return new ActionResult<>(l -> ((Stream<?>) l).findFirst().orElse(null),
+        FlowType.objResult(input.getReturnType()));
   }
 
 }
