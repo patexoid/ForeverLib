@@ -22,7 +22,6 @@ public class TelegramMessenger implements Messenger {
 
     private static final int MAX_MESSAGE_SIZE = 4000;
     private static final List<String> DELIMS = Arrays.asList("\n", ".", ";", "-", ",");
-    private final MessengerService messagingComponent;
     private final TelegramBot telegramBot;
     private final String baseUrl;
     private final TextSpliterator spliterator;
@@ -30,18 +29,15 @@ public class TelegramMessenger implements Messenger {
     @Autowired
     public TelegramMessenger(@Value("${telegram.bot.token}") String botToken,
                              @Value("${telegram.bot.name}") String botName,
-                             @Value("${telegram.bot.baseurl:}") String baseurl,
-                             MessengerService messagingComponent) {
+                             @Value("${telegram.bot.baseurl:}") String baseurl) {
         this.baseUrl = baseurl;
-        this.messagingComponent = messagingComponent;
         telegramBot = new TelegramBot(botToken, botName, this::response);
         spliterator = new TextSpliterator(MAX_MESSAGE_SIZE, DELIMS);
     }
 
     @VisibleForTesting
-    TelegramMessenger(MessengerService messagingComponent, TelegramBot telegramBot,
+    TelegramMessenger(TelegramBot telegramBot,
                       String baseUrl, TextSpliterator spliterator) {
-        this.messagingComponent = messagingComponent;
         this.telegramBot = telegramBot;
         this.baseUrl = baseUrl;
         this.spliterator = spliterator;
@@ -50,7 +46,6 @@ public class TelegramMessenger implements Messenger {
     @PostConstruct
     public void start() {
         telegramBot.start();
-        messagingComponent.register(this);
     }
 
     Optional<String> response(String request, Long chatId) {

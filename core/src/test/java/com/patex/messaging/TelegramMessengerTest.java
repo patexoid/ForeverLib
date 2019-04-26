@@ -23,9 +23,6 @@ public class TelegramMessengerTest {
     public static final String MESSAGE = "message";
     public static final String BASE_URL = "baseUrl";
     @Mock
-    private MessengerService messagingComponent;
-
-    @Mock
     private TelegramBot telegramBot;
 
     @Mock
@@ -36,14 +33,13 @@ public class TelegramMessengerTest {
 
     @Before
     public void setUp() {
-        telegramMessenger = new TelegramMessenger(messagingComponent, telegramBot, BASE_URL, spliterator);
+        telegramMessenger = new TelegramMessenger(telegramBot, BASE_URL, spliterator);
     }
 
     @Test
     public void shouldStart() {
         telegramMessenger.start();
 
-        verify(messagingComponent).register(telegramMessenger);
         verify(telegramBot).start();
     }
 

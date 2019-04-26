@@ -7,7 +7,6 @@ import com.patex.utils.Res;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -22,11 +21,13 @@ public class MessengerService {
     private final Resources res;
     private final ZUserService userService;
 
-    private final List<Messenger> messengers = new ArrayList<>();
+    private final List<Messenger> messengers;
 
-    public MessengerService(Resources res, ZUserService userService) {
+    public MessengerService(Resources res, ZUserService userService,
+        List<Messenger> messengers) {
         this.res = res;
         this.userService = userService;
+        this.messengers = messengers;
     }
 
     public void register(Messenger messenger) {
