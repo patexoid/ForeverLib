@@ -2,15 +2,14 @@ package com.patex.messaging;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.patex.entities.ZUser;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
 
 /**
  *
@@ -23,38 +22,24 @@ public class TelegramMessenger implements Messenger {
     private static final int MAX_MESSAGE_SIZE = 4000;
     private static final List<String> DELIMS = Arrays.asList("\n", ".", ";", "-", ",");
     private final TelegramBot telegramBot;
-    private final String baseUrl;
     private final TextSpliterator spliterator;
 
     @Autowired
     public TelegramMessenger(@Value("${telegram.bot.token}") String botToken,
-                             @Value("${telegram.bot.name}") String botName,
-                             @Value("${telegram.bot.baseurl:}") String baseurl) {
-        this.baseUrl = baseurl;
-        telegramBot = new TelegramBot(botToken, botName, this::response);
+        @Value("${telegram.bot.name}") String botName, Collection<TelegramMessengerListener> listeners) {
+        telegramBot = new TelegramBot(botName, botToken, listeners);
         spliterator = new TextSpliterator(MAX_MESSAGE_SIZE, DELIMS);
     }
 
     @VisibleForTesting
-    TelegramMessenger(TelegramBot telegramBot,
-                      String baseUrl, TextSpliterator spliterator) {
+    TelegramMessenger(TelegramBot telegramBot, TextSpliterator spliterator) {
         this.telegramBot = telegramBot;
-        this.baseUrl = baseUrl;
         this.spliterator = spliterator;
     }
 
     @PostConstruct
     public void start() {
         telegramBot.start();
-    }
-
-    Optional<String> response(String request, Long chatId) {
-        if ("/subscribe".equalsIgnoreCase(request)) {
-            String url = baseUrl + "/user/updateConfig?telegramChatId=" + chatId;
-            return Optional.of("Please open <a href=\"" + url + "\">Link</a> to register chat");
-        } else {
-            return Optional.empty();
-        }
     }
 
     @Override

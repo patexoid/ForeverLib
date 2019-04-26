@@ -4,11 +4,12 @@ import com.patex.entities.ZUser;
 import com.patex.service.Resources;
 import com.patex.service.ZUserService;
 import com.patex.utils.Res;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -30,9 +31,10 @@ public class MessengerService {
         this.messengers = messengers;
     }
 
-    public void register(Messenger messenger) {
-        messengers.add(messenger);
-        toRole(new Res("lib.started"), ZUserService.ADMIN_AUTHORITY, Collections.singletonList(messenger));
+    @EventListener
+    public void handleContextRefreshEvent(ContextRefreshedEvent ctxStartEvt) {
+        toRole(new Res("lib.started"), ZUserService.ADMIN_AUTHORITY);
+
     }
 
     @PreDestroy()
