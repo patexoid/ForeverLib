@@ -1,4 +1,4 @@
-package com.patex.opds.converters;
+package com.patex.opds;
 
 /**
  * Created by Alexey on 07.05.2017.

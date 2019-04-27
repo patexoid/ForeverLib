@@ -4,16 +4,14 @@ import com.patex.LibException;
 import com.patex.extlib.ExtLibFeed;
 import com.patex.extlib.ExtLibService;
 import com.patex.extlib.LinkMapper;
-import com.patex.opds.OPDSEntryBuilder;
+import com.patex.opds.OPDSEntry;
+import com.patex.opds.OPDSLink;
 import com.patex.opds.RootProvider;
-import com.patex.opds.converters.OPDSEntry;
-import com.patex.opds.converters.OPDSLink;
 import com.patex.opds.latest.SaveLatest;
 import com.patex.service.Resources;
 import com.patex.service.ZUserService;
 import com.patex.utils.LinkUtils;
 import com.patex.utils.Res;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,7 +26,8 @@ import java.util.List;
 import java.util.Map;
 
 import static com.patex.controllers.OPDSController.*;
-import static com.patex.service.ZUserService.*;
+import static com.patex.service.ZUserService.ADMIN_AUTHORITY;
+import static com.patex.service.ZUserService.USER;
 
 /**
  *
@@ -42,20 +41,24 @@ public class OPDSExtLibController implements RootProvider {
 
 
     private final List<OPDSEntry> rootEntries = Collections.singletonList(
-            new OPDSEntryBuilder("root:libraries", null, new Res("opds.extlib.libraries")).
+            OPDSEntry.builder("root:libraries", "opds.extlib.libraries").
                     addLink(OPDS_EXT_LIB, OPDSLink.OPDS_CATALOG).build());
 
-    @Autowired
     private ExtLibService extLibService;
 
-    @Autowired
     private OPDSController opdsController;
 
-    @Autowired
     private ZUserService userService;
 
-    @Autowired
     private Resources resources;
+
+    public OPDSExtLibController(ExtLibService extLibService, OPDSController opdsController,
+                                ZUserService userService, Resources resources) {
+        this.extLibService = extLibService;
+        this.opdsController = opdsController;
+        this.userService = userService;
+        this.resources = resources;
+    }
 
     @PostConstruct
     public void setUp() {

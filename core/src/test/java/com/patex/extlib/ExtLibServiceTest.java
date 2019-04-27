@@ -1,12 +1,10 @@
 package com.patex.extlib;
 
 import com.patex.entities.*;
-import com.patex.opds.OPDSEntryBuilder;
-import com.patex.opds.converters.OPDSEntry;
-import com.patex.opds.converters.OPDSLink;
+import com.patex.opds.OPDSEntry;
+import com.patex.opds.OPDSLink;
 import com.patex.service.ZUserService;
 import com.patex.utils.ExecutorCreator;
-import com.patex.utils.Res;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,14 +12,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
 import static com.patex.extlib.ExtLibService.*;
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -75,10 +71,7 @@ public class ExtLibServiceTest {
         when(userService.getCurrentUser()).thenReturn(user);
         when(downloadService.downloadBook(library, URI, TYPE, user)).thenReturn(book);
 
-
-        final Object[] objects = new Object[]{};
-        final Res entryTitle = new Res("entryTitle", objects);
-        OPDSEntry entry = new OPDSEntryBuilder("entryId", Instant.now(), entryTitle)
+        OPDSEntry entry = OPDSEntry.builder("entryId", "entryTitle")
                 .addLink("linHref", OPDSLink.FB2)
                 .build();
         ExtLibFeed rawFeed = new ExtLibFeed("title",
@@ -93,7 +86,7 @@ public class ExtLibServiceTest {
 
         List<OPDSEntry> roots = extLibService.getRoot(PREFIX);
 
-        assertThat(roots, hasSize(1));
+        assertEquals(roots.size(), 1);
         OPDSEntry root = roots.get(0);
         assertEquals(LIBRARY_NAME, root.getTitle().getObjs()[0]);
 
@@ -149,16 +142,14 @@ public class ExtLibServiceTest {
         HashMap<String, String> params = new HashMap<>();
         params.put(REQUEST_P_NAME, entryUrl);
 
-        final Object[] objects = new Object[]{};
-        final Res entryTitle = new Res("entryTitle", objects);
-        OPDSEntry entry = new OPDSEntryBuilder("dd", Instant.now(), entryTitle).build();
+        OPDSEntry entry = OPDSEntry.builder("dd", "entryTitle").build();
         ExtLibFeed rawFeed = new ExtLibFeed("title",
                 Collections.singletonList(entry), Collections.emptyList());
         when(downloadService.getExtLibFeed(library, entryUrl)).thenReturn(rawFeed);
 
         ExtLibFeed feed = extLibService.getDataForLibrary(ID, params);
 
-        assertThat(feed.getEntries(), hasSize(1));
+        assertEquals(feed.getEntries().size(), 1);
     }
 
     @Test

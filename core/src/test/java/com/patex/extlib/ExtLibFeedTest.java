@@ -1,12 +1,9 @@
 package com.patex.extlib;
 
-import com.patex.opds.OPDSEntryBuilder;
-import com.patex.opds.converters.OPDSEntry;
-import com.patex.opds.converters.OPDSLink;
-import com.patex.utils.Res;
+import com.patex.opds.OPDSEntry;
+import com.patex.opds.OPDSLink;
 import org.junit.Test;
 
-import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 
@@ -24,8 +21,7 @@ public class ExtLibFeedTest {
         String prefix = "linkPrefix.";
 
         final Object[] objects = new Object[]{};
-        final Res bookTitle1 = new Res("bookTitle1", objects);
-        OPDSEntry entry1 = new OPDSEntryBuilder("id1", Instant.now(), bookTitle1).
+        OPDSEntry entry1 = OPDSEntry.builder("id1", "bookTitle1").
                 addLink(entryLinkHref, "application/typ").build();
         OPDSLink link = new OPDSLink(linkHref, "typ");
         ExtLibFeed feed = new ExtLibFeed("title", Collections.singletonList(entry1),

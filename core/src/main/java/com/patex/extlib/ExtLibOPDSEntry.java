@@ -1,10 +1,10 @@
 package com.patex.extlib;
 
 import com.patex.opds.OPDSContent;
-import com.patex.opds.converters.OPDSAuthor;
-import com.patex.opds.converters.OPDSAuthorImpl;
-import com.patex.opds.converters.OPDSEntry;
-import com.patex.opds.converters.OPDSLink;
+import com.patex.opds.OPDSAuthor;
+import com.patex.opds.OPDSAuthorImpl;
+import com.patex.opds.OPDSEntry;
+import com.patex.opds.OPDSLink;
 import com.patex.utils.Res;
 import com.rometools.rome.feed.synd.SyndEntry;
 

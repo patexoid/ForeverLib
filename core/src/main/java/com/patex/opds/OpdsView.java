@@ -2,9 +2,6 @@ package com.patex.opds;
 
 import com.patex.entities.ZUser;
 import com.patex.entities.ZUserConfig;
-import com.patex.opds.converters.OPDSAuthor;
-import com.patex.opds.converters.OPDSEntry;
-import com.patex.opds.converters.OPDSLink;
 import com.patex.service.Resources;
 import com.patex.service.ZUserService;
 import com.patex.utils.Res;

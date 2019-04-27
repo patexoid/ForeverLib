@@ -2,18 +2,15 @@ package com.patex.extlib;
 
 import com.patex.LibException;
 import com.patex.entities.*;
-import com.patex.opds.converters.OPDSEntry;
-import com.patex.opds.converters.OPDSEntryImpl;
-import com.patex.opds.converters.OPDSLink;
+import com.patex.opds.OPDSEntry;
+import com.patex.opds.OPDSLink;
 import com.patex.service.ZUserService;
 import com.patex.utils.ExecutorCreator;
-import com.patex.utils.Res;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -21,8 +18,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
-import static com.patex.opds.converters.OPDSLink.FB2;
-import static com.patex.opds.converters.OPDSLink.OPDS_CATALOG;
+import static com.patex.opds.OPDSLink.FB2;
 
 /**
  *
@@ -68,8 +64,7 @@ public class ExtLibService {
     }
 
     private OPDSEntry getRootEntry(ExtLibrary library) {
-        return new OPDSEntryImpl("" + library.getId(), new Res("first.value",
-                library.getName()), new OPDSLink("", OPDS_CATALOG));
+        return OPDSEntry.builder("" + library.getId(), "first.value", library.getName()).addLink("").build();
     }
 
     public void actionExtLibData(long libId, String action, Map<String, String> params) throws LibException {
@@ -131,11 +126,9 @@ public class ExtLibService {
                 filter(link -> REL_NEXT.equals(link.getRel())).
                 findFirst().
                 ifPresent(nextLink -> {
-                    OPDSEntry nextEntry = new OPDSEntryImpl(NEXT_ID_PREFIX + ":" + uri, Instant.now(),
-                            new Res("opds.extlib.nextPage"),
-                            (String) null,
-                            nextLink);
-                    entries.add(nextEntry);
+                    entries.add(
+                            OPDSEntry.builder(NEXT_ID_PREFIX + ":" + uri, "opds.extlib.nextPage").
+                                    addLink(nextLink).build());
                 });
 
         return new ExtLibFeed(feed.getTitle(), entries, links);
@@ -143,12 +136,11 @@ public class ExtLibService {
 
     private List<OPDSEntry> getDownloadAndSubscriptionEntries(ExtLibrary extLibrary, String uri, ExtLibFeed feed) {
         List<OPDSEntry> entries = new ArrayList<>();
-        entries.add(new OPDSEntryImpl(DOWNLOAD_ID_PREFIX + ":" + uri, Instant.now(),
-                new Res("opds.extlib.download", feed.getTitle()),
-                (String) null,
-                new OPDSLink(LinkMapper.mapToUri("action/" + Action.downloadAll + "?", uri), OPDS_CATALOG)
-        ));
 
+        entries.add(
+                OPDSEntry.builder(DOWNLOAD_ID_PREFIX + ":" + uri, "opds.extlib.download", feed.getTitle()).
+                        addLink(LinkMapper.mapToUri("action/" + Action.downloadAll + "?", uri)).
+                        build());
 
         OPDSEntry subscriptionEntry =
                 subscriptionService.find(extLibrary, uri).map(s -> toUnsbscribeEntry(uri, feed, s)).
@@ -157,19 +149,14 @@ public class ExtLibService {
         return entries;
     }
 
-    private OPDSEntryImpl toSubscribeEntry(String uri, ExtLibFeed feed) {
-        return new OPDSEntryImpl(SUBSCRIBE_ID_PREFIX + ":" + uri, Instant.now(),
-                new Res("opds.extlib.subscribe", feed.getTitle()), (String) null,
-                new OPDSLink(LinkMapper.mapToUri("action/" + Action.subscribe + "?", uri),
-                        OPDS_CATALOG));
+    private OPDSEntry toSubscribeEntry(String uri, ExtLibFeed feed) {
+        return OPDSEntry.builder(SUBSCRIBE_ID_PREFIX + ":" + uri, "opds.extlib.subscribe", feed.getTitle()).
+                addLink(LinkMapper.mapToUri("action/" + Action.subscribe + "?", uri)).build();
     }
 
-    private OPDSEntryImpl toUnsbscribeEntry(String uri, ExtLibFeed feed, Subscription subscription) {
-        String id = UNSUBSCRIBE_ID_PREFIX + ":" + uri;
-        String href = LinkMapper.mapToUri("action/" + Action.unsubscribe + "?id=" + subscription.getId() + "&", uri);
-        return new OPDSEntryImpl(id, Instant.now(),
-                new Res("opds.extlib.unsubscribe", feed.getTitle()), (String) null,
-                new OPDSLink(href, OPDS_CATALOG));
+    private OPDSEntry toUnsbscribeEntry(String uri, ExtLibFeed feed, Subscription subscription) {
+        return OPDSEntry.builder(UNSUBSCRIBE_ID_PREFIX + ":" + uri, "opds.extlib.unsubscribe", feed.getTitle()).
+                addLink(LinkMapper.mapToUri("action/" + Action.unsubscribe + "?id=" + subscription.getId() + "&", uri)).build();
     }
 
     private boolean containsDownloadLinks(List<OPDSEntry> entries) {
@@ -179,7 +166,6 @@ public class ExtLibService {
 
     private void addSubscription(ExtLibrary library, String uri) throws LibException {
         subscriptionService.addSubscription(library, uri);
-//        return LinkMapper.mapToUri("?", uri);
     }
 
     private void deleteSubscription(String idS) throws LibException {

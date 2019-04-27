@@ -3,7 +3,10 @@ package com.patex.opds.converters;
 import com.patex.entities.Book;
 import com.patex.entities.BookSequence;
 import com.patex.entities.Sequence;
+import com.patex.opds.OPDSAuthor;
 import com.patex.opds.OPDSContent;
+import com.patex.opds.OPDSEntry;
+import com.patex.opds.OPDSLink;
 import com.patex.utils.LinkUtils;
 import com.patex.utils.Res;
 
