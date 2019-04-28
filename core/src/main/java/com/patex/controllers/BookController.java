@@ -5,7 +5,7 @@ import com.patex.LibException;
 import com.patex.entities.Book;
 import com.patex.service.AdminService;
 import com.patex.service.BookService;
-import com.patex.service.DuplicateHandler;
+import com.patex.service.DuplicateQueueHandler;
 import com.patex.service.ZUserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +39,7 @@ import static com.patex.service.ZUserService.USER;
 @RequestMapping("/book")
 public class BookController {
 
-   private static final Logger log = LoggerFactory.getLogger(BookController.class);
+    private static final Logger log = LoggerFactory.getLogger(BookController.class);
 
     @Autowired
     private BookService bookService;
@@ -49,7 +49,7 @@ public class BookController {
 
 
     @Autowired
-    private DuplicateHandler duplicateHandler;
+    private DuplicateQueueHandler duplicateQueueHandler;
 
     @Autowired
     private ZUserService userService;
@@ -109,7 +109,7 @@ public class BookController {
     @RequestMapping(value = "/cover/{id}", method = RequestMethod.GET)
     public ResponseEntity<InputStreamResource> getCover(@PathVariable("id") int bookId) throws LibException {
         Book book = bookService.getBook(bookId);
-        if(book.getCover()!=null) {
+        if (book.getCover() != null) {
             InputStream inputStream = bookService.getBookCoverInputStream(book);
             HttpHeaders respHeaders = new HttpHeaders();
             respHeaders.setContentLength(book.getCover().getSize());
@@ -125,7 +125,7 @@ public class BookController {
     @Secured(ADMIN_AUTHORITY)
     public @ResponseBody
     String waitForDuplicateCheck() {
-        duplicateHandler.waitForFinish();
+        duplicateQueueHandler.waitForFinish();
         return "success";
     }
 
@@ -134,7 +134,15 @@ public class BookController {
     public @ResponseBody
     String duplicateCheckForExisted() {
         adminService.publisEventForExistingBooks(userService.getCurrentUser());
-        duplicateHandler.waitForFinish();
+        return "success";
+    }
+
+    @RequestMapping(value = "/recalculateDuplication", method = RequestMethod.GET)
+    @Secured(ADMIN_AUTHORITY)
+    public @ResponseBody
+    String recalculateDuplication() {
+        adminService.recalculateDuplication(userService.getCurrentUser());
+        adminService.recalculateDuplication(userService.getCurrentUser());
         return "success";
     }
 
@@ -143,7 +151,6 @@ public class BookController {
     public @ResponseBody
     String duplicateCheckForAuthorExisted(@PathVariable("authorId") Long authorId) {
         adminService.checkDuplicatesForAuthor(userService.getCurrentUser(), authorId);
-        duplicateHandler.waitForFinish();
         return "success";
     }
 

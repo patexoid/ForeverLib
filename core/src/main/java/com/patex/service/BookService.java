@@ -4,6 +4,7 @@ import com.patex.LibException;
 import com.patex.entities.Author;
 import com.patex.entities.AuthorBook;
 import com.patex.entities.Book;
+import com.patex.entities.BookCreationEvent;
 import com.patex.entities.BookRepository;
 import com.patex.entities.BookSequence;
 import com.patex.entities.FileResource;
@@ -14,8 +15,7 @@ import com.patex.parser.BookInfo;
 import com.patex.parser.ParserService;
 import com.patex.storage.StorageService;
 import com.patex.utils.StreamU;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -38,12 +38,10 @@ import java.util.stream.Collectors;
 
 /**
  *
- *
  */
 @Service
+@Slf4j
 public class BookService {
-   private static final Logger log = LoggerFactory.getLogger(BookService.class);
-
 
     private final BookRepository bookRepository;
     private final SequenceService sequenceService;
@@ -77,7 +75,7 @@ public class BookService {
             if (sameBook.isPresent()) {
                 return sameBook.get();
             }
-            log.trace("new book:{}",  book.getFileName());
+            log.trace("new book:{}", book.getFileName());
             List<Author> authors = book.getAuthorBooks().stream().
                     map(AuthorBook::getAuthor).
                     map(author -> authorService.findFirstByNameIgnoreCase(author.getName()).orElse(author)).
@@ -207,6 +205,6 @@ public class BookService {
     }
 
     public Page<Book> getNewBooks(PageRequest pageRequest) {
-       return bookRepository.findAllByOrderByCreatedDesc(pageRequest);
+        return bookRepository.findAllByOrderByCreatedDesc(pageRequest);
     }
 }

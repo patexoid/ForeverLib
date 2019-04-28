@@ -14,7 +14,7 @@ import java.util.function.Function;
 /**
  * Created by Alexey on 16.07.2017.
  */
-class ShingleMatcher<T, ID> {
+public class ShingleMatcher<T, ID> {
 
     private final Cache<ID, Shingler> cache;
     private final Function<T, Shingleable> mapFunc;

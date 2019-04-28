@@ -45,4 +45,7 @@
             AND ab.BOOK_ID = b.ID);
         </sql>
     </changeSet>
+    <changeSet id="5" author="patex">
+        <dropTable tableName="BOOK_CHECK_QUEUE"/>
+    </changeSet>
 </databaseChangeLog>

@@ -3,6 +3,8 @@ install: true
 script: mvn -P prod verify
 jdk:
   - openjdk11
+services:
+  - rabbitmq
 cache:
   directories:
     - .autoconf

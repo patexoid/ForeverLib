@@ -39,6 +39,10 @@ public class MessengerService {
         toRole(new Res("lib.stopped"), ZUserService.ADMIN_AUTHORITY);
     }
 
+    public void sendMessageToUser(Res message, String username) {
+       sendMessageToUser(message,userService.loadUserByUsername(username));
+    }
+
     public void sendMessageToUser(Res message, ZUser user) {
         if (user != null && user.getUserConfig() != null) {
             Locale locale = user.getUserConfig().getLocale();

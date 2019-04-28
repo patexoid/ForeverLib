@@ -3,6 +3,7 @@ package com.patex.service;
 import com.patex.entities.Author;
 import com.patex.entities.AuthorBook;
 import com.patex.entities.Book;
+import com.patex.entities.BookCreationEvent;
 import com.patex.entities.FileResource;
 import com.patex.entities.ZUser;
 import com.patex.parser.BookImage;
@@ -41,7 +42,6 @@ public class AdminService {
                 filter(book -> book.getCover() == null).forEach(
                 book -> transactionService.newTransaction(() -> updateCover(book))
         );
-
     }
 
     private void updateCover(Book book) {
@@ -62,6 +62,16 @@ public class AdminService {
                 filter(book -> !book.isDuplicate()).
                 map(book -> new BookCreationEvent(book, user)).
                 forEach(publisher::publishEvent);
+    }
+
+
+    public void recalculateDuplication(ZUser user) {
+        transactionService.transactionRequired(() -> {
+            bookService.findAll().forEach(
+                    book -> book.setDuplicate(false)
+            );
+        });
+        publisEventForExistingBooks(user);
     }
 
     public void checkDuplicatesForAuthor(ZUser user, Long authorId) {

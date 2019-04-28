@@ -1,9 +1,6 @@
-package com.patex.service;
+package com.patex.entities;
 
-import com.patex.entities.Book;
-import com.patex.entities.ZUser;
-
-public class BookCreationEvent  {
+public class BookCreationEvent {
     private final Book book;
 
     private final ZUser user;
