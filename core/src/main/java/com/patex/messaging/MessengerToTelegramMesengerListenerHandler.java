@@ -23,40 +23,38 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 @RequiredArgsConstructor
 public class MessengerToTelegramMesengerListenerHandler implements TelegramMessengerListener {
 
-    private final Collection<MessengerListener> listeners;
-    private final ZUserConfigRepository userConfigRepository;
+  private final Collection<MessengerListener> listeners;
+  private final ZUserConfigRepository userConfigRepository;
 
+  @Override
+  @SneakyThrows
+  public Stream<SendMessage> createResponse(Message request) {
+    Long chatId = request.getChatId();
+    String requestMessage = request.getText().trim();
 
-    @Override
-    @SneakyThrows
-    public Stream<SendMessage> createResponse(Message request) {
-        Long chatId = request.getChatId();
-        String requestMessage = request.getText().trim();
-
-        Optional<SecurityContext> securityContext = authenticate(chatId);
-        if (securityContext.isPresent()) {
-            List<String> responseMessages = new DelegatingSecurityContextCallable<>(
-                () -> listeners.stream().flatMap(l -> l.createResponse(requestMessage)).collect(Collectors.toList()),
-                securityContext.get()).call();
-            return responseMessages.stream().map(r -> createSendMessage(chatId, r));
-        } else {
-            return listeners.stream().filter(not(MessengerListener::requireUserAuth))
-                .flatMap(l -> l.createResponse(requestMessage)).map(r -> createSendMessage(chatId, r));
-        }
+    Optional<SecurityContext> securityContext = authenticate(chatId);
+    if (securityContext.isPresent()) {
+      List<String> responseMessages = new DelegatingSecurityContextCallable<>(
+          () -> listeners.stream().flatMap(l -> l.createResponse(requestMessage)).collect(Collectors.toList()),
+          securityContext.get()).call();
+      return responseMessages.stream().map(r -> createSendMessage(chatId, r));
+    } else {
+      return listeners.stream().filter(not(MessengerListener::requireUserAuth))
+          .flatMap(l -> l.createResponse(requestMessage)).map(r -> createSendMessage(chatId, r));
     }
+  }
 
-    private Optional<SecurityContext> authenticate(long chatId) {
-        Optional<ZUserConfig> userConfig = userConfigRepository.findByTelegramChatId(chatId);
-        return userConfig
-            .map(ZUserConfig::getUser)
-            .map(u -> new UsernamePasswordAuthenticationToken(u.getUsername(), u.getPassword(), u.getAuthorities()))
-            .map(SecurityContextImpl::new);
-    }
+  private Optional<SecurityContext> authenticate(long chatId) {
+    Optional<ZUserConfig> userConfig = userConfigRepository.findByTelegramChatId(chatId);
+    return userConfig
+        .map(ZUserConfig::getUser)
+        .map(u -> new UsernamePasswordAuthenticationToken(u.getUsername(), u.getPassword(), u.getAuthorities()))
+        .map(SecurityContextImpl::new);
+  }
 
-
-    private SendMessage createSendMessage(Long chatId, String r) {
-        SendMessage response = new SendMessage(chatId, r);
-        response.setParseMode("HTML");
-        return response;
-    }
+  private SendMessage createSendMessage(Long chatId, String r) {
+    SendMessage response = new SendMessage(chatId, r);
+    response.setParseMode("HTML");
+    return response;
+  }
 }

@@ -24,7 +24,7 @@ public class ZUserConfig {
     private Long id;
 
 
-    @OneToOne(cascade = {CascadeType.PERSIST}, fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToOne(cascade = {CascadeType.PERSIST}, fetch = FetchType.EAGER, orphanRemoval = true)
     @JoinColumn(name = "username", nullable = false, updatable = false)
     private ZUser user;
 

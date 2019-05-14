@@ -16,9 +16,7 @@ PARSER_END(LibRequestBuilder)
 
 
 SKIP :
-{
-  " "
-| "\t"
+{"\t"
 | "\n"
 | "\r"
 | <"//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>

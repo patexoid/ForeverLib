@@ -12,9 +12,9 @@ public class ActionBuilder {
   public Value execute(String requestString) throws ParseException {
     java.io.InputStream is = new java.io.ByteArrayInputStream(requestString.getBytes());
     LibRequestBuilder t = new LibRequestBuilder(is, java.nio.charset.Charset.forName("UTF-8"));
-    SimpleNode request = t.Request();
+    Request request = t.Request();
 
-    return ((Request) request).getValueSupplier(actionHandlerStorage);
+    return request.getValueSupplier(actionHandlerStorage);
   }
 
 }

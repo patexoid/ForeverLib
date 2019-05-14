@@ -30,7 +30,7 @@ class Request extends SimpleNode implements ValueSupplier {
       resultFunction = resultFunction.andThen(mapFunc);
     }
     Function r = resultFunction;
-    return new Value(inputType.getClass(), () -> r.apply(initial));
+    return new Value(inputType.getReturnType(), () -> r.apply(initial));
   }
 }
 /* ParserGeneratorCC - OriginalChecksum=a48974d8142e543c3be7b9546cd90bc3 (do not edit this line) */
