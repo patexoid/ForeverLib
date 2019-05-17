@@ -1,7 +1,6 @@
 package com.patex.lrequest;
 
 import com.patex.messaging.MessengerListener;
-import java.util.Collection;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -19,15 +18,18 @@ public class TelegramRequest implements MessengerListener {
   public Stream<String> createResponse(String request) {
     try {
 
-      Value result = actionBuilder.execute(request);
-      Object value = result.getResultSupplier().get();
-      if(value instanceof Stream) {
-        return ((Stream<?>) value).map(String::valueOf).collect(Collectors.toList()).stream();
-      } else{
+      Value<?> result = actionBuilder.execute(request);
+      if (result instanceof StreamValue) {
+        return ((StreamValue<?>) result).getResultSupplier().get()
+            .map(String::valueOf)
+            .collect(Collectors.toList())
+            .stream();
+      } else {
+        Object value = result.getResultSupplier().get();
         return Stream.of(String.valueOf(value));
       }
-    } catch (ParseException e) {
-      return Stream.empty();
+    } catch (ParseException | WrongActionSyntaxException e) {
+      return Stream.of(e.getMessage());
     }
   }
 

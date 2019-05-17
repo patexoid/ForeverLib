@@ -6,7 +6,7 @@ import static org.mockito.Mockito.when;
 
 import com.patex.entities.Author;
 import com.patex.lrequest.ActionResult;
-import com.patex.lrequest.FlowType;
+import com.patex.lrequest.DataType;
 import com.patex.lrequest.Value;
 import com.patex.lrequest.WrongActionSyntaxException;
 import com.patex.lrequest.actionprocessor.FindAuthor;
@@ -41,41 +41,30 @@ public class FindAuthorTest {
 
   @Test(expected = WrongActionSyntaxException.class)
   public void shouldFailWhenInitialWithWrongParams() {
-    findAuthor.createFuncton(FlowType.INITIAL, new Value<>(Integer.class, null));
+    findAuthor.createFuncton(DataType.INITIAL, new Value<>(Integer.class, null));
   }
 
   @Test(expected = WrongActionSyntaxException.class)
   public void shouldfailWhenNoParamsNoInput() {
-    findAuthor.createFuncton(FlowType.INITIAL);
+    findAuthor.createFuncton(DataType.INITIAL);
   }
 
   @Test(expected = WrongActionSyntaxException.class)
   public void shouldFailWhenWrongStreamInput() {
-    findAuthor.createFuncton(FlowType.streamResult(Integer.class));
+    findAuthor.createFuncton(DataType.streamResult(Integer.class));
   }
 
   @Test(expected = WrongActionSyntaxException.class)
   public void shouldFailWhenWrongInputType() {
-    findAuthor.createFuncton(FlowType.objResult(Integer.class));
+    findAuthor.createFuncton(DataType.objResult(Integer.class));
   }
 
   @Test
   public void shouldReturnAuthorWhenParam() {
     ActionResult<?, Stream<Author>> functon = findAuthor
-        .createFuncton(FlowType.INITIAL, new Value<>(String.class, () -> AUTHOR_NAME));
-    assertEquals(FlowType.streamResult(Author.class), functon.getFlowType());
+        .createFuncton(DataType.INITIAL, new Value<>(String.class, () -> AUTHOR_NAME));
+    assertEquals(DataType.streamResult(Author.class), functon.getDataType());
     List<Author> result = functon.getResultFunc().apply(null).collect(Collectors.toList());
-    assertEquals(AUTHORS, result);
-
-  }
-
-
-  @Test
-  public void shouldReturnAuthorWhenInputString() {
-    ActionResult<String, Stream<Author>> functon = findAuthor
-        .createFuncton(FlowType.objResult(String.class));
-    assertEquals(FlowType.streamResult(Author.class), functon.getFlowType());
-    List<Author> result = functon.getResultFunc().apply(AUTHOR_NAME).collect(Collectors.toList());
     assertEquals(AUTHORS, result);
   }
 
@@ -84,9 +73,9 @@ public class FindAuthorTest {
     String authorNanem2 = "authorNanem2";
     Author author2 = mock(Author.class);
     when(authorService.findByName(authorNanem2)).thenReturn(Collections.singletonList(author2));
-    ActionResult<Stream<String>, Stream<Author>> functon = findAuthor
-        .createFuncton(FlowType.streamResult(String.class));
-    assertEquals(FlowType.streamResult(Author.class), functon.getFlowType());
+    ActionResult<String, Stream<Author>> functon = findAuthor
+        .createFuncton(DataType.streamResult(String.class));
+    assertEquals(DataType.streamResult(Author.class), functon.getDataType());
     List<Author> result = functon.getResultFunc().apply(Stream.of(AUTHOR_NAME, authorNanem2)).collect(Collectors.toList());
     assertEquals(Arrays.asList(AUTHOR, author2), result);
   }

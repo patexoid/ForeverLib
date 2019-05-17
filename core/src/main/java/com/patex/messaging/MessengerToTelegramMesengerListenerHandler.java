@@ -35,12 +35,16 @@ public class MessengerToTelegramMesengerListenerHandler implements TelegramMesse
     Optional<SecurityContext> securityContext = authenticate(chatId);
     if (securityContext.isPresent()) {
       List<String> responseMessages = new DelegatingSecurityContextCallable<>(
-          () -> listeners.stream().flatMap(l -> l.createResponse(requestMessage)).collect(Collectors.toList()),
+          () -> listeners.stream()
+              .flatMap(l -> l.createResponse(requestMessage))
+              .collect(Collectors.toList()),
           securityContext.get()).call();
       return responseMessages.stream().map(r -> createSendMessage(chatId, r));
     } else {
-      return listeners.stream().filter(not(MessengerListener::requireUserAuth))
-          .flatMap(l -> l.createResponse(requestMessage)).map(r -> createSendMessage(chatId, r));
+      return listeners.stream()
+          .filter(not(MessengerListener::requireUserAuth))
+          .flatMap(l -> l.createResponse(requestMessage))
+          .map(r -> createSendMessage(chatId, r));
     }
   }
 

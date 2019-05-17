@@ -9,7 +9,7 @@ public class ActionBuilder {
 
   private final ActionHandlerStorage actionHandlerStorage;
 
-  public Value execute(String requestString) throws ParseException {
+  public Value execute(String requestString) throws ParseException, WrongActionSyntaxException {
     java.io.InputStream is = new java.io.ByteArrayInputStream(requestString.getBytes());
     LibRequestBuilder t = new LibRequestBuilder(is, java.nio.charset.Charset.forName("UTF-8"));
     Request request = t.Request();

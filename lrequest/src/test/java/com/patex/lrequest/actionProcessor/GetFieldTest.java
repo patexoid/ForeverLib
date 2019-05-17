@@ -3,7 +3,7 @@ package com.patex.lrequest.actionProcessor;
 import static org.junit.Assert.assertEquals;
 
 import com.patex.lrequest.ActionResult;
-import com.patex.lrequest.FlowType;
+import com.patex.lrequest.DataType;
 import com.patex.lrequest.Value;
 import com.patex.lrequest.WrongActionSyntaxException;
 import com.patex.lrequest.actionprocessor.GetField;
@@ -31,46 +31,15 @@ public class GetFieldTest {
 
   @Test(expected = WrongActionSyntaxException.class)
   public void shouldFailWheWrongInput() {
-    getField.createFuncton(FlowType.INITIAL, new Value<>(String.class, () -> "fieldName"));
-  }
-
-  @Test(expected = WrongActionSyntaxException.class)
-  public void shouldFailWhenNoParams() {
-    getField.createFuncton(FlowType.objResult(TestGetter.class));
-  }
-
-  @Test(expected = WrongActionSyntaxException.class)
-  public void shouldFailWhenWrongParamType() {
-    getField.createFuncton(FlowType.objResult(TestGetter.class), new Value<>(Integer.class, () -> 42));
-  }
-
-
-  @Test
-  public void shouldReturnValueForObject() {
-    ActionResult<TestGetter, String> actionResult = getField
-        .createFuncton(FlowType.objResult(TestGetter.class), new Value<>(String.class, () -> "value"));
-
-    assertEquals(FlowType.objResult(String.class), actionResult.getFlowType());
-    String result = actionResult.getResultFunc().apply(new TestGetter(SINGLE_VALUE));
-    assertEquals(SINGLE_VALUE, result);
-  }
-
-  @Test
-  public void shouldReturnValueStreamForObject() {
-    ActionResult<TestGetter, Stream<String>> actionResult = getField
-        .createFuncton(FlowType.objResult(TestGetter.class), new Value<>(String.class, () -> "values"));
-
-    assertEquals(FlowType.streamResult(String.class), actionResult.getFlowType());
-    List<String> result = actionResult.getResultFunc().apply(new TestGetter(VALUES)).collect(Collectors.toList());
-    assertEquals(VALUES, result);
+    getField.createFuncton(DataType.INITIAL, new Value<>(String.class, () -> "fieldName"));
   }
 
   @Test
   public void shouldReturnValueStreamForObjectStream() {
-    ActionResult<Stream<TestGetter>, Stream<String>> actionResult = getField
-        .createFuncton(FlowType.streamResult(TestGetter.class), new Value<>(String.class, () -> "value"));
+    ActionResult<TestGetter, Stream<String>> actionResult = getField
+        .createFuncton(DataType.streamResult(TestGetter.class), new Value<>(String.class, () -> "value"));
 
-    assertEquals(FlowType.streamResult(String.class), actionResult.getFlowType());
+    assertEquals(DataType.streamResult(String.class), actionResult.getDataType());
     List<String> result = actionResult.getResultFunc().apply(Stream.of(new TestGetter(SINGLE_VALUE), new TestGetter(
         SINGLE_VALUE_2))).collect(Collectors.toList());
     assertEquals(Arrays.asList(SINGLE_VALUE, SINGLE_VALUE_2), result);
@@ -78,10 +47,10 @@ public class GetFieldTest {
 
   @Test
   public void shouldReturnCollectionValuesStreamForObjectStream() {
-    ActionResult<Stream<TestGetter>, Stream<String>> actionResult = getField
-        .createFuncton(FlowType.streamResult(TestGetter.class), new Value<>(String.class, () -> "values"));
+    ActionResult<TestGetter, Stream<String>> actionResult = getField
+        .createFuncton(DataType.streamResult(TestGetter.class), new Value<>(String.class, () -> "values"));
 
-    assertEquals(FlowType.streamResult(String.class), actionResult.getFlowType());
+    assertEquals(DataType.streamResult(String.class), actionResult.getDataType());
     List<String> result = actionResult.getResultFunc().apply(Stream.of(new TestGetter(VALUES), new TestGetter(
         VALUES_2))).collect(Collectors.toList());
 

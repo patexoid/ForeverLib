@@ -5,7 +5,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.patex.lrequest.ActionHandler;
 import com.patex.lrequest.ActionResult;
-import com.patex.lrequest.FlowType;
+import com.patex.lrequest.DataType;
 import com.patex.lrequest.Value;
 import com.patex.lrequest.WrongActionSyntaxException;
 import java.lang.invoke.CallSite;
@@ -33,35 +33,28 @@ public class GetField implements ActionHandler {
   private final LambdaInfoStorage lambdaStorage = new LambdaInfoStorage();
 
   @Override
-  public ActionResult createFuncton(FlowType input, Value... values)
+  public ActionResult createFuncton(DataType input, Value... values)
       throws WrongActionSyntaxException {
     Class inputType = input.getReturnType();
-    if (input.is(FlowType.Type.initial) ||
+    if (!input.is(DataType.Type.stream) ||
         values.length != 1 ||
         !String.class.isAssignableFrom(values[0].getResultClass())) {
-      throw new WrongActionSyntaxException("Object.GetField(\"FieldName\") or Stream.GetField(\"FieldName\")");
+      throw new WrongActionSyntaxException("Object.GetField(\"FieldName\")");
     }
-    String fieldName = (String) values[0].getResultSupplier().get();
+    return createActionResult(inputType, (String) values[0].getResultSupplier().get());
+  }
+
+  private ActionResult createActionResult(Class inputType, String fieldName) {
     LambdaInfo lambda = lambdaStorage.getLambda(inputType, fieldName);
 
-    if (input.is((FlowType.Type.stream))) {
-      return new ActionResult(s -> {
-        Stream inputS = (Stream) s;
-        if (lambda.isCollection()) {
-          Function<Object, Collection> result = lambda.getFunction();
-          return inputS.flatMap(result.andThen(Collection::stream));
-        } else {
-          return inputS.map(lambda.getFunction());
-        }
-      }, FlowType.streamResult(lambda.getReturnType()));
+    Function<Stream<Object>, Stream<Object>> function;
+    if (lambda.isCollection()) {
+      function = s -> s.map((Function<Object, Collection>)lambda.getFunction()).flatMap(Collection::stream);
     } else {
-      if (lambda.isCollection()) {
-        Function<Object, Collection> result = lambda.getFunction();
-        return new ActionResult(result.andThen(Collection::stream), FlowType.streamResult(lambda.getReturnType()));
-      } else {
-        return new ActionResult(lambda.getFunction(), FlowType.objResult(lambda.getReturnType()));
-      }
+      function = s -> s.map(lambda.getFunction());
     }
+
+    return new ActionResult<>(function, DataType.streamResult(lambda.getReturnType()));
   }
 
   private static class LambdaInfoStorage {
@@ -76,10 +69,9 @@ public class GetField implements ActionHandler {
         });
 
     @SneakyThrows
-    public LambdaInfo getLambda(Class type, String field) {
+    LambdaInfo getLambda(Class type, String field) {
       return lambdaCache.get(new LambdaKey(type, field));
     }
-
 
     @SneakyThrows
     private LambdaInfo getLambda(LambdaKey key) {

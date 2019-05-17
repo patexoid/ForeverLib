@@ -5,25 +5,24 @@ import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
-public class FlowType {
+public class DataType {
 
-  public static FlowType INITIAL = new FlowType(null, Type.initial);
+  public static DataType INITIAL = new DataType(null, Type.initial);
   private final Class returnType;
   private final Type type;
 
 
-  private FlowType(Class returnType, Type type) {
+  private DataType(Class returnType, Type type) {
     this.returnType = returnType;
     this.type = type;
   }
 
-  public static FlowType streamResult(Class returnType) {
-    return new FlowType(returnType, Type.stream);
+  public static DataType streamResult(Class returnType) {
+    return new DataType(returnType, Type.stream);
   }
 
-
-  public static FlowType objResult(Class returnType) {
-    return new FlowType(returnType, Type.object);
+  public static DataType objResult(Class returnType) {
+    return new DataType(returnType, Type.object);
   }
 
   public boolean is(Type type) {

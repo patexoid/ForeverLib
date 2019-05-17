@@ -2,14 +2,16 @@
 /* ParserGeneratorCCOptions:MULTI=true,NODE_USES_PARSER=false,VISITOR=false,TRACK_TOKENS=false,NODE_PREFIX=,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package com.patex.lrequest;
 
-import static com.patex.lrequest.FlowType.INITIAL;
+import static com.patex.lrequest.DataType.INITIAL;
 
+import com.patex.lrequest.DataType.Type;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 public
 class Request extends SimpleNode implements ValueSupplier {
 
-  private static final Object initial = new Object();
+  private static final Object initial = Stream.empty();
 
   public Request(int id) {
     super(id);
@@ -17,20 +19,24 @@ class Request extends SimpleNode implements ValueSupplier {
 
   @SuppressWarnings("unchecked")
   @Override
-  public Value getValueSupplier(ActionHandlerStorage handlerStorage) {
+  public Value getValueSupplier(ActionHandlerStorage handlerStorage) throws WrongActionSyntaxException {
     Function resultFunction = Function.identity();
-    FlowType inputType = INITIAL;
+    DataType inputType = INITIAL;
     for (int i = 0; i < jjtGetNumChildren(); i++) {
       Action action = (Action) jjtGetChild(i);
       ActionHandler actionHandler = action.getFunction(handlerStorage);
       Value[] params = action.getParams(handlerStorage);
       ActionResult actionResult = actionHandler.createFuncton(inputType, params);
-      inputType = actionResult.getFlowType();
+      inputType = actionResult.getDataType();
       Function mapFunc = actionResult.getResultFunc();
       resultFunction = resultFunction.andThen(mapFunc);
     }
     Function r = resultFunction;
-    return new Value(inputType.getReturnType(), () -> r.apply(initial));
+    if (inputType.is(Type.stream)) {
+      return new StreamValue(inputType.getReturnType(), () -> r.apply(initial));
+    } else {
+      return new Value(inputType.getReturnType(), () -> r.apply(initial));
+    }
   }
 }
 /* ParserGeneratorCC - OriginalChecksum=a48974d8142e543c3be7b9546cd90bc3 (do not edit this line) */
