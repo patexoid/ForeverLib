@@ -67,17 +67,17 @@ public class BookService {
         this.publisher = publisher;
     }
 
-    public synchronized Book uploadBook(String fileName, InputStream is, ZUser user) throws LibException {
+    public Book uploadBook(String fileName, InputStream is, ZUser user) throws LibException {
+        byte[] byteArray = loadFromStream(is);
+        byte[] checksum = getChecksum(byteArray);
+        BookInfo bookInfo = parserService.getBookInfo(fileName, new ByteArrayInputStream(byteArray));
+        Book book = bookInfo.getBook();
         Book result = transactionService.transactionRequired(() -> {
-            byte[] byteArray = loadFromStream(is);
-            byte[] checksum = getChecksum(byteArray);
-            BookInfo bookInfo = parserService.getBookInfo(fileName, new ByteArrayInputStream(byteArray));
-            Book book = bookInfo.getBook();
             Optional<Book> sameBook = bookRepository.findFirstByTitleAndChecksum(book.getTitle(), checksum);
             if (sameBook.isPresent()) {
                 return sameBook.get();
             }
-            log.trace("new book:{}",  book.getFileName());
+            log.trace("new book:{}", book.getFileName());
             List<Author> authors = book.getAuthorBooks().stream().
                     map(AuthorBook::getAuthor).
                     map(author -> authorService.findFirstByNameIgnoreCase(author.getName()).orElse(author)).

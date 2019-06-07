@@ -174,21 +174,20 @@ public class DuplicateHandler {
                 collect(Collectors.toList());
     }
 
-    private BookCheckQueue checkForDuplicate(BookCheckQueue bookCheckQueue) {
+    private void checkForDuplicate(BookCheckQueue bookCheckQueue) {
         Book primary = bookService.getBook(bookCheckQueue.getBook().getId());
         try {
             shingleSearch.findSimilar(primary).
                     ifPresent(book -> markDuplications(primary, book, bookCheckQueue.getUser()));
             bookCheckQueueRepo.deleteById(bookCheckQueue.getId());
             log.trace("duplicate id=" + bookCheckQueue.getId());
-            return bookCheckQueue;
         } catch (Exception e) {
-            throw new LibException("Duplication check exception book " +
+            log.error("Duplication check exception book " +
                     " book.id= " + primary.getId() +
-                    " book.title = " + primary.getTitle() +
-                    " book.filename" + primary.getFileName() +
-                    " exception=" + e.getMessage(),
-                    e);
+                            " book.title = " + primary.getTitle() +
+                            " book.filename" + primary.getFileName() +
+                            " exception=" + e.getMessage());
+            log.trace("",e);
         }
     }
 
@@ -251,8 +250,12 @@ public class DuplicateHandler {
     private static class BookShingleCacheStorage implements ShingleCacheStorage<Book> {
         private final String storageFolder;
 
-        public BookShingleCacheStorage(String storageFolder) {
+        BookShingleCacheStorage(String storageFolder) {
             this.storageFolder = storageFolder;
+            File dir = new File(storageFolder);
+            if(!dir.exists()){
+                dir.mkdirs();
+            }
         }
 
         @Override
