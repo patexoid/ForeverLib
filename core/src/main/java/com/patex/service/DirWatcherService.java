@@ -14,6 +14,7 @@ import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileInputStream;
 import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchKey;
@@ -74,6 +75,9 @@ public class DirWatcherService {
 
     private void watch() {
         try {
+            if(!Files.exists(directoryPath)){
+                Files.createDirectories(directoryPath);
+            }
             WatchService watchService = directoryPath.getFileSystem().newWatchService();
             directoryPath.register(watchService, StandardWatchEventKinds.ENTRY_CREATE,
                     StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE);

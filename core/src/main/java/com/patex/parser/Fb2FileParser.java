@@ -49,7 +49,7 @@ public class Fb2FileParser implements FileParser {
             while (reader.hasNext()) {
                 XMLEvent event = reader.nextEvent();
                 if (event.isStartElement() && "title-info".equals(event.asStartElement().getName().getLocalPart())) {
-                    return parseTitleInfo(reader);
+                    return parseTitleInfo(reader, fileName);
                 }
             }
         } catch (XMLStreamException e) {
@@ -58,19 +58,18 @@ public class Fb2FileParser implements FileParser {
         throw new LibException("unable to parse fb2 file");
     }
 
-    private BookInfo parseTitleInfo(XMLEventReader reader) {
+    private BookInfo parseTitleInfo(XMLEventReader reader, String fileName) {
         BookInfo bookInfo = new BookInfo();
         bookInfo.setBook(new Book());
         try {
             parseTitleInfo(reader, bookInfo);
-
         } catch (XMLStreamException e) {
-            log.error(e.getMessage(), e);
+            log.error("Can't parse title for:"+fileName+" errorMessage:"+e.getMessage());
         }
         try {
             parseBodyAndBinary(reader, bookInfo);
         } catch (Exception e) {
-            log.error(e.getMessage(), e);
+            log.error("Can't parse body for:"+fileName+" errorMessage:"+e.getMessage());
         }
         return bookInfo;
     }
@@ -104,7 +103,7 @@ public class Fb2FileParser implements FileParser {
         Iterator<String> bodyIterator = createBodyIterator(reader);
         return StreamSupport.stream(
                 Spliterators.spliteratorUnknownSize(bodyIterator, 0), false).
-                map(String::length).reduce((l, l2) -> l + l2).orElse(0);
+                map(String::length).reduce(Integer::sum).orElse(0);
     }
 
     private void parseTitleInfo(XMLEventReader reader, BookInfo bookInfo) throws XMLStreamException {
@@ -277,7 +276,7 @@ public class Fb2FileParser implements FileParser {
     }
 
     private Iterator<String> createBodyIterator(XMLEventReader reader) {
-        return new Iterator<String>() {
+        return new Iterator<>() {
             private String next = calcNext();
 
             @Override
