@@ -26,35 +26,50 @@ SKIP :
 TOKEN : /* LITERALS */
 {
 
-< IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
+<FIND_AUTHOR:"Find author ">
+|
+<GET_FIRST:"Get first">
+|
+<NEXT_PAGE:"Next">
+|
+<PREVIOUS_PAGE:"Previous">
 |
 < NUMBER: (<DIGIT>)+ >
 |
-< STRING_VALUE: (<LETTER>|<DIGIT>|<CYRILIC>|" ")+ >// todo should work with all chars
-
+< STRING_VALUE: (<LETTER>|<DIGIT>|<CYRILIC>)(<LETTER>|<DIGIT>|<CYRILIC>|" ")* >// todo should work with all chars
 |
   < #LETTER: ["_","a"-"z","A"-"Z"] >
 |
   < #CYRILIC: ["а"-"я","А"-"Я"] >
 |
   < #DIGIT: ["0"-"9"] >
-
 }
-
 
 Request Request():{}
 {
-   Action()("."Action())*
+   Action()(". "Action())*
 { return jjtThis; }
 }
 
-Action Action():
+void Action():{}
+{
+ FindAuthor() | GetFirst()
+}
+
+void FindAuthor():
 {
    Token t;
 }
 {
-  t=<IDENTIFIER>{jjtThis.jjtSetValue(t.image);}
-  ("("  (Request() |NumericParam()|StringParam()) (","Request()|NumericParam()|StringParam())* ")")?
+<FIND_AUTHOR>
+"\""
+  t=<STRING_VALUE>{jjtThis.setAuthorName(t.image);}
+"\""
+}
+
+GetFirst GetFirst():{}
+{
+<GET_FIRST>
   { return jjtThis; }
 }
 
@@ -72,12 +87,7 @@ void StringParam():
 }
 {
 ("\""
-(
-  t=<IDENTIFIER> {jjtThis.setValue(t.image);}
-  |
   t=<STRING_VALUE>{jjtThis.setValue(t.image);}
-
-)
 "\"")
 |
 "\"\""{jjtThis.setValue("");}

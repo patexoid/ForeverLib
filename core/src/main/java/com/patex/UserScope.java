@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
-public class LocaleScope implements Scope {
+public class UserScope implements Scope {
 
     private final Map<String, Map<String, Object>> userObjMap = new HashMap<>();
     private final Map<String, Map<String, Runnable>> userObjDestructorMap = new HashMap<>();
@@ -25,7 +25,7 @@ public class LocaleScope implements Scope {
 
     @PostConstruct
     public void setUp() {
-        beanFactory.registerScope("locale",this);
+        beanFactory.registerScope("userScope",this);
     }
 
 

@@ -17,7 +17,8 @@
         <module>fuzzySearch</module>
         <module>core</module>
         <module>lrequest</module>
-      <module>it</module>
+        <module>it</module>
+        <module>stateMachine</module>
     </modules>
     <profiles>
         <profile>
