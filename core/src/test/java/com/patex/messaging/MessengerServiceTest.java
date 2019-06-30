@@ -46,7 +46,8 @@ public class MessengerServiceTest {
 
     @Before
     public void setUp() {
-        messengerService.register(messenger);
+
+        messengerService=new MessengerService(res,userService, Collections.singletonList(messenger));
         when(userConfig.getLocale()).thenReturn(locale);
         user.setUserConfig(userConfig);
         when(res.get(locale, MESSAGE_KEY, OBJS)).thenReturn(LOCALIZED_MESSAGE);

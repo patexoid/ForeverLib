@@ -1,0 +1,95 @@
+
+options {
+    MULTI = true;
+    NODE_PREFIX = "";
+
+}
+
+PARSER_BEGIN(LibRequestBuilder)
+package  com.patex.lrequest;
+
+public class LibRequestBuilder {
+
+}
+
+PARSER_END(LibRequestBuilder)
+
+
+SKIP :
+{"\t"
+| "\n"
+| "\r"
+| <"//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+| <"/*" (~["*"])* "*" (~["/"] (~["*"])* "*")* "/">
+}
+
+TOKEN : /* LITERALS */
+{
+
+<FIND_AUTHOR:"Find author ">
+|
+<GET_FIRST:"Get first">
+|
+<NEXT_PAGE:"Next">
+|
+<PREVIOUS_PAGE:"Previous">
+|
+< NUMBER: (<DIGIT>)+ >
+|
+< STRING_VALUE: (<LETTER>|<DIGIT>|<CYRILIC>)(<LETTER>|<DIGIT>|<CYRILIC>|" ")* >// todo should work with all chars
+|
+  < #LETTER: ["_","a"-"z","A"-"Z"] >
+|
+  < #CYRILIC: ["а"-"я","А"-"Я"] >
+|
+  < #DIGIT: ["0"-"9"] >
+}
+
+Request Request():{}
+{
+   Action()(". "Action())*
+{ return jjtThis; }
+}
+
+void Action():{}
+{
+ FindAuthor() | GetFirst()
+}
+
+void FindAuthor():
+{
+   Token t;
+}
+{
+<FIND_AUTHOR>
+"\""
+  t=<STRING_VALUE>{jjtThis.setAuthorName(t.image);}
+"\""
+}
+
+GetFirst GetFirst():{}
+{
+<GET_FIRST>
+  { return jjtThis; }
+}
+
+void NumericParam():
+{
+   Token t;
+}
+{
+  t=<NUMBER>{jjtThis.setValue(t.image);}
+}
+
+void StringParam():
+{
+   Token t;
+}
+{
+("\""
+  t=<STRING_VALUE>{jjtThis.setValue(t.image);}
+"\"")
+|
+"\"\""{jjtThis.setValue("");}
+}
+
