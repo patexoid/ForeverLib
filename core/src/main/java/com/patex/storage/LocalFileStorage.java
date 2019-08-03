@@ -35,13 +35,13 @@ public class LocalFileStorage implements FileStorage {
     }
 
     @Override
-    public boolean exists(String... filePath) {
-        return new File(getFilePath(filePath)).exists();
+    public boolean exists( String bucket, String fileName) {
+        return new File(getFilePath(bucket, fileName)).exists();
     }
 
     @Override
-    public String save(byte[] fileContent, String... filePath) throws LibException {
-        File file = new File(getFilePath(filePath));
+    public String save(byte[] fileContent, String bucket, String fileName) throws LibException {
+        File file = new File(getFilePath(bucket, fileName));
         File  parentDir = file.getParentFile();
         if(!parentDir.exists()){
             parentDir.mkdirs();

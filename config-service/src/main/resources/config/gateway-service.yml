@@ -1,0 +1,31 @@
+server:
+  port: 8060
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://discovery-service:8061/eureka/
+
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} ${LOG_LEVEL_PATTERN:-%5p} %class.%method %m%n"
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: core
+          uri: lb://core
+          predicates:
+            - Path=/core/**
+          filters:
+            - RewritePath=/core/(?<path>.*), /$\{path}
+        - id: data-storage
+          uri: http://data-storage:8090
+          predicates:
+            - Path=/file/**
+          filters:
+            - RewritePath=/file/(?<path>.*), /$\{path}

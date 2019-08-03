@@ -1,0 +1,64 @@
+version: "3.7"
+services:
+  config-service:
+    build: config-service
+    ports:
+      - "8088:8088"
+    networks:
+      external:
+        aliases:
+          - config-service
+  discovery-service:
+    build: discovery-service
+    ports:
+        - "8061:8061"
+    networks:
+      external:
+        aliases:
+            - discovery-service
+  gateway-service:
+    build: gateway-service
+    ports:
+      - "8060:8060"
+    networks:
+      external:
+        aliases:
+          - gateway-service
+  core:
+    build: core
+    ports:
+      - "8080:8080"
+      - "5005:5005"
+    networks:
+      external:
+        aliases:
+          - core
+  data-storage-spring:
+    build: data-storage-spring
+    ports:
+      - "8090:8090"
+      - "5007:5007"
+    networks:
+      external:
+        aliases:
+          - data-storage-spring
+  postgres:
+    image: postgres:11.4
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_DB=dev-db
+      - POSTGRES_USER=dev
+      - POSTGRES_PASSWORD=dev
+    networks:
+      external:
+        aliases:
+          - postgres
+volumes:
+  db-data:
+networks:
+  external:
+

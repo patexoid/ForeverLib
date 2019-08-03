@@ -3,6 +3,8 @@ package com.patex;
 import liquibase.integration.spring.SpringLiquibase;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -22,12 +24,13 @@ import javax.sql.DataSource;
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableScheduling
 @EnableTransactionManagement
+@EnableDiscoveryClient
+@EnableFeignClients
 public class Application {
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
     }
-
 
     @Bean
     public WebMvcConfigurer corsConfigurer() {

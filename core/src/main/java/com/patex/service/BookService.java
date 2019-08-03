@@ -104,7 +104,7 @@ public class BookService {
                     }).collect(Collectors.toList());
             book.setSequences(sequences);
 
-            String fileId = fileStorage.save(byteArray, fileName);
+            String fileId = fileStorage.save(byteArray, "book",fileName);
             book.setFileResource(new FileResource(fileId, "application/fb2+zip", byteArray.length));//TODO improve me
             BookImage bookImage = bookInfo.getBookImage();
             if (bookImage != null) {

@@ -27,13 +27,13 @@ public class TempFileStorage implements FileStorage {
 
 
     @Override
-    public boolean exists(String... filepath) {
-        return new File(getFilePath(filepath)).exists();
+    public boolean exists( String bucket, String fileName) {
+        return new File(getFilePath(bucket, fileName)).exists();
     }
 
     @Override
-    public String save(byte[] fileContent, String... filepath) throws LibException {
-        File file = new File(getFilePath(filepath));
+    public String save(byte[] fileContent,  String bucket, String fileName) throws LibException {
+        File file = new File(getFilePath(bucket, fileName));
         File dir = file.getParentFile();
         if(!dir.exists()){
             dir.mkdirs();

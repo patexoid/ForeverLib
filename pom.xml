@@ -16,6 +16,13 @@
         <module>localization</module>
         <module>fuzzySearch</module>
         <module>core</module>
+        <module>data-storage</module>
+        <module>common</module>
+        <module>config-service</module>
+        <module>gateway-service</module>
+        <module>discovery-service</module>
+        <module>data-storage-spring</module>
+
     </modules>
     <profiles>
         <profile>

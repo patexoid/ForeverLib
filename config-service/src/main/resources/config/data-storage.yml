@@ -1,0 +1,9 @@
+server:
+  port: 8090
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://discovery-service:8061/eureka/
+localStorage:
+  folder: './storage'

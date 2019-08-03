@@ -95,7 +95,7 @@ public class BooksServiceTest {
     public void verifyUploadBook() {
         Book result = bookService.uploadBook(FILE_NAME, bookIS, user);
         verify(bookRepo).save(this.book);
-        verify(fileStorage).save(any(), eq(FILE_NAME));
+        verify(fileStorage).save(any(), any(), eq(FILE_NAME));
         assertEquals(FILE_NAME, book.getFileName());
         assertEquals(result, book);
     }

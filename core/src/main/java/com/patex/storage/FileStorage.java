@@ -10,9 +10,9 @@ import java.io.InputStream;
 public interface FileStorage {
     String getType();
 
-    String save(byte[] fileContent, String... filePath) throws LibException;
+    String save(byte[] fileContent, String bucket, String fileName) throws LibException;
 
     InputStream load(String fileId) throws LibException;
 
-    boolean exists(String... filePath);
+    boolean exists( String bucket, String fileName);
 }
