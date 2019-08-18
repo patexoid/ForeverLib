@@ -1,9 +1,0 @@
-com\patex\storage\Main.class
-com\patex\storage\server\FileDownloadHandler.class
-com\patex\storage\server\RequestHandler.class
-com\patex\storage\ExampleServiceBase.class
-com\patex\storage\server\LocalFileStorage.class
-com\patex\storage\GuicePropertyModule.class
-com\patex\storage\server\FileUploadHandler.class
-com\patex\storage\server\FileServer.class
-com\patex\storage\server\FileStorage.class

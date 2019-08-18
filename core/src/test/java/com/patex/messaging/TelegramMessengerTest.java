@@ -1,7 +1,7 @@
 package com.patex.messaging;
 
-import com.patex.entities.ZUser;
-import com.patex.entities.ZUserConfig;
+import com.patex.entities.UserEntity;
+import com.patex.entities.UserConfigEntity;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,8 +49,8 @@ public class TelegramMessengerTest {
 
     @Test
     public void shouldSendMessage() {
-        ZUser user = new ZUser();
-        ZUserConfig config = new ZUserConfig();
+        UserEntity user = new UserEntity();
+        UserConfigEntity config = new UserConfigEntity();
         config.setTelegramChatId(TELEGRAM_CHAT_ID);
         user.setUserConfig(config);
         when(spliterator.splitText(MESSAGE)).thenReturn(Collections.singletonList(MESSAGE));
@@ -64,8 +64,8 @@ public class TelegramMessengerTest {
     public void shouldSendMessages() {
         String part1 = "part1";
         String part2 = "part2";
-        ZUser user = new ZUser();
-        ZUserConfig config = new ZUserConfig();
+        UserEntity user = new UserEntity();
+        UserConfigEntity config = new UserConfigEntity();
         config.setTelegramChatId(TELEGRAM_CHAT_ID);
         user.setUserConfig(config);
         when(spliterator.splitText(MESSAGE)).thenReturn(Arrays.asList(part1, part2));

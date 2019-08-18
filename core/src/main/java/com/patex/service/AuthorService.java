@@ -1,8 +1,8 @@
 package com.patex.service;
 
-import com.patex.entities.AggrResult;
-import com.patex.entities.Author;
+import com.patex.entities.AuthorEntity;
 import com.patex.entities.AuthorRepository;
+import com.patex.model.AggrResult;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,7 +22,7 @@ public class AuthorService {
         this.authorRepository = authorRepository;
     }
 
-    public Author getAuthor(long id) {
+    public AuthorEntity getAuthor(long id) {
         return authorRepository.findById(id).get();
     }
 
@@ -30,15 +30,15 @@ public class AuthorService {
         return authorRepository.getAuthorsCount(start.length() + 1, start);
     }
 
-    public List<Author> findByName(String name) {
+    public List<AuthorEntity> findByName(String name) {
         return authorRepository.findByNameStartingWithIgnoreCaseOrderByName(name);
     }
 
-    public Optional<Author> findFirstByNameIgnoreCase(String name) {
+    public Optional<AuthorEntity> findFirstByNameIgnoreCase(String name) {
         return authorRepository.findFirstByNameIgnoreCase(name);
     }
 
-    public Page<Author> getAuthor(Pageable pageable, String prefix) {
+    public Page<AuthorEntity> getAuthor(Pageable pageable, String prefix) {
         prefix = prefix == null ? "" : prefix;
         return authorRepository.getAuthorsByName(pageable, prefix);
     }

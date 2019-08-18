@@ -2,14 +2,14 @@ package com.patex.service;
 
 
 import com.patex.LibException;
-import com.patex.entities.Author;
-import com.patex.entities.AuthorBook;
-import com.patex.entities.Book;
+import com.patex.entities.AuthorBookEntity;
+import com.patex.entities.AuthorEntity;
 import com.patex.entities.BookCheckQueue;
 import com.patex.entities.BookCheckQueueRepository;
-import com.patex.entities.BookSequence;
-import com.patex.entities.Sequence;
-import com.patex.entities.ZUser;
+import com.patex.entities.BookEntity;
+import com.patex.entities.BookSequenceEntity;
+import com.patex.entities.SequenceEntity;
+import com.patex.entities.UserEntity;
 import com.patex.messaging.MessengerService;
 import com.patex.parser.ParserService;
 import com.patex.shingle.ShingleCacheStorage;
@@ -54,11 +54,10 @@ public class DuplicateHandler {
 
     private final BookCheckQueueRepository bookCheckQueueRepo;
     private final TransactionService transactionService;
-    private final BookService bookService;
     private final MessengerService messenger;
     private final StorageService fileStorage;
     private final ParserService parserService;
-    private final ShingleSearch<Book, Long> shingleSearch;
+    private final ShingleSearch<BookEntity, Long> shingleSearch;
     private final ExecutorService scheduleExecutor;
 
     private final Semaphore lock = new Semaphore(0);
@@ -67,7 +66,7 @@ public class DuplicateHandler {
 
     @Autowired
     public DuplicateHandler(BookCheckQueueRepository bookCheckQueueRepo, TransactionService transactionService,
-                            BookService bookService, MessengerService messenger, StorageService fileStorage,
+                            MessengerService messenger, StorageService fileStorage,
                             ParserService parserService,
                             ExecutorCreator executorCreator,
                             @Value("${duplicateCheck.threadCount:0}") int threadCount,
@@ -76,7 +75,6 @@ public class DuplicateHandler {
                             @Value("${duplicateCheck.storageCacheFolder:}") String storageFolder) {
         this.bookCheckQueueRepo = bookCheckQueueRepo;
         this.transactionService = transactionService;
-        this.bookService = bookService;
         this.messenger = messenger;
         this.fileStorage = fileStorage;
         this.parserService = parserService;
@@ -91,7 +89,7 @@ public class DuplicateHandler {
         blockingExecutor = new BlockingExecutor(this.threadCount, this.threadCount * 5, 1,
                 TimeUnit.MINUTES, this.threadCount * 5,
                 executorCreator.createThreadFactory("checkForDuplicate-", log));
-        shingleSearch = new ShingleSearch<>(this::getSameAuthorsBook, ShingleableBook::new, Book::getId,
+        shingleSearch = new ShingleSearch<>(this::getSameAuthorsBook, ShingleableBook::new, BookEntity::getId,
                 coef, cacheSize);
         if (StringUtils.isNotEmpty(storageFolder)) {
             shingleSearch.setStorage(new BookShingleCacheStorage(storageFolder));
@@ -155,19 +153,20 @@ public class DuplicateHandler {
                         scheduleCheck(event)));
     }
 
-    private synchronized void scheduleCheck(BookCreationEvent event) {
-        Book newBook = bookService.getBook(event.getBook().getId());
-        if (!newBook.isDuplicate()) {
-            bookCheckQueueRepo.saveAndFlush(new BookCheckQueue(newBook, event.getUser()));
-            lock.release();
-        }
+    private synchronized void scheduleCheck(BookCreationEvent event) {//TODO FIX
+        System.out.println(event);
+//        BookEntity newBook = bookService.getBook(event.getBook().getId());
+//        if (!newBook.isDuplicate()) {
+//            bookCheckQueueRepo.saveAndFlush(new BookCheckQueue(newBook, event.getUser()));
+//            lock.release();
+//        }
     }
 
-    private List<Book> getSameAuthorsBook(Book primaryBook) {
-        return primaryBook.getAuthorBooks().stream().map(AuthorBook::getAuthor).
-                flatMap(a -> a.getBooks().stream().map(AuthorBook::getBook)).
+    private List<BookEntity> getSameAuthorsBook(BookEntity primaryBook) {
+        return primaryBook.getAuthorBooks().stream().map(AuthorBookEntity::getAuthor).
+                flatMap(a -> a.getBooks().stream().map(AuthorBookEntity::getBook)).
                 filter(book -> !book.getId().equals(primaryBook.getId())).
-                filter(StreamU.distinctByKey(Book::getId)).
+                filter(StreamU.distinctByKey(BookEntity::getId)).
                 filter(book -> !book.isDuplicate()).
                 sorted(Comparator.comparing(
                         book -> StringUtils.getLevenshteinDistance(book.getTitle(), primaryBook.getTitle()))).
@@ -175,7 +174,8 @@ public class DuplicateHandler {
     }
 
     private void checkForDuplicate(BookCheckQueue bookCheckQueue) {
-        Book primary = bookService.getBook(bookCheckQueue.getBook().getId());
+        System.out.println(bookCheckQueue);
+/*        BookEntity primary = bookService.getBook(bookCheckQueue.getBook().getId());
         try {
             shingleSearch.findSimilar(primary).
                     ifPresent(book -> markDuplications(primary, book, bookCheckQueue.getUser()));
@@ -188,12 +188,12 @@ public class DuplicateHandler {
                             " book.filename" + primary.getFileName() +
                             " exception=" + e.getMessage());
             log.trace("",e);
-        }
+        }*/
     }
 
-    private void markDuplications(Book first, Book second, ZUser user) {
+    public void markDuplications(BookEntity first, BookEntity second, UserEntity user) {
         try {
-            Book primary, secondary;
+            BookEntity primary, secondary;
             if (first.getContentSize() > second.getContentSize()) {
                 primary = first;
                 secondary = second;
@@ -203,30 +203,30 @@ public class DuplicateHandler {
             }
 
             List<Long> sequences = primary.getSequences().stream().
-                    map(BookSequence::getSequence).
+                    map(BookSequenceEntity::getSequence).
                     filter(Objects::nonNull).//todo delete later
-                    map(Sequence::getId).
+                    map(SequenceEntity::getId).
                     collect(Collectors.toList());
-            List<Long> authors = primary.getAuthorBooks().stream().map(AuthorBook::getAuthor).map(Author::getId).
+            List<Long> authors = primary.getAuthorBooks().stream().map(AuthorBookEntity::getAuthor).map(AuthorEntity::getId).
                     collect(Collectors.toList());
 
             secondary.setDuplicate(true);
-            this.bookService.updateBook(secondary);
+//            this.bookService.updateBook(secondary);
             shingleSearch.invalidate(secondary);
-            for (AuthorBook authorBook : secondary.getAuthorBooks()) {
-                Author author = authorBook.getAuthor();
+            for (AuthorBookEntity authorBook : secondary.getAuthorBooks()) {
+                AuthorEntity author = authorBook.getAuthor();
                 if (!authors.contains(author.getId())) {
-                    primary.getAuthorBooks().add(new AuthorBook(author, primary));
+                    primary.getAuthorBooks().add(new AuthorBookEntity(author, primary));
                 }
             }
-            for (BookSequence bookSequence : secondary.getSequences()) {
-                Sequence sequence = bookSequence.getSequence();
+            for (BookSequenceEntity bookSequence : secondary.getSequences()) {
+                SequenceEntity sequence = bookSequence.getSequence();
                 if (!sequences.contains(sequence.getId())) {
                     primary.getSequences().
-                            add(new BookSequence(bookSequence.getSeqOrder(), sequence, primary));
+                            add(new BookSequenceEntity(bookSequence.getSeqOrder(), sequence, primary));
                 }
             }
-            String message = "Book:" + first.getTitle() + "\nPrimary: " + primary.getTitle() + "\nDuplicate: " +
+            String message = "BookEntity:" + first.getTitle() + "\nPrimary: " + primary.getTitle() + "\nDuplicate: " +
                     secondary.getTitle();
             log.info(message);
             if (user != null) {
@@ -234,7 +234,7 @@ public class DuplicateHandler {
                         primary.getTitle(), secondary.getTitle());
                 messenger.sendMessageToUser(messageRes, user);
             }
-            this.bookService.updateBook(primary);
+//            this.bookService.updateBook(primary);
         } catch (Exception e) {
             throw new LibException("Duplication mark exception book " +
                     " first.id= " + first.getId() +
@@ -247,19 +247,19 @@ public class DuplicateHandler {
         }
     }
 
-    private static class BookShingleCacheStorage implements ShingleCacheStorage<Book> {
+    private static class BookShingleCacheStorage implements ShingleCacheStorage<BookEntity> {
         private final String storageFolder;
 
         BookShingleCacheStorage(String storageFolder) {
             this.storageFolder = storageFolder;
             File dir = new File(storageFolder);
-            if(!dir.exists()){
+            if (!dir.exists()) {
                 dir.mkdirs();
             }
         }
 
         @Override
-        public InputStream load(Book book) {
+        public InputStream load(BookEntity book) {
             File cache = getCacheFile(book);
             if (cache.exists()) {
                 try {
@@ -271,12 +271,12 @@ public class DuplicateHandler {
             return null;
         }
 
-        private File getCacheFile(Book book) {
+        private File getCacheFile(BookEntity book) {
             return new File(storageFolder + "/" + book.getId());
         }
 
         @Override
-        public void save(byte[] bytes, Book book) {
+        public void save(byte[] bytes, BookEntity book) {
             try (FileOutputStream fos = new FileOutputStream(getCacheFile(book))) {
                 fos.write(bytes);
                 fos.flush();
@@ -287,11 +287,11 @@ public class DuplicateHandler {
     }
 
     private class ShingleableBook implements Shingleable {
-        private final Book book;
+        private final BookEntity book;
         private Iterator<String> contentIterator;
         private InputStream is;
 
-        ShingleableBook(Book book) {
+        ShingleableBook(BookEntity book) {
             this.book = book;
             is = fileStorage.load(book.getFileResource().getFilePath());
             this.contentIterator = parserService.getContentIterator(book.getFileName(), is);

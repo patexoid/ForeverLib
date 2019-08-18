@@ -12,12 +12,12 @@ import java.util.Optional;
  */
 
 @Repository
-public interface BookRepository extends CrudRepository<Book, Long> {
+public interface BookRepository extends CrudRepository<BookEntity, Long> {
 
-    Page<Book> findAll(Pageable pageable);
+    Page<BookEntity> findAll(Pageable pageable);
 
-    Optional<Book> findFirstByTitleAndChecksum(String title, byte[] checksum);
+    Optional<BookEntity> findFirstByTitleAndChecksum(String title, byte[] checksum);
 
-    Page<Book> findAllByOrderByCreatedDesc(Pageable pageable);
+    Page<BookEntity> findAllByOrderByCreatedDesc(Pageable pageable);
 
 }

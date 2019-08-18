@@ -18,8 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.apache.http.HttpHeaders.AUTHORIZATION;
-
 /**
  * Created by Alexey on 8/15/2016.
  */
@@ -45,7 +43,7 @@ public class HttpTestClient {
     private void updateHeaders(HttpHeaders headers){
         if(username!=null) {
             String basic = Base64.getEncoder().encodeToString((username + ":" + password).getBytes());
-            headers.add(AUTHORIZATION, "Basic " + basic);
+            headers.add(HttpHeaders.AUTHORIZATION, "Basic " + basic);
         }
     }
 

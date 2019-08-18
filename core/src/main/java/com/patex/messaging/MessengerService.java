@@ -1,6 +1,6 @@
 package com.patex.messaging;
 
-import com.patex.entities.ZUser;
+import com.patex.entities.UserEntity;
 import com.patex.service.Resources;
 import com.patex.service.ZUserService;
 import com.patex.utils.Res;
@@ -39,7 +39,7 @@ public class MessengerService {
         toRole(new Res("lib.stopped"), ZUserService.ADMIN_AUTHORITY);
     }
 
-    public void sendMessageToUser(Res message, ZUser user) {
+    public void sendMessageToUser(Res message, UserEntity user) {
         if (user != null && user.getUserConfig() != null) {
             Locale locale = user.getUserConfig().getLocale();
             String messageS = message.getMessage(res, locale);
@@ -52,7 +52,7 @@ public class MessengerService {
     }
 
     private void toRole(Res message, String role, Collection<Messenger> messengers) {
-        Collection<ZUser> users = userService.getByRole(role);
+        Collection<UserEntity> users = userService.getByRole(role);
         messengers.forEach(messenger -> users.forEach(user -> sendMessageToUser(message, user)));
     }
 }

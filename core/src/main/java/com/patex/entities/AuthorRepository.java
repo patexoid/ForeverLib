@@ -1,5 +1,6 @@
 package com.patex.entities;
 
+import com.patex.model.AggrResult;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
@@ -15,11 +16,11 @@ import java.util.Optional;
  * Created by Alexey on 12.03.2016.
  */
 @Repository
-public interface AuthorRepository extends CrudRepository<Author, Long> {
+public interface AuthorRepository extends CrudRepository<AuthorEntity, Long> {
 
-    List<Author> findByNameStartingWithIgnoreCaseOrderByName(String name);
+    List<AuthorEntity> findByNameStartingWithIgnoreCaseOrderByName(String name);
 
-    Optional<Author> findFirstByNameIgnoreCase(String name);
+    Optional<AuthorEntity> findFirstByNameIgnoreCase(String name);
 
     @Query(value = "SELECT " +
             "  substring(a.name, 0, :prefixLength) AS id, " +
@@ -27,9 +28,9 @@ public interface AuthorRepository extends CrudRepository<Author, Long> {
             "FROM Author a WHERE name LIKE :prefix% GROUP BY id ORDER BY id",nativeQuery = true)
     List<AggrResult> getAuthorsCount(@Param("prefixLength")int length, @Param("prefix") String name);
 
-    Page<Author> findByNameStartingWithIgnoreCase(String name, Pageable pageable);
+    Page<AuthorEntity> findByNameStartingWithIgnoreCase(String name, Pageable pageable);
 
-    @Query("SELECT NEW com.patex.entities.Author(a.id, a.name)" +
-            " FROM Author a where name like :prefix% order by name")
-    Page<Author> getAuthorsByName(Pageable pageable, @Param("prefix") String prefix);
+    @Query("SELECT NEW com.patex.entities.AuthorEntity(a.id, a.name)" +
+            " FROM AuthorEntity a where name like :prefix% order by name")
+    Page<AuthorEntity> getAuthorsByName(Pageable pageable, @Param("prefix") String prefix);
 }

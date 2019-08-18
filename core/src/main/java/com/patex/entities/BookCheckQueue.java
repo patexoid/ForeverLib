@@ -18,17 +18,17 @@ public class BookCheckQueue {
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    private Book book;
+    private BookEntity book;
 
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    private ZUser user;
+    private UserEntity user;
 
 
     public BookCheckQueue() {
     }
 
-    public BookCheckQueue(Book book, ZUser user) {
+    public BookCheckQueue(BookEntity book, UserEntity user) {
         this.book = book;
         this.user = user;
     }
@@ -41,19 +41,19 @@ public class BookCheckQueue {
         this.id = id;
     }
 
-    public ZUser getUser() {
+    public UserEntity getUser() {
         return user;
     }
 
-    public void setUser(ZUser user) {
+    public void setUser(UserEntity user) {
         this.user = user;
     }
 
-    public Book getBook() {
+    public BookEntity getBook() {
         return book;
     }
 
-    public void setBook(Book book) {
+    public void setBook(BookEntity book) {
         this.book = book;
     }
 }

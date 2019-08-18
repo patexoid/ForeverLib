@@ -1,7 +1,7 @@
 package com.patex.messaging;
 
-import com.patex.entities.ZUser;
-import com.patex.entities.ZUserConfig;
+import com.patex.entities.UserEntity;
+import com.patex.entities.UserConfigEntity;
 import com.patex.service.Resources;
 import com.patex.service.ZUserService;
 import com.patex.utils.Res;
@@ -39,10 +39,10 @@ public class MessengerServiceTest {
     @InjectMocks
     private MessengerService messengerService;
 
-    private ZUser user = new ZUser();
+    private UserEntity user = new UserEntity();
 
     private Locale locale = Locale.PRC;
-    private ZUserConfig userConfig = mock(ZUserConfig.class);
+    private UserConfigEntity userConfig = mock(UserConfigEntity.class);
 
     @Before
     public void setUp() {
@@ -60,9 +60,9 @@ public class MessengerServiceTest {
 
     @Test
     public void shouldSendMessageToUserWithRole() {
-        ZUser user1 = new ZUser();
+        UserEntity user1 = new UserEntity();
         user1.setUserConfig(userConfig);
-        ZUser user2 = new ZUser();
+        UserEntity user2 = new UserEntity();
         user2.setUserConfig(userConfig);
         String role = "role";
         when(userService.getByRole(role)).thenReturn(Arrays.asList(user1, user2));

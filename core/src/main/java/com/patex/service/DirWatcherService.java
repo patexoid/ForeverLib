@@ -1,6 +1,6 @@
 package com.patex.service;
 
-import com.patex.entities.ZUser;
+import com.patex.entities.UserEntity;
 import com.patex.utils.ExecutorCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +54,7 @@ public class DirWatcherService {
 
     @PostConstruct
     public void setUp() {
-        Optional<ZUser> user = getAdminUser();
+        Optional<UserEntity> user = getAdminUser();
         user.ifPresent(zUser -> run());
     }
 
@@ -83,7 +83,7 @@ public class DirWatcherService {
                     StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE);
             while (running) {
                 WatchKey watchKey = watchService.take();
-                Optional<ZUser> user = getAdminUser();
+                Optional<UserEntity> user = getAdminUser();
                 assert user.isPresent();
                 watchKey.pollEvents().stream().
                         filter(e -> StandardWatchEventKinds.ENTRY_CREATE.equals(e.kind())).
@@ -101,7 +101,7 @@ public class DirWatcherService {
     }
 
     private void initStart() {
-        Optional<ZUser> user = getAdminUser();
+        Optional<UserEntity> user = getAdminUser();
         user.ifPresent(zUser -> {
             File dir = directoryPath.toFile();
             for (File file : Objects.requireNonNull(dir.listFiles())) {
@@ -110,11 +110,11 @@ public class DirWatcherService {
         });
     }
 
-    private Optional<ZUser> getAdminUser() {
+    private Optional<UserEntity> getAdminUser() {
         return zUserService.getByRole(ZUserService.ADMIN_AUTHORITY).stream().findFirst();
     }
 
-    private void processFile(File file, ZUser adminUser) {
+    private void processFile(File file, UserEntity adminUser) {
         try (FileInputStream fis = new FileInputStream(file)) {
             bookService.uploadBook(file.getName(), fis, adminUser);
         } catch (Exception e) {

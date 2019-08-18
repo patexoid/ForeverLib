@@ -1,8 +1,8 @@
 package com.patex.controllers;
 
 import com.patex.LibException;
-import com.patex.entities.ZUser;
-import com.patex.entities.ZUserConfig;
+import com.patex.entities.UserEntity;
+import com.patex.entities.UserConfigEntity;
 import com.patex.service.ZUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
@@ -34,14 +34,14 @@ public class ZUserController {
 
     @RequestMapping(method = RequestMethod.POST)
     @Secured(USER)
-    public ZUser save(ZUser user) {
+    public UserEntity save(UserEntity user) {
         return userDetailsService.save(user);
     }
 
 
     @RequestMapping(value = "/create", method = RequestMethod.POST)
     public @ResponseBody
-    ZUser createUser(@RequestBody ZUser user) {
+    UserEntity createUser(@RequestBody UserEntity user) {
         return userDetailsService.createUser(user);
     }
 
@@ -55,7 +55,7 @@ public class ZUserController {
 
     @RequestMapping(value = "/current", method = RequestMethod.GET)
     public @ResponseBody
-    ZUser getCurrentUser() {
+    UserEntity getCurrentUser() {
         return userDetailsService.getCurrentUser();
     }
 
@@ -69,7 +69,7 @@ public class ZUserController {
 
     @RequestMapping(value = "/updateConfig", method = RequestMethod.GET)
     @Secured(USER)
-    public void updateUserConfig(ZUserConfig newConfig) {
+    public void updateUserConfig(UserConfigEntity newConfig) {
         userDetailsService.updateUserConfig(newConfig);
     }
 }

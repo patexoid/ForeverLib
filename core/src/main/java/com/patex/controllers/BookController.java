@@ -2,14 +2,15 @@ package com.patex.controllers;
 
 import com.patex.BookUploadInfo;
 import com.patex.LibException;
-import com.patex.entities.Book;
+import com.patex.entities.BookEntity;
+import com.patex.mapper.BookMapper;
+import com.patex.model.Book;
 import com.patex.service.AdminService;
 import com.patex.service.BookService;
 import com.patex.service.DuplicateHandler;
 import com.patex.service.ZUserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,31 +40,36 @@ import static com.patex.service.ZUserService.USER;
 @RequestMapping("/book")
 public class BookController {
 
-   private static final Logger log = LoggerFactory.getLogger(BookController.class);
+    private static final Logger log = LoggerFactory.getLogger(BookController.class);
 
-    @Autowired
-    private BookService bookService;
+    private final BookService bookService;
 
-    @Autowired
-    private AdminService adminService;
+    private final AdminService adminService;
 
+    private final DuplicateHandler duplicateHandler;
 
-    @Autowired
-    private DuplicateHandler duplicateHandler;
+    private final ZUserService userService;
 
-    @Autowired
-    private ZUserService userService;
+    private final BookMapper mapper;
+
+    public BookController(BookService bookService, AdminService adminService, DuplicateHandler duplicateHandler, ZUserService userService, BookMapper mapper) {
+        this.bookService = bookService;
+        this.adminService = adminService;
+        this.duplicateHandler = duplicateHandler;
+        this.userService = userService;
+        this.mapper = mapper;
+    }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public @ResponseBody
     Book getBook(@PathVariable(value = "id") long id) {
-        return bookService.getBook(id);
+        return mapper.toDto(bookService.getBook(id));
     }
 
     @RequestMapping(method = RequestMethod.GET)
     public @ResponseBody
     Page<Book> getBooks(Pageable pageable) {
-        return bookService.getBooks(pageable);
+        return bookService.getBooks(pageable).map(mapper::toDto);
     }
 
     @RequestMapping(method = RequestMethod.POST, value = "/upload")
@@ -74,7 +80,7 @@ public class BookController {
 
         return Arrays.stream(files).map(file -> {
                     try {
-                        Book book = bookService.uploadBook(file.getOriginalFilename(), file.getInputStream(),
+                        BookEntity book = bookService.uploadBook(file.getOriginalFilename(), file.getInputStream(),
                                 userService.getCurrentUser());
                         return new BookUploadInfo(book.getId(), file.getOriginalFilename(), BookUploadInfo.Status.Success);
                     } catch (AccessDeniedException e) {
@@ -91,13 +97,13 @@ public class BookController {
     @RequestMapping(method = RequestMethod.POST)
     public @ResponseBody
     Book updateBook(@RequestBody Book book) throws LibException {
-        return bookService.updateBook(book);
+        return mapper.toDto(bookService.updateBook(book));
     }
 
     @RequestMapping(value = "/loadFile/{id}", method = RequestMethod.GET)
     public ResponseEntity<InputStreamResource> downloadBook(@PathVariable("id") int bookId) throws LibException {
 
-        Book book = bookService.getBook(bookId);
+        BookEntity book = bookService.getBook(bookId);
         InputStream inputStream = bookService.getBookInputStream(book);
         HttpHeaders respHeaders = new HttpHeaders();
         respHeaders.setContentLength(book.getFileResource().getSize());
@@ -108,8 +114,8 @@ public class BookController {
 
     @RequestMapping(value = "/cover/{id}", method = RequestMethod.GET)
     public ResponseEntity<InputStreamResource> getCover(@PathVariable("id") int bookId) throws LibException {
-        Book book = bookService.getBook(bookId);
-        if(book.getCover()!=null) {
+        BookEntity book = bookService.getBook(bookId);
+        if (book.getCover() != null) {
             InputStream inputStream = bookService.getBookCoverInputStream(book);
             HttpHeaders respHeaders = new HttpHeaders();
             respHeaders.setContentLength(book.getCover().getSize());
@@ -157,3 +163,4 @@ public class BookController {
     }
 
 }
+

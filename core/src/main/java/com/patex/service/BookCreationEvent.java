@@ -1,23 +1,23 @@
 package com.patex.service;
 
-import com.patex.entities.Book;
-import com.patex.entities.ZUser;
+import com.patex.entities.BookEntity;
+import com.patex.entities.UserEntity;
 
-public class BookCreationEvent  {
-    private final Book book;
+public class BookCreationEvent {
+    private final BookEntity book;
 
-    private final ZUser user;
+    private final UserEntity user;
 
-    public BookCreationEvent(Book book, ZUser user) {
+    public BookCreationEvent(BookEntity book, UserEntity user) {
         this.book = book;
         this.user = user;
     }
 
-    public Book getBook() {
+    public BookEntity getBook() {
         return book;
     }
 
-    public ZUser getUser() {
+    public UserEntity getUser() {
         return user;
     }
 }
