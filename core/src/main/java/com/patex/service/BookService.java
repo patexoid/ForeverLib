@@ -8,9 +8,9 @@ import com.patex.entities.BookRepository;
 import com.patex.entities.BookSequenceEntity;
 import com.patex.entities.FileResourceEntity;
 import com.patex.entities.SequenceEntity;
-import com.patex.entities.UserEntity;
 import com.patex.mapper.BookMapper;
 import com.patex.model.Book;
+import com.patex.model.User;
 import com.patex.parser.BookImage;
 import com.patex.parser.BookInfo;
 import com.patex.parser.ParserService;
@@ -70,7 +70,7 @@ public class BookService {
         this.mapper = mapper;
     }
 
-    public BookEntity uploadBook(String fileName, InputStream is, UserEntity user) throws LibException {
+    public BookEntity uploadBook(String fileName, InputStream is, User user) throws LibException {
         byte[] byteArray = loadFromStream(is);
         byte[] checksum = getChecksum(byteArray);
         BookInfo bookInfo = parserService.getBookInfo(fileName, new ByteArrayInputStream(byteArray));

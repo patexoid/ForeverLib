@@ -8,7 +8,6 @@ import com.patex.model.Book;
 import com.patex.service.AdminService;
 import com.patex.service.BookService;
 import com.patex.service.DuplicateHandler;
-import com.patex.service.ZUserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.InputStreamResource;
@@ -18,7 +17,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,9 +31,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.patex.service.ZUserService.ADMIN_AUTHORITY;
-import static com.patex.service.ZUserService.USER;
-
 @Controller
 @RequestMapping("/book")
 public class BookController {
@@ -48,15 +43,14 @@ public class BookController {
 
     private final DuplicateHandler duplicateHandler;
 
-    private final ZUserService userService;
+//    private final ZUserService userService;
 
     private final BookMapper mapper;
 
-    public BookController(BookService bookService, AdminService adminService, DuplicateHandler duplicateHandler, ZUserService userService, BookMapper mapper) {
+    public BookController(BookService bookService, AdminService adminService, DuplicateHandler duplicateHandler, BookMapper mapper) {
         this.bookService = bookService;
         this.adminService = adminService;
         this.duplicateHandler = duplicateHandler;
-        this.userService = userService;
         this.mapper = mapper;
     }
 
@@ -73,7 +67,7 @@ public class BookController {
     }
 
     @RequestMapping(method = RequestMethod.POST, value = "/upload")
-    @Secured(USER)
+//    @Secured(USER)
     public @ResponseBody
     List<BookUploadInfo> handleFileUpload(@RequestParam("file") MultipartFile[] files)
             throws LibException {
@@ -81,7 +75,7 @@ public class BookController {
         return Arrays.stream(files).map(file -> {
                     try {
                         BookEntity book = bookService.uploadBook(file.getOriginalFilename(), file.getInputStream(),
-                                userService.getCurrentUser());
+                                null);
                         return new BookUploadInfo(book.getId(), file.getOriginalFilename(), BookUploadInfo.Status.Success);
                     } catch (AccessDeniedException e) {
                         throw e;
@@ -128,7 +122,7 @@ public class BookController {
     }
 
     @RequestMapping(value = "/waitForDuplicateCheck", method = RequestMethod.GET)
-    @Secured(ADMIN_AUTHORITY)
+//    @Secured(ADMIN_AUTHORITY)
     public @ResponseBody
     String waitForDuplicateCheck() {
         duplicateHandler.waitForFinish();
@@ -136,26 +130,26 @@ public class BookController {
     }
 
     @RequestMapping(value = "/duplicateCheckForExisted", method = RequestMethod.GET)
-    @Secured(ADMIN_AUTHORITY)
+//    @Secured(ADMIN_AUTHORITY)
     public @ResponseBody
     String duplicateCheckForExisted() {
-        adminService.publisEventForExistingBooks(userService.getCurrentUser());
+//        adminService.publisEventForExistingBooks(userService.getCurrentUser());
         duplicateHandler.waitForFinish();
         return "success";
     }
 
     @RequestMapping(value = "/duplicateCheckForAuthor/{authorId}", method = RequestMethod.GET)
-    @Secured(ADMIN_AUTHORITY)
+//    @Secured(ADMIN_AUTHORITY)
     public @ResponseBody
     String duplicateCheckForAuthorExisted(@PathVariable("authorId") Long authorId) {
-        adminService.checkDuplicatesForAuthor(userService.getCurrentUser(), authorId);
+//        adminService.checkDuplicatesForAuthor(userService.getCurrentUser(), authorId);
         duplicateHandler.waitForFinish();
         return "success";
     }
 
 
     @RequestMapping(value = "/updateCovers", method = RequestMethod.GET)
-    @Secured(ADMIN_AUTHORITY)
+//    @Secured(ADMIN_AUTHORITY)
     public @ResponseBody
     String updateCovers() {
         adminService.updateCovers();

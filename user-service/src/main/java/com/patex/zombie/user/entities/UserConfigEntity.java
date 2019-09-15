@@ -1,4 +1,4 @@
-package com.patex.entities;
+package com.patex.zombie.user.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -18,7 +18,7 @@ import java.util.Locale;
  * Created by Alexey on 22.04.2017.
  */
 @Entity
-@Table(name = "ZUSER_CONFIG")
+@Table(name = "USER_CONFIG")
 public class UserConfigEntity {
 
     @Id

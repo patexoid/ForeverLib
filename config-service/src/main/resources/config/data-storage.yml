@@ -1,6 +1,7 @@
 server:
   port: 8090
-
+jwt:
+  secret: "VERY_BIG_SECRET"
 eureka:
   client:
     serviceUrl:

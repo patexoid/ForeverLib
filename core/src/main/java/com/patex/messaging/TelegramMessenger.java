@@ -1,7 +1,7 @@
 package com.patex.messaging;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.patex.entities.UserEntity;
+import com.patex.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
@@ -63,10 +63,10 @@ public class TelegramMessenger implements Messenger {
     }
 
     @Override
-    public void sendToUser(String message, UserEntity user) {
-        if (user.getUserConfig() != null) {
-            sendToUser(message, user.getUserConfig().getTelegramChatId());
-        }
+    public void sendToUser(String message, User user) {
+//        if (user.getUserConfig() != null) {
+//            sendToUser(message, user.getUserConfig().getTelegramChatId());
+//        }
     }
 
     private void sendToUser(String message, Long telegramChatId) {

@@ -6,8 +6,8 @@ import com.patex.entities.BookEntity;
 import com.patex.entities.BookRepository;
 import com.patex.entities.BookSequenceEntity;
 import com.patex.entities.SequenceEntity;
-import com.patex.entities.UserEntity;
 import com.patex.mapper.BookMapperImpl;
+import com.patex.model.User;
 import com.patex.parser.BookImage;
 import com.patex.parser.BookInfo;
 import com.patex.parser.ParserService;
@@ -52,7 +52,7 @@ public class BooksServiceTest {
     private ApplicationEventPublisher eventPublisher;
     private BookService bookService;
     private ByteArrayInputStream bookIS;
-    private UserEntity user;
+    private User user;
     private BookInfo bookInfo;
     private BookEntity book;
 
@@ -64,7 +64,7 @@ public class BooksServiceTest {
         authorService = mock(AuthorService.class);
 
         bookIS = new ByteArrayInputStream(new byte[0]);
-        user = new UserEntity();
+        user = new User();
         bookInfo = new BookInfo();
         book = new BookEntity();
         book.setAuthors(Collections.singleton(new AuthorEntity(1L, FIRST_AUTHOR)));
@@ -181,7 +181,7 @@ public class BooksServiceTest {
 
     @Test
     public void testSameBookUpload() {
-        UserEntity user = new UserEntity();
+        User user = new User();
         ByteArrayInputStream bais = new ByteArrayInputStream(new byte[0]);
         String fileName = rsg.generate(10);
         String uploadedTitle = rsg.generate(10);
@@ -222,7 +222,7 @@ public class BooksServiceTest {
         savedAuthor.setName(existedAuthorName);
         when(authorService.findFirstByNameIgnoreCase(existedAuthorName)).thenReturn(Optional.of(savedAuthor));
 
-        BookEntity saved = bookService.uploadBook(fileName, bais, new UserEntity());
+        BookEntity saved = bookService.uploadBook(fileName, bais, new User());
         assertTrue(saved.getAuthorBooks().get(0).getAuthor() == newAuthor);
         assertTrue(saved.getAuthorBooks().get(1).getAuthor() == savedAuthor);
     }
@@ -259,7 +259,7 @@ public class BooksServiceTest {
         savedAuthor.getBooks().add(new AuthorBookEntity(savedAuthor, savedBook));
         when(authorService.findFirstByNameIgnoreCase(existedAuthorName)).thenReturn(Optional.of(savedAuthor));
 
-        BookEntity saved = bookService.uploadBook(fileName, bais, new UserEntity());
+        BookEntity saved = bookService.uploadBook(fileName, bais, new User());
         assertTrue(saved.getSequences().get(0).getSequence() == savedSequence);
     }
 }

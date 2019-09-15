@@ -1,4 +1,4 @@
-package com.patex.entities;
+package com.patex.zombie.user.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -44,9 +44,10 @@ public class UserEntity implements UserDetails, CredentialsContainer {
     public UserEntity() {
     }
 
-    public UserEntity(String username, boolean enabled) {
+    public UserEntity(String username, String password) {
         this.username = username;
-        this.enabled = enabled;
+        this.password = password;
+        enabled=true;
     }
 
     @Override

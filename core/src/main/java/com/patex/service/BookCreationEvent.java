@@ -1,14 +1,14 @@
 package com.patex.service;
 
 import com.patex.entities.BookEntity;
-import com.patex.entities.UserEntity;
+import com.patex.model.User;
 
 public class BookCreationEvent {
     private final BookEntity book;
 
-    private final UserEntity user;
+    private final User user;
 
-    public BookCreationEvent(BookEntity book, UserEntity user) {
+    public BookCreationEvent(BookEntity book, User user) {
         this.book = book;
         this.user = user;
     }
@@ -17,7 +17,7 @@ public class BookCreationEvent {
         return book;
     }
 
-    public UserEntity getUser() {
+    public User getUser() {
         return user;
     }
 }

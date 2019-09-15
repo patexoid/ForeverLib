@@ -1,6 +1,7 @@
 server:
   port: 8061
-
+jwt:
+  secret: "VERY_BIG_SECRET"
 eureka:
   instance:
     hostname: discovery-service

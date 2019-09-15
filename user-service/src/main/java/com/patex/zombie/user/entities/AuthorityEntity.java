@@ -1,4 +1,4 @@
-package com.patex.entities;
+package com.patex.zombie.user.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;

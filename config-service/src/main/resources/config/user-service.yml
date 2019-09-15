@@ -1,0 +1,27 @@
+server:
+  port: 8080
+jwt:
+  secret: "VERY_BIG_SECRET"
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://discovery-service:8061/eureka/
+spring:
+  liquibase:
+    change-log: classpath:liquibase/db-changelog.xml
+    user: liq_user
+    password: password
+  datasource:
+    url: jdbc:postgresql://postgres:5432/dev-db?currentSchema=users
+    username: users_user
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+#logging:
+#  level:
+#    ROOT: TRACE

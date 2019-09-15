@@ -1,0 +1,9 @@
+jwt:
+  secret: "VER_BIG_SECRET"
+eureka:
+  client:
+    enabled: false
+spring:
+  cloud:
+    config:
+      enabled: false

@@ -1,24 +1,22 @@
 package com.patex.service;
 
-import com.patex.entities.UserEntity;
-import com.patex.entities.AuthorityEntity;
+
+import com.patex.model.User;
 
 public class UserCreationEvent {
 
-    private final UserEntity user;
+    private final User user;
 
-    public UserCreationEvent(UserEntity user) {
+    public UserCreationEvent(User user) {
         this.user = user;
     }
 
-    public UserEntity getUser() {
+    public User getUser() {
         return user;
     }
 
     public boolean isAdmin() {
-        return user.getAuthorities().stream().
-                map(AuthorityEntity::getAuthority).
-                anyMatch(ZUserService.ADMIN_AUTHORITY::equals);
+        return false;
     }
 
 }

@@ -1,4 +1,4 @@
-package com.patex.entities;
+package com.patex.zombie.user.entities;
 
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;

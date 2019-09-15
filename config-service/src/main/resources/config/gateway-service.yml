@@ -1,6 +1,7 @@
 server:
   port: 8060
-
+jwt:
+  secret: "VERY_BIG_SECRET"
 eureka:
   client:
     serviceUrl:
@@ -29,3 +30,12 @@ spring:
             - Path=/file/**
           filters:
             - RewritePath=/file/(?<path>.*), /$\{path}
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/user/**
+          filters:
+            - JwtFilter
+feign:
+  httpclient:
+    connection-timeout: 100000

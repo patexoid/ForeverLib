@@ -49,7 +49,6 @@ public class Application {
         springLiquibase.setDataSource(dataSource);
         springLiquibase.setChangeLog("classpath:db-changelog.main.xml");
         return springLiquibase;
-
     }
 
     @Bean

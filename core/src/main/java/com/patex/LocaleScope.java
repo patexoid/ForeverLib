@@ -1,7 +1,6 @@
 package com.patex;
 
-import com.patex.entities.UserEntity;
-import com.patex.service.ZUserService;
+import com.patex.model.User;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -32,10 +31,10 @@ public class LocaleScope implements Scope {
     private String getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Object principal = auth.getPrincipal();
-        if (principal instanceof UserEntity) {
-            return ((UserEntity) principal).getUsername();
+        if (principal instanceof User) {
+            return ((User) principal).getUsername();
         }
-        return ZUserService.anonim.getUsername();
+        return "anonimus";
     }
 
     @Override

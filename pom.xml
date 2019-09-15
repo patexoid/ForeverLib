@@ -23,6 +23,7 @@
         <module>discovery-service</module>
         <module>data-storage-spring</module>
         <module>opds-service</module>
+        <module>user-service</module>
         <!--        <module>extlib</module>-->
         <!--        <module>book-keeper</module>-->
 <!--        <module>opds</module>-->

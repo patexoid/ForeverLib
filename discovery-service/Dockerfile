@@ -1,4 +1,4 @@
-FROM openjdk:8-jre-alpine
+FROM openjdk:12-alpine
 ENV APP_FILE discovery-service-1.0-SNAPSHOT.jar
 ENV APP_HOME /app
 EXPOSE 8061

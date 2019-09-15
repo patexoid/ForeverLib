@@ -20,10 +20,20 @@ services:
     build: gateway-service
     ports:
       - "8060:8060"
+      - "5010:5010"
     networks:
       external:
         aliases:
           - gateway-service
+  user-service:
+    build: user-service
+    ports:
+      - "8082:8080"
+      - "5008:5008"
+    networks:
+      external:
+        aliases:
+          - user-service
   core:
     build: core
     ports:

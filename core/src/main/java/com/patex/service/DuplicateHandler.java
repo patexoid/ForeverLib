@@ -9,8 +9,8 @@ import com.patex.entities.BookCheckQueueRepository;
 import com.patex.entities.BookEntity;
 import com.patex.entities.BookSequenceEntity;
 import com.patex.entities.SequenceEntity;
-import com.patex.entities.UserEntity;
 import com.patex.messaging.MessengerService;
+import com.patex.model.User;
 import com.patex.parser.ParserService;
 import com.patex.shingle.ShingleCacheStorage;
 import com.patex.shingle.ShingleSearch;
@@ -191,7 +191,7 @@ public class DuplicateHandler {
         }*/
     }
 
-    public void markDuplications(BookEntity first, BookEntity second, UserEntity user) {
+    public void markDuplications(BookEntity first, BookEntity second, User user) {
         try {
             BookEntity primary, secondary;
             if (first.getContentSize() > second.getContentSize()) {

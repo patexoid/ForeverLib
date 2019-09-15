@@ -4,7 +4,7 @@ import com.patex.entities.AuthorBookEntity;
 import com.patex.entities.AuthorEntity;
 import com.patex.entities.BookEntity;
 import com.patex.entities.FileResourceEntity;
-import com.patex.entities.UserEntity;
+import com.patex.model.User;
 import com.patex.parser.BookImage;
 import com.patex.parser.BookInfo;
 import com.patex.parser.ParserService;
@@ -53,14 +53,14 @@ public class AdminService {
         }
     }
 
-    public void publisEventForExistingBooks(UserEntity user) {
+    public void publisEventForExistingBooks(User user) {
         bookService.findAll().
                 filter(book -> !book.isDuplicate()).
                 map(book -> new BookCreationEvent(book, user)).
                 forEach(publisher::publishEvent);
     }
 
-    public void checkDuplicatesForAuthor(UserEntity user, Long authorId) {
+    public void checkDuplicatesForAuthor(User user, Long authorId) {
         transactionService.transactionRequired(
                 () -> {
                     AuthorEntity author = authorService.getAuthor(authorId);

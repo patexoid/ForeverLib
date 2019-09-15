@@ -1,6 +1,6 @@
 package com.patex.service;
 
-import com.patex.entities.UserEntity;
+import com.patex.model.User;
 import com.patex.utils.ExecutorCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,30 +31,28 @@ public class DirWatcherService {
 
     private final Path directoryPath;
     private final BookService bookService;
-    private final ZUserService zUserService;
     private final Executor executor;
 
     private volatile boolean running = false;
 
     @Autowired
     public DirWatcherService(@Value("${bulkUploadDir}") String path,
-                             BookService bookService, ZUserService zUserService,
+                             BookService bookService,
                              ExecutorCreator executorCreator) {
-        this(FileSystems.getDefault().getPath(path), bookService, zUserService,
+        this(FileSystems.getDefault().getPath(path), bookService,
                 Executors.newSingleThreadExecutor(executorCreator.createThreadFactory("DirWatcherService", log)));
     }
 
     public DirWatcherService(Path directoryPath, BookService bookService,
-                             ZUserService zUserService, Executor executor) {
+                             Executor executor) {
         this.directoryPath = directoryPath;
         this.bookService = bookService;
-        this.zUserService = zUserService;
         this.executor = executor;
     }
 
     @PostConstruct
     public void setUp() {
-        Optional<UserEntity> user = getAdminUser();
+        Optional<User> user = getAdminUser();
         user.ifPresent(zUser -> run());
     }
 
@@ -75,7 +73,7 @@ public class DirWatcherService {
 
     private void watch() {
         try {
-            if(!Files.exists(directoryPath)){
+            if (!Files.exists(directoryPath)) {
                 Files.createDirectories(directoryPath);
             }
             WatchService watchService = directoryPath.getFileSystem().newWatchService();
@@ -83,7 +81,7 @@ public class DirWatcherService {
                     StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE);
             while (running) {
                 WatchKey watchKey = watchService.take();
-                Optional<UserEntity> user = getAdminUser();
+                Optional<User> user = getAdminUser();
                 assert user.isPresent();
                 watchKey.pollEvents().stream().
                         filter(e -> StandardWatchEventKinds.ENTRY_CREATE.equals(e.kind())).
@@ -101,7 +99,7 @@ public class DirWatcherService {
     }
 
     private void initStart() {
-        Optional<UserEntity> user = getAdminUser();
+        Optional<User> user = getAdminUser();
         user.ifPresent(zUser -> {
             File dir = directoryPath.toFile();
             for (File file : Objects.requireNonNull(dir.listFiles())) {
@@ -110,11 +108,11 @@ public class DirWatcherService {
         });
     }
 
-    private Optional<UserEntity> getAdminUser() {
-        return zUserService.getByRole(ZUserService.ADMIN_AUTHORITY).stream().findFirst();
+    private Optional<User> getAdminUser() {
+        return Optional.empty();//zUserService.getByRole(ZUserService.ADMIN_AUTHORITY).stream().findFirst();
     }
 
-    private void processFile(File file, UserEntity adminUser) {
+    private void processFile(File file, User adminUser) {
         try (FileInputStream fis = new FileInputStream(file)) {
             bookService.uploadBook(file.getName(), fis, adminUser);
         } catch (Exception e) {
