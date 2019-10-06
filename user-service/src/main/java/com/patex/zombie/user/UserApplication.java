@@ -11,7 +11,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-@SpringBootApplication(scanBasePackages = {"com.patex.zombie.user", "com.patex.jwt"})
+@SpringBootApplication(scanBasePackages = {"com.patex.zombie.user", "com.patex.jwt","com.patex.security"})
 @EnableDiscoveryClient
 @RequiredArgsConstructor
 public class UserApplication {

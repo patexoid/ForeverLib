@@ -5,6 +5,7 @@ import com.patex.LibException;
 import com.patex.entities.BookEntity;
 import com.patex.mapper.BookMapper;
 import com.patex.model.Book;
+import com.patex.model.User;
 import com.patex.service.AdminService;
 import com.patex.service.BookService;
 import com.patex.service.DuplicateHandler;
@@ -17,6 +18,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -67,15 +70,15 @@ public class BookController {
     }
 
     @RequestMapping(method = RequestMethod.POST, value = "/upload")
-//    @Secured(USER)
+    @Secured("USER")
     public @ResponseBody
-    List<BookUploadInfo> handleFileUpload(@RequestParam("file") MultipartFile[] files)
+    List<BookUploadInfo> handleFileUpload(@RequestParam("file") MultipartFile[] files, Authentication authentication)
             throws LibException {
 
         return Arrays.stream(files).map(file -> {
                     try {
                         BookEntity book = bookService.uploadBook(file.getOriginalFilename(), file.getInputStream(),
-                                null);
+                                (User) authentication.getDetails());
                         return new BookUploadInfo(book.getId(), file.getOriginalFilename(), BookUploadInfo.Status.Success);
                     } catch (AccessDeniedException e) {
                         throw e;

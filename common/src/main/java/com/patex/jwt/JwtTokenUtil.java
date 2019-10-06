@@ -32,7 +32,7 @@ public class JwtTokenUtil {
         String userName = claims.getSubject();
         @SuppressWarnings("unchecked")
         List<String> authorities = (List<String>) claims.get(AUTHORITIES);
-        return new User(userName, enabled, authorities);
+        return new User(userName, enabled, authorities, token);
     }
 
     private Claims getAllClaimsFromToken(String token) {

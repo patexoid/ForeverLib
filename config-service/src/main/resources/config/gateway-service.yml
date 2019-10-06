@@ -37,5 +37,8 @@ spring:
           filters:
             - JwtFilter
 feign:
-  httpclient:
-    connection-timeout: 100000
+  client:
+    config:
+      default:
+        connectTimeout: 10000
+        readTimeout: 10000

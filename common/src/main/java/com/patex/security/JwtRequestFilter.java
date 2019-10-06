@@ -1,8 +1,7 @@
-package com.patex.zombie.user;
+package com.patex.security;
 
 import com.patex.jwt.JwtTokenUtil;
 import com.patex.model.User;
-import com.patex.zombie.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -34,7 +33,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             String jwtToken = requestTokenHeader.substring(7);
             user = jwtTokenUtil.getUser(jwtToken);
         } else {
-            user = UserService.anonim;
+            user = User.anonim;
         }
         List<SimpleGrantedAuthority> authorities = user.getAuthorities().stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
         UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =

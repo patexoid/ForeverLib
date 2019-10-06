@@ -18,7 +18,10 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static com.patex.model.User.anonim;
 
 /**
  * Created by Alexey on 25.03.2017.
@@ -31,7 +34,6 @@ public class UserService {
     public static final String GUEST = "GUEST";
     public static final String USER = "ROLE_USER";
     public static final String ADMIN_AUTHORITY = "ROLE_ADMIN";
-    public static final User anonim = new User("anonimus", true, Collections.emptyList());
 
     private final UserRepository userRepo;
 
@@ -53,6 +55,10 @@ public class UserService {
             return mapper.toDto(userRepo.save(updatedUser));
         }
         return user;
+    }
+
+    public List<User> getAll(){
+       return userRepo.findAll().stream().map(mapper::toDto).collect(Collectors.toList());
     }
 
     public User createUser(UserCreateRequest createRequest, User currentUser) {
@@ -90,6 +96,7 @@ public class UserService {
                             throw new LibException("Incorrect old password");
                         });
     }
+
 
     public Collection<UserEntity> getByRole(String role) {
         return userRepo.findAllByAuthoritiesIs(role);

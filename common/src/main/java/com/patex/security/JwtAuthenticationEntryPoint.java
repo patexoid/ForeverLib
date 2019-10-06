@@ -1,4 +1,4 @@
-package com.patex.zombie.user;
+package com.patex.security;
 
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
