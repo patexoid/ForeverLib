@@ -2,11 +2,11 @@ package com.patex.opds.extlib;
 
 import com.google.common.util.concurrent.MoreExecutors;
 import com.patex.LibException;
-import com.patex.entities.*;
-import com.patex.messaging.MessengerService;
+import com.patex.zombie.core.entities.*;
+import com.patex.zombie.core.messaging.MessengerService;
 import com.patex.opds.OPDSEntry;
-import com.patex.service.TransactionService;
-import com.patex.utils.ExecutorCreator;
+import com.patex.zombie.core.service.TransactionService;
+import com.patex.zombie.core.utils.ExecutorCreator;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

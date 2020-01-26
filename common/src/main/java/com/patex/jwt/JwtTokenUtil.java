@@ -18,6 +18,11 @@ public class JwtTokenUtil {
     public static final long JWT_TOKEN_VALIDITY = 50 * 60 * 60;
     public static final String AUTHORITIES = "authorities";
 
+    public static final String GUEST = "GUEST";
+    public static final String USER = "ROLE_USER";
+    public static final String FILE_UPLOAD="ROLE_FILE_UPLOAD";
+    public static final String FILE_DOWNLOAD="ROLE_FILE_DOWNLOAD";
+    public static final String ADMIN_AUTHORITY = "ROLE_ADMIN";
 
     private final String secret;
 

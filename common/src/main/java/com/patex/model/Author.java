@@ -1,12 +1,10 @@
 package com.patex.model;
 
-import com.patex.utils.Tuple;
+import com.patex.zombie.core.utils.Tuple;
 import lombok.Data;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;

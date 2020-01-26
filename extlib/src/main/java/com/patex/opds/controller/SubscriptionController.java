@@ -1,8 +1,8 @@
 package com.patex.opds.controller;
 
 import com.patex.LibException;
-import com.patex.entities.Subscription;
-import com.patex.service.SubscriptionService;
+import com.patex.zombie.core.entities.Subscription;
+import com.patex.zombie.core.service.SubscriptionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import static com.patex.service.ZUserService.USER;
+import static com.patex.zombie.core.service.ZUserService.USER;
 
 @Controller
 @RequestMapping("/subscription")

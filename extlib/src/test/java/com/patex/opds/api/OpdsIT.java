@@ -1,7 +1,7 @@
 package com.patex.opds.api;
 
 import com.patex.BookUploadInfo;
-import com.patex.entities.ZUser;
+import com.patex.zombie.core.entities.ZUser;
 import fb2Generator.Fb2Creator;
 import org.junit.Assert;
 import org.junit.Before;

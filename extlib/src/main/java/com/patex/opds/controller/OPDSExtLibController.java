@@ -3,10 +3,10 @@ package com.patex.opds.controller;
 import com.patex.LibException;
 
 import com.patex.opds.controller.latest.SaveLatest;
-import com.patex.service.Resources;
-import com.patex.service.ZUserService;
-import com.patex.utils.LinkUtils;
-import com.patex.utils.Res;
+import com.patex.zombie.core.service.Resources;
+import com.patex.zombie.core.service.ZUserService;
+import com.patex.zombie.core.utils.LinkUtils;
+import com.patex.zombie.core.utils.Res;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,9 +20,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static com.patex.controllers.OPDSController.*;
-import static com.patex.service.ZUserService.ADMIN_AUTHORITY;
-import static com.patex.service.ZUserService.USER;
+import static com.patex.zombie.core.controllers.OPDSController.*;
+import static com.patex.zombie.core.service.ZUserService.ADMIN_AUTHORITY;
+import static com.patex.zombie.core.service.ZUserService.USER;
 
 /**
  *

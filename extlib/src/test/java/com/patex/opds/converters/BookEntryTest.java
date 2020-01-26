@@ -1,7 +1,7 @@
 package com.patex.opds.converters;
 
-import com.patex.entities.Book;
-import com.patex.entities.FileResource;
+import com.patex.zombie.core.entities.Book;
+import com.patex.zombie.core.entities.FileResource;
 import org.junit.Test;
 
 import java.time.Instant;

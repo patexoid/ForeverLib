@@ -1,17 +1,17 @@
 package com.patex.opds.extlib;
 
 import com.google.common.util.concurrent.MoreExecutors;
-import com.patex.entities.Book;
-import com.patex.entities.ExtLibrary;
-import com.patex.entities.SavedBookRepository;
-import com.patex.entities.ZUser;
-import com.patex.messaging.MessengerService;
+import com.patex.zombie.core.entities.Book;
+import com.patex.zombie.core.entities.ExtLibrary;
+import com.patex.zombie.core.entities.SavedBookRepository;
+import com.patex.zombie.core.entities.ZUser;
+import com.patex.zombie.core.messaging.MessengerService;
 import com.patex.opds.OPDSContent;
 import com.patex.opds.OPDSEntry;
 import com.patex.opds.OPDSLink;
-import com.patex.service.BookService;
-import com.patex.service.TransactionService;
-import com.patex.utils.ExecutorCreator;
+import com.patex.zombie.core.service.BookService;
+import com.patex.zombie.core.service.TransactionService;
+import com.patex.zombie.core.utils.ExecutorCreator;
 import com.rometools.rome.feed.synd.SyndContentImpl;
 import com.rometools.rome.feed.synd.SyndEntryImpl;
 import com.rometools.rome.feed.synd.SyndFeedImpl;

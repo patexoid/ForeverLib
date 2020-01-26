@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import static com.patex.jwt.JwtTokenUtil.USER;
+
 
 @Controller
 @RequestMapping("/user")
@@ -24,7 +26,7 @@ public class ZUserController {
     private final UserService userService;
 
     @RequestMapping(method = RequestMethod.POST)
-    @Secured(UserService.USER)
+    @Secured(USER)
     public User save(User user, Authentication authentication) {
         return userService.save(user, (User) authentication.getPrincipal());
     }
@@ -37,7 +39,7 @@ public class ZUserController {
     }
 
     @RequestMapping(value = "/updatePassword", method = RequestMethod.POST)
-    @Secured(UserService.USER)
+    @Secured(USER)
     @ResponseStatus(value = HttpStatus.OK)
     public void updatePassword(@RequestBody PasswordChangeRequest request,
                                Authentication authentication) throws LibException {

@@ -5,7 +5,6 @@ import com.patex.jwt.JwtTokenUtil;
 import com.patex.model.User;
 import com.patex.zombie.user.controller.UserCreateRequest;
 import com.patex.zombie.user.entities.UserRepository;
-import com.patex.zombie.user.service.UserService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,8 +24,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static com.patex.jwt.JwtTokenUtil.*;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -70,8 +69,8 @@ public class UserApiIT {
         assertEquals(USERNAME, createdUser.getUsername());
         assertEquals(3, createdUser.getAuthorities().size());
         assertTrue(createdUser.getAuthorities().contains(TEST_AUTHORITY));
-        assertTrue(createdUser.getAuthorities().contains(UserService.ADMIN_AUTHORITY));
-        assertTrue(createdUser.getAuthorities().contains(UserService.USER));
+        assertTrue(createdUser.getAuthorities().contains(ADMIN_AUTHORITY));
+        assertTrue(createdUser.getAuthorities().contains(USER));
     }
 
     @Test
@@ -80,7 +79,7 @@ public class UserApiIT {
         RestTemplate template = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(tokenUtil.generateToken("machine", Collections.singletonList(UserService.ADMIN_AUTHORITY)));
+        headers.setBearerAuth(tokenUtil.generateToken("machine", Collections.singletonList(ADMIN_AUTHORITY)));
         headers.setContentType(MediaType.APPLICATION_JSON);
         UserCreateRequest request = new UserCreateRequest();
         request.setUsername(USERNAME);
@@ -92,7 +91,7 @@ public class UserApiIT {
         assertEquals(USERNAME, createdUser.getUsername());
         assertEquals(2, createdUser.getAuthorities().size());
         assertTrue(createdUser.getAuthorities().contains(TEST_AUTHORITY));
-        assertTrue(createdUser.getAuthorities().contains(UserService.USER));
+        assertTrue(createdUser.getAuthorities().contains(USER));
     }
 
 

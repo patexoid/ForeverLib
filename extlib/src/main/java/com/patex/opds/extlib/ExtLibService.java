@@ -1,11 +1,11 @@
 package com.patex.opds.extlib;
 
 import com.patex.LibException;
-import com.patex.entities.*;
+import com.patex.zombie.core.entities.*;
 import com.patex.opds.OPDSEntry;
 import com.patex.opds.OPDSLink;
-import com.patex.service.ZUserService;
-import com.patex.utils.ExecutorCreator;
+import com.patex.zombie.core.service.ZUserService;
+import com.patex.zombie.core.utils.ExecutorCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;

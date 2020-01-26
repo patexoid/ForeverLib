@@ -1,11 +1,11 @@
 package api.com.patex;
 
 
-import com.patex.BookUploadInfo;
+import com.patex.zombie.core.BookUploadInfo;
 import com.patex.model.Book;
 import com.patex.model.BookAuthor;
 import com.patex.model.User;
-import com.patex.utils.Tuple;
+import com.patex.zombie.core.utils.Tuple;
 import fb2Generator.Fb2Creator;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Assert;
@@ -37,15 +37,15 @@ import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 
 @SuppressWarnings("Duplicates")
 @RunWith(SpringJUnit4ClassRunner.class)
-@Ignore
+
 public class UploadIT {
 
     private HttpTestClient httpClient;
 
     @Before
     public void setUp() throws IOException {
-        httpClient = new HttpTestClient("http://localhost:8080");
-        httpClient.setCreds("testUser", "simplePassword");
+        httpClient = new HttpTestClient("http://localhost:8060");
+        httpClient.setCreds("patex", "19851985");
         try {
             httpClient.get("user/current", User.class);
         } catch (HttpClientErrorException e) {
@@ -65,7 +65,7 @@ public class UploadIT {
                 getFbook());
 
 
-        ResponseEntity<List<BookUploadInfo>> response = httpClient.uploadFiles("book/upload",
+        ResponseEntity<List<BookUploadInfo>> response = httpClient.uploadFiles("core/book/upload",
                 "file", files, new ParameterizedTypeReference<List<BookUploadInfo>>() {
                 });
 

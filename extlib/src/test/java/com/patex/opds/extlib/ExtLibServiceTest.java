@@ -1,10 +1,10 @@
 package com.patex.opds.extlib;
 
-import com.patex.entities.*;
+import com.patex.zombie.core.entities.*;
 import com.patex.opds.OPDSEntry;
 import com.patex.opds.OPDSLink;
-import com.patex.service.ZUserService;
-import com.patex.utils.ExecutorCreator;
+import com.patex.zombie.core.service.ZUserService;
+import com.patex.zombie.core.utils.ExecutorCreator;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

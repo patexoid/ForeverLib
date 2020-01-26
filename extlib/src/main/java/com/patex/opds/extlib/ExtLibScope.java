@@ -1,6 +1,6 @@
 package com.patex.opds.extlib;
 
-import com.patex.entities.ExtLibrary;
+import com.patex.zombie.core.entities.ExtLibrary;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;

@@ -2,14 +2,14 @@ package com.patex.opds.extlib;
 
 import com.google.common.util.concurrent.MoreExecutors;
 import com.patex.LibException;
-import com.patex.entities.Book;
-import com.patex.entities.ZUser;
+import com.patex.zombie.core.entities.Book;
+import com.patex.zombie.core.entities.ZUser;
 import com.patex.opds.OPDSContent;
 import com.patex.opds.OPDSAuthor;
 import com.patex.opds.OPDSEntry;
 import com.patex.opds.OPDSLink;
-import com.patex.service.BookService;
-import com.patex.utils.ExecutorCreator;
+import com.patex.zombie.core.service.BookService;
+import com.patex.zombie.core.utils.ExecutorCreator;
 import com.rometools.rome.feed.synd.SyndContent;
 import com.rometools.rome.feed.synd.SyndContentImpl;
 import com.rometools.rome.feed.synd.SyndEntry;

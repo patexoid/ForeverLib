@@ -1,0 +1,8 @@
+server:
+  port: 8100
+jwt:
+  secret: "VERY_BIG_SECRET"
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://discovery-service:8061/eureka/

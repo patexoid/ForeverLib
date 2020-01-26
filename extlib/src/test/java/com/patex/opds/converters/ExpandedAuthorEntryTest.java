@@ -1,6 +1,6 @@
 package com.patex.opds.converters;
 
-import com.patex.entities.*;
+import com.patex.zombie.core.entities.*;
 import com.patex.opds.OPDSEntry;
 import org.junit.Test;
 

@@ -5,7 +5,7 @@ import com.patex.opds.OPDSAuthor;
 import com.patex.opds.OPDSAuthorImpl;
 import com.patex.opds.OPDSEntry;
 import com.patex.opds.OPDSLink;
-import com.patex.utils.Res;
+import com.patex.zombie.core.utils.Res;
 import com.rometools.rome.feed.synd.SyndEntry;
 
 import java.time.Instant;

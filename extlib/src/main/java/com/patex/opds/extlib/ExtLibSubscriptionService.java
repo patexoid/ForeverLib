@@ -1,11 +1,11 @@
 package com.patex.opds.extlib;
 
 import com.patex.LibException;
-import com.patex.entities.ExtLibrary;
-import com.patex.entities.Subscription;
-import com.patex.entities.SubscriptionRepository;
-import com.patex.service.ZUserService;
-import com.patex.utils.ExecutorCreator;
+import com.patex.zombie.core.entities.ExtLibrary;
+import com.patex.zombie.core.entities.Subscription;
+import com.patex.zombie.core.entities.SubscriptionRepository;
+import com.patex.zombie.core.service.ZUserService;
+import com.patex.zombie.core.utils.ExecutorCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

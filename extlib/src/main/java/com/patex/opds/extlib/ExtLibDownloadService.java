@@ -2,13 +2,13 @@ package com.patex.opds.extlib;
 
 
 import com.patex.LibException;
-import com.patex.entities.*;
-import com.patex.messaging.MessengerService;
+import com.patex.zombie.core.entities.*;
+import com.patex.zombie.core.messaging.MessengerService;
 import com.patex.opds.OPDSAuthor;
 import com.patex.opds.OPDSEntry;
 import com.patex.opds.OPDSLink;
-import com.patex.service.TransactionService;
-import com.patex.utils.ExecutorCreator;
+import com.patex.zombie.core.service.TransactionService;
+import com.patex.zombie.core.utils.ExecutorCreator;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.slf4j.Logger;

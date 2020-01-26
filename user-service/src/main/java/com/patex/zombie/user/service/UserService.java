@@ -19,8 +19,11 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.patex.jwt.JwtTokenUtil.ADMIN_AUTHORITY;
+import static com.patex.jwt.JwtTokenUtil.USER;
 import static com.patex.model.User.anonim;
 
 /**
@@ -31,9 +34,7 @@ import static com.patex.model.User.anonim;
 @Slf4j
 public class UserService {
 
-    public static final String GUEST = "GUEST";
-    public static final String USER = "ROLE_USER";
-    public static final String ADMIN_AUTHORITY = "ROLE_ADMIN";
+
 
     private final UserRepository userRepo;
 
@@ -43,6 +44,11 @@ public class UserService {
 
     public User loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepo.findById(username).map(mapper::toDto).get();
+    }
+
+    public Optional<User> findUser(String username, String password) {
+        return userRepo.findById(username).
+                filter(u -> passwordEncoder.matches(password, u.getPassword())).map(mapper::toDto);
     }
 
     public User save(User user, User currentUser) {
@@ -57,8 +63,8 @@ public class UserService {
         return user;
     }
 
-    public List<User> getAll(){
-       return userRepo.findAll().stream().map(mapper::toDto).collect(Collectors.toList());
+    public List<User> getAll() {
+        return userRepo.findAll().stream().map(mapper::toDto).collect(Collectors.toList());
     }
 
     public User createUser(UserCreateRequest createRequest, User currentUser) {

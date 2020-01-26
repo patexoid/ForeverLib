@@ -1,7 +1,7 @@
 package com.patex.opds.extlib;
 
-import com.patex.entities.ExtLibrary;
-import com.patex.utils.Tuple;
+import com.patex.zombie.core.entities.ExtLibrary;
+import com.patex.zombie.core.utils.Tuple;
 import org.springframework.stereotype.Component;
 
 @Component

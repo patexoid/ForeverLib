@@ -2,12 +2,12 @@ package com.patex.opds.extlib;
 
 
 import com.google.common.util.concurrent.MoreExecutors;
-import com.patex.entities.ExtLibrary;
-import com.patex.entities.Subscription;
-import com.patex.entities.SubscriptionRepository;
-import com.patex.entities.ZUser;
-import com.patex.service.ZUserService;
-import com.patex.utils.ExecutorCreator;
+import com.patex.zombie.core.entities.ExtLibrary;
+import com.patex.zombie.core.entities.Subscription;
+import com.patex.zombie.core.entities.SubscriptionRepository;
+import com.patex.zombie.core.entities.ZUser;
+import com.patex.zombie.core.service.ZUserService;
+import com.patex.zombie.core.utils.ExecutorCreator;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

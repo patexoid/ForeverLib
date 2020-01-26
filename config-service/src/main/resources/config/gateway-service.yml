@@ -24,6 +24,7 @@ spring:
             - Path=/core/**
           filters:
             - RewritePath=/core/(?<path>.*), /$\{path}
+            - JwtFilter
         - id: data-storage
           uri: http://data-storage:8090
           predicates:

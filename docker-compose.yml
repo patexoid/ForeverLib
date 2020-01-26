@@ -25,6 +25,16 @@ services:
       external:
         aliases:
           - gateway-service
+  opds-service:
+    build: opds-service
+    ports:
+      - "8100:8100"
+      - "5011:5011"
+    networks:
+      external:
+        aliases:
+          - opds-service
+
   user-service:
     build: user-service
     ports:

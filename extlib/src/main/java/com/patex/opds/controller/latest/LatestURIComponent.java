@@ -1,7 +1,7 @@
 package com.patex.opds.controller.latest;
 
-import com.patex.entities.ZUser;
-import com.patex.service.ZUserService;
+import com.patex.zombie.core.entities.ZUser;
+import com.patex.zombie.core.service.ZUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
