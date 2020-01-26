@@ -12,7 +12,7 @@ public interface FileStorage {
 
     String save(byte[] fileContent, String bucket, String fileName) throws LibException;
 
-    InputStream load(String fileId) throws LibException;
+    InputStream load(String bucket, String fileId) throws LibException;
 
     boolean exists( String bucket, String fileName);
 }

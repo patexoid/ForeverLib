@@ -6,7 +6,12 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -27,15 +32,15 @@ public class TempFileStorage implements FileStorage {
 
 
     @Override
-    public boolean exists( String bucket, String fileName) {
+    public boolean exists(String bucket, String fileName) {
         return new File(getFilePath(bucket, fileName)).exists();
     }
 
     @Override
-    public String save(byte[] fileContent,  String bucket, String fileName) throws LibException {
+    public String save(byte[] fileContent, String bucket, String fileName) throws LibException {
         File file = new File(getFilePath(bucket, fileName));
         File dir = file.getParentFile();
-        if(!dir.exists()){
+        if (!dir.exists()) {
             dir.mkdirs();
         }
         try (FileOutputStream fos = new FileOutputStream(file)) {
@@ -48,9 +53,9 @@ public class TempFileStorage implements FileStorage {
     }
 
     @Override
-    public InputStream load(String fileId) throws LibException {
+    public InputStream load(String bucket, String fileId) throws LibException {
         try {
-            return new FileInputStream(fileId);
+            return new FileInputStream(bucket + File.separator + fileId);
         } catch (FileNotFoundException e) {
             throw new LibException(e);
         }
@@ -58,7 +63,7 @@ public class TempFileStorage implements FileStorage {
 
 
     private String getFilePath(String... fileName) {
-        return tempDirectory.toAbsolutePath() + File.separator + String.join(File.separator,fileName);
+        return tempDirectory.toAbsolutePath() + File.separator + String.join(File.separator, fileName);
     }
 
     @PreDestroy

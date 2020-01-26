@@ -293,7 +293,7 @@ public class DuplicateHandler {
 
         ShingleableBook(BookEntity book) {
             this.book = book;
-            is = fileStorage.load(book.getFileResource().getFilePath());
+            is = fileStorage.load("book", book.getFileResource().getFilePath());
             this.contentIterator = parserService.getContentIterator(book.getFileName(), is);
         }
 

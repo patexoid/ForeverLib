@@ -86,11 +86,10 @@ public class FeignFileStorage implements FileStorage {
     }
 
     @Override
-    public InputStream load(String fileId) throws LibException {
+    public InputStream load(String bucket, String fileId) throws LibException {
         String token = jwtTokenUtil.generateToken("core", FILE_DOWNLOAD);
-        String[] split = fileId.split("/");
         try {
-            return dataStorage.downloadBook(token, split[0], split[1]).getBody().getInputStream();
+            return dataStorage.downloadBook("Bearer " + token, bucket, fileId).getBody().getInputStream();
         } catch (IOException e) {
             throw new LibException(e);
         }

@@ -162,11 +162,11 @@ public class BookService {
     }
 
     public InputStream getBookInputStream(BookEntity book) throws LibException {
-        return fileStorage.load(book.getFileResource().getFilePath());
+        return fileStorage.load("book",book.getFileResource().getFilePath());
     }
 
     public InputStream getBookCoverInputStream(BookEntity book) throws LibException {
-        return fileStorage.load(book.getCover().getFilePath());
+        return fileStorage.load("image", book.getCover().getFilePath());
     }
 
     public Page<BookEntity> getBooks(Pageable pageable) {

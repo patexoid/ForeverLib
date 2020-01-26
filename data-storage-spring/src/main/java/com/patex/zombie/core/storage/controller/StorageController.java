@@ -48,8 +48,8 @@ public class StorageController {
         ).collect(Collectors.toList());
     }
 
-    @Secured(JwtTokenUtil.FILE_DOWNLOAD)
     @RequestMapping(value = "/download/{bucket}/{id}", method = RequestMethod.GET)
+    @Secured(JwtTokenUtil.FILE_DOWNLOAD)
     public ResponseEntity<InputStreamResource> downloadBook(@PathVariable String bucket,
                                                             @PathVariable String id) throws LibException {
         return dataHandler.load(bucket, id).map(fileData -> {

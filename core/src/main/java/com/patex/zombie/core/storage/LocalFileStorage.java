@@ -60,9 +60,9 @@ public class LocalFileStorage implements FileStorage {
     }
 
     @Override
-    public InputStream load(String fileId) throws LibException {
+    public InputStream load(String bucket, String fileId) throws LibException {
         try {
-            return new FileInputStream(getFilePath(fileId));
+            return new FileInputStream(getFilePath(bucket + File.separator + fileId));
         } catch (FileNotFoundException e) {
             throw new LibException(e);
         }

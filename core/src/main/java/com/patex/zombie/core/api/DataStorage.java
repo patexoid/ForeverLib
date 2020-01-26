@@ -23,7 +23,7 @@ public interface DataStorage {
     List<UploadResponse> upload(@RequestHeader(HttpHeaders.AUTHORIZATION) String header,
                                 @PathVariable String path, @RequestPart(name = "file") MultipartFile file);
 
-    @RequestMapping(value = "/download/{bucket}/{id}", method = RequestMethod.GET)
+    @RequestMapping(value = "/data/download/{bucket}/{id}", method = RequestMethod.GET)
     ResponseEntity<InputStreamResource> downloadBook(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String header,
             @PathVariable String bucket, @PathVariable String id);

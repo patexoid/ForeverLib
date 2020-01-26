@@ -45,8 +45,8 @@ public class StorageService {
         return fileStorage.save(file, bucket, fileName);
     }
 
-    public InputStream load(String fileId) throws LibException {
-        return fileStorage.load(fileId);
+    public InputStream load(String bucket, String fileId) throws LibException {
+        return fileStorage.load(bucket, fileId);
     }
 
 }
