@@ -6,8 +6,8 @@ import com.patex.model.Book;
 import com.patex.model.Sequence;
 import com.patex.model.SequenceBook;
 import com.patex.zombie.opds.model.ODPSContentRes;
-import com.patex.zombie.opds.model.OPDSEntry;
-import com.patex.zombie.opds.utils.LinkUtils;
+import com.patex.opds.OPDSEntry;
+import com.patex.utils.LinkUtils;
 
 import java.time.Instant;
 import java.util.ArrayList;

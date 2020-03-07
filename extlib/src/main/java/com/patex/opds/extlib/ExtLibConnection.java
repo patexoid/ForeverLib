@@ -5,13 +5,12 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.patex.LibException;
-import com.patex.zombie.core.entities.Book;
-import com.patex.zombie.core.entities.ExtLibrary;
-import com.patex.zombie.core.entities.ZUser;
+import com.patex.model.Book;
+import com.patex.opds.entities.ExtLibrary;
+import com.patex.opds.service.BookService;
+import com.patex.utils.ExecutorCreator;
 import com.patex.opds.OPDSEntry;
 import com.patex.opds.OPDSLink;
-import com.patex.zombie.core.service.BookService;
-import com.patex.zombie.core.utils.ExecutorCreator;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.FeedException;
 import com.rometools.rome.io.SyndFeedInput;
@@ -122,7 +121,7 @@ class ExtLibConnection {
         }
     }
 
-    public Book downloadBook(String uri, String type, ZUser user) {
+    public Book downloadBook(String uri, String type, String user) {
         try {
             return bookCache.get(uri, () -> getData(uri, conn -> downloadBook(type, conn, user)));
         } catch (ExecutionException | UncheckedExecutionException e) {
@@ -134,7 +133,7 @@ class ExtLibConnection {
         }
     }
 
-    private Book downloadBook(String type, URLConnection conn, ZUser user) throws LibException, IOException {
+    private Book downloadBook(String type, URLConnection conn, String user) throws LibException, IOException {
         String contentDisposition = conn.getHeaderField("Content-Disposition");
         String fileName;
         if (contentDisposition != null) {

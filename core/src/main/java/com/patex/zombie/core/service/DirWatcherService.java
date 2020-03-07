@@ -1,7 +1,7 @@
 package com.patex.zombie.core.service;
 
 import com.patex.model.User;
-import com.patex.zombie.core.utils.ExecutorCreator;
+import com.patex.utils.ExecutorCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

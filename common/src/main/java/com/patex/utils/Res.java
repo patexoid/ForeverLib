@@ -1,7 +1,5 @@
-package com.patex.zombie.core.utils;
+package com.patex.utils;
 
-
-import com.patex.zombie.core.service.Resources;
 
 import java.util.Locale;
 

@@ -2,12 +2,11 @@ package com.patex.opds.extlib;
 
 
 import com.google.common.util.concurrent.MoreExecutors;
-import com.patex.zombie.core.entities.ExtLibrary;
-import com.patex.zombie.core.entities.Subscription;
-import com.patex.zombie.core.entities.SubscriptionRepository;
-import com.patex.zombie.core.entities.ZUser;
-import com.patex.zombie.core.service.ZUserService;
-import com.patex.zombie.core.utils.ExecutorCreator;
+import com.patex.opds.entities.ExtLibrary;
+import com.patex.opds.entities.Subscription;
+import com.patex.opds.entities.SubscriptionRepository;
+import com.patex.opds.service.UserService;
+import com.patex.utils.ExecutorCreator;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,18 +31,18 @@ public class ExtLibSubscriptionServiceTest {
     private ExtLibDownloadService downloadService;
 
     @Mock
-    private ZUserService userService;
+    private UserService userService;
 
     private ExtLibSubscriptionService subscriptionService;
 
     @Mock
     private ExecutorCreator executorCreator;
-    private ZUser user;
+    private String user;
     private String url;
 
     @Before
     public void setUp() {
-        user = new ZUser();
+        user = "new ZUser()";
         when(userService.getCurrentUser()).thenReturn(user);
         when(executorCreator.createExecutor(any(), any())).thenReturn(MoreExecutors.newDirectExecutorService());
         subscriptionService = new ExtLibSubscriptionService(subscriptionRepo, downloadService,
@@ -63,7 +62,7 @@ public class ExtLibSubscriptionServiceTest {
         verify(subscriptionRepo).save(argument.capture());
         assertEquals(library, argument.getValue().getExtLibrary());
         assertEquals(url, argument.getValue().getLink());
-        assertEquals(user, argument.getValue().getUser());
+        assertEquals(user, argument.getValue().getUserId());
         verify(downloadService).downloadAll(library, url, user);
     }
 
@@ -90,7 +89,7 @@ public class ExtLibSubscriptionServiceTest {
         Subscription subscription = new Subscription();
         subscription.setLink(url);
         subscription.setExtLibrary(library);
-        subscription.setUser(user);
+        subscription.setUserId(user);
 
         when(subscriptionRepo.findAllByExtLibrary(library)).thenReturn(Collections.singletonList(subscription));
 

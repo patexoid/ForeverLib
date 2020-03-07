@@ -1,6 +1,6 @@
 package com.patex.model;
 
-import com.patex.zombie.core.utils.Tuple;
+import com.patex.utils.Tuple;
 import lombok.Data;
 
 import java.time.Instant;

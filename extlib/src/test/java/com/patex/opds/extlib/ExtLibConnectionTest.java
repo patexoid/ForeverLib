@@ -2,14 +2,13 @@ package com.patex.opds.extlib;
 
 import com.google.common.util.concurrent.MoreExecutors;
 import com.patex.LibException;
-import com.patex.zombie.core.entities.Book;
-import com.patex.zombie.core.entities.ZUser;
+import com.patex.model.Book;
 import com.patex.opds.OPDSContent;
 import com.patex.opds.OPDSAuthor;
 import com.patex.opds.OPDSEntry;
 import com.patex.opds.OPDSLink;
-import com.patex.zombie.core.service.BookService;
-import com.patex.zombie.core.utils.ExecutorCreator;
+import com.patex.opds.service.BookService;
+import com.patex.utils.ExecutorCreator;
 import com.rometools.rome.feed.synd.SyndContent;
 import com.rometools.rome.feed.synd.SyndContentImpl;
 import com.rometools.rome.feed.synd.SyndEntry;
@@ -54,7 +53,7 @@ public class ExtLibConnectionTest {
 
     @Test
     public void testDownloadBook() throws Exception {
-        ZUser user = new ZUser();
+        String user = "new ZUser()";
         Book book = new Book();
         book.setId(RandomUtils.nextLong(0, 1000));
         InputStream is = mock(InputStream.class);
@@ -77,7 +76,7 @@ public class ExtLibConnectionTest {
 
     @Test(expected = LibException.class)
     public void testDownloadBookLibException() throws Exception {
-        ZUser user = new ZUser();
+        String user = "new ZUser()";
 
         BookService bookService = mock(BookService.class);
         when(bookService.uploadBook(any(), any(), eq(user))).thenThrow(new LibException());

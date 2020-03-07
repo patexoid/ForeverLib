@@ -1,6 +1,6 @@
-package com.patex.zombie.opds.model;
+package com.patex.opds;
 
-import com.patex.zombie.core.utils.Res;
+import com.patex.utils.Res;
 
 import java.time.Instant;
 import java.util.List;

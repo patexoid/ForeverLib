@@ -2,13 +2,16 @@ package com.patex.opds.extlib;
 
 
 import com.patex.LibException;
-import com.patex.zombie.core.entities.*;
-import com.patex.zombie.core.messaging.MessengerService;
+import com.patex.model.Book;
 import com.patex.opds.OPDSAuthor;
 import com.patex.opds.OPDSEntry;
 import com.patex.opds.OPDSLink;
-import com.patex.zombie.core.service.TransactionService;
-import com.patex.zombie.core.utils.ExecutorCreator;
+import com.patex.opds.entities.ExtLibrary;
+import com.patex.opds.entities.SavedBook;
+import com.patex.opds.entities.SavedBookRepository;
+import com.patex.opds.service.MessengerService;
+import com.patex.opds.service.TransactionService;
+import com.patex.utils.ExecutorCreator;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.slf4j.Logger;
@@ -17,7 +20,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
@@ -63,7 +70,7 @@ public class ExtLibDownloadService {
         return uriO.map(NameValuePair::getValue);
     }
 
-    public Book downloadBook(ExtLibrary library, String uri, String type, ZUser user) throws LibException {
+    public Book downloadBook(ExtLibrary library, String uri, String type, String user) throws LibException {
         return transactionService.transactionRequired(() -> {
             SavedBook savedInfo =
                     savedBookRepo.findSavedBooksByExtLibraryAndExtId(library, uri).
@@ -90,14 +97,14 @@ public class ExtLibDownloadService {
         return connection.getFeed(uri);
     }
 
-    public CompletableFuture<Optional<DownloadAllResult>> downloadAll(ExtLibrary library, String uri, ZUser user) {
+    public CompletableFuture<Optional<DownloadAllResult>> downloadAll(ExtLibrary library, String uri, String user) {
 
         Supplier<Optional<DownloadAllResult>> supplier = () ->
                 scopeRunner.runInScope(library, () -> downloadAll(uri, user, library));
         return CompletableFuture.supplyAsync(supplier, executor);
     }
 
-    private Optional<DownloadAllResult> downloadAll(String uri, ZUser user, ExtLibrary library) {
+    private Optional<DownloadAllResult> downloadAll(String uri, String user, ExtLibrary library) {
         List<OPDSEntry> entries = getAllEntries(uri);
         Set<String> saved = getAlreadySaved(library, entries);
         Optional<DownloadAllResult> downloadResult = entries.stream().
@@ -145,7 +152,7 @@ public class ExtLibDownloadService {
                 map(SavedBook::getExtId).collect(Collectors.toSet());
     }
 
-    private DownloadAllResult download(OPDSEntry entry, ZUser user, ExtLibrary library) {
+    private DownloadAllResult download(OPDSEntry entry, String user, ExtLibrary library) {
         List<OPDSLink> links = entry.getLinks().stream().
                 filter(link -> link.getType().contains(FB2_TYPE)).
                 collect(Collectors.toList());

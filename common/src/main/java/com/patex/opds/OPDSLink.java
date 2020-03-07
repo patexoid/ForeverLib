@@ -1,4 +1,4 @@
-package com.patex.zombie.opds.model;
+package com.patex.opds;
 
 /**
  * Created by Alexey on 07.05.2017.

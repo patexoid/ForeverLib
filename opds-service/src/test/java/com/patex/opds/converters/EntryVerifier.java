@@ -1,9 +1,9 @@
 package com.patex.opds.converters;
 
-import com.patex.opds.ODPSContentRes;
 import com.patex.opds.OPDSContent;
 import com.patex.opds.OPDSEntry;
 import com.patex.opds.OPDSLink;
+import com.patex.zombie.opds.model.ODPSContentRes;
 import org.hamcrest.Matchers;
 
 import java.time.Instant;

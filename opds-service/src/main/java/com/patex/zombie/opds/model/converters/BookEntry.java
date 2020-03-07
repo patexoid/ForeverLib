@@ -1,13 +1,13 @@
 package com.patex.zombie.opds.model.converters;
 
 import com.patex.model.Book;
-import com.patex.zombie.opds.model.OPDSAuthor;
-import com.patex.zombie.opds.model.OPDSAuthorImpl;
-import com.patex.zombie.opds.model.OPDSContent;
-import com.patex.zombie.opds.model.OPDSEntry;
-import com.patex.zombie.opds.model.OPDSLink;
-import com.patex.zombie.opds.utils.LinkUtils;
-import com.patex.zombie.core.utils.Res;
+import com.patex.opds.OPDSAuthor;
+import com.patex.opds.OPDSAuthorImpl;
+import com.patex.opds.OPDSContent;
+import com.patex.opds.OPDSEntry;
+import com.patex.opds.OPDSLink;
+import com.patex.utils.LinkUtils;
+import com.patex.utils.Res;
 
 import java.time.Instant;
 import java.util.ArrayList;

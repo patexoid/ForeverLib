@@ -1,6 +1,7 @@
 package com.patex.opds.converters;
 
-import com.patex.zombie.core.entities.Author;
+import com.patex.model.Author;
+import com.patex.zombie.opds.model.converters.AuthorEntry;
 import org.junit.Test;
 
 import java.time.Instant;

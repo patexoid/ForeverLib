@@ -2,11 +2,14 @@ package com.patex.opds.extlib;
 
 import com.google.common.util.concurrent.MoreExecutors;
 import com.patex.LibException;
-import com.patex.zombie.core.entities.*;
-import com.patex.zombie.core.messaging.MessengerService;
+import com.patex.model.Book;
 import com.patex.opds.OPDSEntry;
-import com.patex.zombie.core.service.TransactionService;
-import com.patex.zombie.core.utils.ExecutorCreator;
+import com.patex.opds.entities.ExtLibrary;
+import com.patex.opds.entities.SavedBook;
+import com.patex.opds.entities.SavedBookRepository;
+import com.patex.opds.service.MessengerService;
+import com.patex.opds.service.TransactionService;
+import com.patex.utils.ExecutorCreator;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,7 +32,7 @@ public class ExtLibDownloadServiceTest {
     private ExtLibDownloadService downloadService;
     private String uri = "uri";
     private String type = "typ";
-    private ZUser user = new ZUser();
+    private String user = "user";
     private SavedBookRepository savedBookRepo;
 
 

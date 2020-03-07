@@ -1,4 +1,4 @@
-package com.patex.zombie.core.service;
+package com.patex.utils;
 
 
 import com.patex.plural.PluralResourceBundle;

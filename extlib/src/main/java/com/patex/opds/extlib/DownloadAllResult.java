@@ -1,8 +1,8 @@
 package com.patex.opds.extlib;
 
-import com.patex.zombie.core.entities.Book;
-import com.patex.zombie.core.service.Resources;
-import com.patex.zombie.core.utils.Res;
+import com.patex.model.Book;
+import com.patex.utils.Resources;
+import com.patex.utils.Res;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 /**
  * Created by Alexey on 05.07.2017.
  */
-class DownloadAllResult extends Res {
+public class DownloadAllResult extends Res {
 
     private final List<String> authors;
     private final List<Res> emptyBooks;

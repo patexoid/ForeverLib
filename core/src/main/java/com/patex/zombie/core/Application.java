@@ -16,7 +16,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.sql.DataSource;
 
-@SpringBootApplication(scanBasePackages = {"com.patex.zombie.core", "com.patex.jwt", "com.patex.security"})
+@SpringBootApplication(scanBasePackages = {"com.patex.zombie.core", "com.patex.jwt", "com.patex.security","com.patex.utils"})
 @EnableJpaRepositories
 @EnableSpringDataWebSupport
 @EnableAspectJAutoProxy(proxyTargetClass = true)

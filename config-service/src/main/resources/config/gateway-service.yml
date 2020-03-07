@@ -7,9 +7,9 @@ eureka:
     serviceUrl:
       defaultZone: http://discovery-service:8061/eureka/
 
-
 logging:
   pattern:
+    ROOT: DEBUG
     console: "%d{yyyy-MM-dd HH:mm:ss} ${LOG_LEVEL_PATTERN:-%5p} %class.%method %m%n"
 spring:
   cloud:
@@ -35,6 +35,12 @@ spring:
           uri: lb://user-service
           predicates:
             - Path=/user/**
+          filters:
+            - JwtFilter
+        - id: opds-service
+          uri: lb://opds-service
+          predicates:
+            - Path=/opds/**
           filters:
             - JwtFilter
 feign:

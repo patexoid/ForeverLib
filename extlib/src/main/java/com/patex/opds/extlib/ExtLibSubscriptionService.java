@@ -1,11 +1,11 @@
 package com.patex.opds.extlib;
 
 import com.patex.LibException;
-import com.patex.zombie.core.entities.ExtLibrary;
-import com.patex.zombie.core.entities.Subscription;
-import com.patex.zombie.core.entities.SubscriptionRepository;
-import com.patex.zombie.core.service.ZUserService;
-import com.patex.zombie.core.utils.ExecutorCreator;
+import com.patex.opds.entities.ExtLibrary;
+import com.patex.opds.entities.Subscription;
+import com.patex.opds.entities.SubscriptionRepository;
+import com.patex.opds.service.UserService;
+import com.patex.utils.ExecutorCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -23,14 +23,14 @@ public class ExtLibSubscriptionService {
 
     private final ExtLibDownloadService downloadService;
 
-    private final ZUserService userService;
+    private final UserService userService;
 
     private final  ExecutorService executor;
 
 
     public ExtLibSubscriptionService(SubscriptionRepository subscriptionRepo,
                                      ExtLibDownloadService downloadService,
-                                     ZUserService userService,
+                                     UserService userService,
                                      ExecutorCreator executorCreator) {
         this.subscriptionRepo = subscriptionRepo;
         this.downloadService = downloadService;
@@ -50,13 +50,13 @@ public class ExtLibSubscriptionService {
     }
 
     private void checkSubscription(ExtLibrary library, Subscription subscription) {
-        downloadService.downloadAll(library, subscription.getLink(), subscription.getUser());
+        downloadService.downloadAll(library, subscription.getLink(), subscription.getUserId());
     }
 
     public void checkSubscriptions(ExtLibrary library) {
         Collection<Subscription> subscriptions = subscriptionRepo.findAllByExtLibrary(library);
         subscriptions.forEach(subscription ->
-                downloadService.downloadAll(library, subscription.getLink(), subscription.getUser()));
+                downloadService.downloadAll(library, subscription.getLink(), subscription.getUserId()));
     }
 
     public Optional<Subscription> find(ExtLibrary library, String url) {

@@ -1,4 +1,4 @@
-package com.patex.zombie.opds.utils;
+package com.patex.utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

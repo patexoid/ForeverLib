@@ -1,4 +1,4 @@
-package com.patex.zombie.core.utils;
+package com.patex.utils;
 
 /**
  * Created by Alexey on 30.07.2017.

@@ -1,6 +1,6 @@
 package com.patex.zombie.opds.model;
 
-import com.patex.zombie.core.utils.Res;
+import com.patex.utils.Res;
 import com.rometools.rome.feed.atom.Link;
 
 import java.time.Instant;

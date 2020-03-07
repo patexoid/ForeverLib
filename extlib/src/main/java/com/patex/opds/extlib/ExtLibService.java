@@ -1,11 +1,15 @@
 package com.patex.opds.extlib;
 
 import com.patex.LibException;
-import com.patex.zombie.core.entities.*;
+import com.patex.model.Book;
+import com.patex.model.User;
 import com.patex.opds.OPDSEntry;
 import com.patex.opds.OPDSLink;
-import com.patex.zombie.core.service.ZUserService;
-import com.patex.zombie.core.utils.ExecutorCreator;
+import com.patex.opds.entities.ExtLibrary;
+import com.patex.opds.entities.ExtLibraryRepository;
+import com.patex.opds.entities.Subscription;
+import com.patex.opds.service.UserService;
+import com.patex.utils.ExecutorCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -19,11 +23,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import static com.patex.opds.OPDSLink.FB2;
-
-/**
- *
- */
-
 
 @Service
 public class ExtLibService {
@@ -40,7 +39,7 @@ public class ExtLibService {
     private final ExtLibDownloadService downloadService;
     private final ExtLibSubscriptionService subscriptionService;
     private final ExtLibraryRepository extLibRepo;
-    private final ZUserService userService;
+    private final UserService userService;
 
     private final ExecutorService executor;
 
@@ -48,7 +47,7 @@ public class ExtLibService {
     public ExtLibService(ExtLibDownloadService downloadService,
                          ExtLibSubscriptionService subscriptionService,
                          ExtLibraryRepository extLibRepo,
-                         ZUserService userService,
+                         UserService userService,
                          ExecutorCreator executorCreator) {
         this.downloadService = downloadService;
         this.subscriptionService = subscriptionService;
@@ -92,7 +91,7 @@ public class ExtLibService {
     }
 
     private String downloadBook(ExtLibrary library, String uri, String type) throws LibException {
-        ZUser user = userService.getCurrentUser();
+        String user = userService.getCurrentUser();
         Book book = downloadService.downloadBook(library, uri, type, user);
         return "/book/loadFile/" + book.getId();
     }

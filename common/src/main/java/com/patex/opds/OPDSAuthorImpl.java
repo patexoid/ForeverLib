@@ -1,4 +1,4 @@
-package com.patex.zombie.opds.model;
+package com.patex.opds;
 
 
 import com.patex.model.BookAuthor;

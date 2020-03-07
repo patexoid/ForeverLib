@@ -1,7 +1,7 @@
 package com.patex.opds.controller;
 
-import com.patex.zombie.core.entities.ExtLibrary;
-import com.patex.zombie.core.service.ExtLibraryService;
+import com.patex.opds.entities.ExtLibrary;
+import com.patex.opds.service.ExtLibraryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

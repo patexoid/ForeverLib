@@ -5,7 +5,7 @@ import com.patex.zombie.core.BookUploadInfo;
 import com.patex.model.Book;
 import com.patex.model.BookAuthor;
 import com.patex.model.User;
-import com.patex.zombie.core.utils.Tuple;
+import com.patex.utils.Tuple;
 import fb2Generator.Fb2Creator;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Assert;

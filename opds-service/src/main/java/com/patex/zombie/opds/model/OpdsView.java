@@ -1,7 +1,11 @@
 package com.patex.zombie.opds.model;
 
-import com.patex.zombie.core.service.Resources;
-import com.patex.zombie.core.utils.Res;
+import com.patex.opds.OPDSAuthor;
+import com.patex.opds.OPDSContent;
+import com.patex.opds.OPDSEntry;
+import com.patex.opds.OPDSLink;
+import com.patex.utils.Resources;
+import com.patex.utils.Res;
 import com.rometools.rome.feed.atom.Content;
 import com.rometools.rome.feed.atom.Entry;
 import com.rometools.rome.feed.atom.Feed;

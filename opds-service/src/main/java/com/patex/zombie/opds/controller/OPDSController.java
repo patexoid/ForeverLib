@@ -3,17 +3,16 @@ package com.patex.zombie.opds.controller;
 import com.patex.model.Author;
 import com.patex.model.Sequence;
 import com.patex.model.SequenceBook;
-import com.patex.zombie.opds.model.OPDSEntry;
-import com.patex.zombie.opds.model.OPDSLink;
+import com.patex.opds.OPDSEntry;
+import com.patex.opds.OPDSLink;
+import com.patex.utils.Res;
 import com.patex.zombie.opds.model.OPDSMetadata;
 import com.patex.zombie.opds.model.OpdsView;
-import com.patex.zombie.opds.model.RootProvider;
 import com.patex.zombie.opds.model.converters.BookEntry;
 import com.patex.zombie.opds.model.converters.ExpandedAuthorEntries;
 import com.patex.zombie.opds.model.converters.SequenceEntry;
 import com.patex.zombie.opds.service.OpdsService;
-import com.patex.zombie.opds.utils.LinkUtils;
-import com.patex.zombie.core.utils.Res;
+import com.patex.utils.LinkUtils;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +23,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -36,12 +34,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OPDSController {
 
-    static final String PREFIX = "opds";
+    public static final String PREFIX = "opds";
+    public static final String AUTHORSINDEX = "authorsindex";
     static final String APPLICATION_ATOM_XML = "application/atom+xml;charset=UTF-8";
-    private static final String AUTHORSINDEX = "authorsindex";
-    private static final int EXPAND_FOR_AUTHORS_COUNT = 3;
     private static final Logger log = LoggerFactory.getLogger(OPDSController.class);
-    private final List<RootProvider> rootEntriesProvider = new ArrayList<>();
 
     private final OpdsService service;
 
@@ -74,9 +70,6 @@ public class OPDSController {
         return createMav(title, entries, e -> e, updated);
     }
 
-    public void addRootPrivider(RootProvider provider) {
-        rootEntriesProvider.add(provider);
-    }
 
     @RequestMapping(produces = APPLICATION_ATOM_XML)
     public ModelAndView getMain() {
@@ -90,11 +83,6 @@ public class OPDSController {
         rootEntries.add(OPDSEntry.builder("root:authors", "opds.all.authors").
                 addLink(LinkUtils.makeURL(PREFIX, AUTHORSINDEX), OPDSLink.OPDS_CATALOG).
                 build());
-        rootEntries.addAll(
-                rootEntriesProvider.stream().
-                        map(RootProvider::getRoot).
-                        flatMap(Collection::stream).
-                        collect(Collectors.toList()));
         return createMav(new Res("opds.catalog"), rootEntries);
     }
 

@@ -1,7 +1,10 @@
 package com.patex.opds.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Getter;
+import lombok.Setter;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -25,17 +28,19 @@ public class Subscription {
 
     private String link;
 
-    @ManyToOne(optional = false)
-    private ZUser user;
+    @Column(nullable = false)
+    @Getter
+    @Setter
+    private String userId;
 
     public Subscription() {
 
     }
 
-    public Subscription(ExtLibrary extLibrary, String link, ZUser user) {
+    public Subscription(ExtLibrary extLibrary, String link, String userId) {
         this.extLibrary = extLibrary;
         this.link = link;
-        this.user = user;
+        this.userId = userId;
     }
 
     public Long getId() {
@@ -60,14 +65,6 @@ public class Subscription {
 
     public void setLink(String link) {
         this.link = link;
-    }
-
-    public ZUser getUser() {
-        return user;
-    }
-
-    public void setUser(ZUser user) {
-        this.user = user;
     }
 
 

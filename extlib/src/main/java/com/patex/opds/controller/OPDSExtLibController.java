@@ -1,12 +1,17 @@
 package com.patex.opds.controller;
 
 import com.patex.LibException;
-
+import com.patex.jwt.JwtTokenUtil;
+import com.patex.opds.OPDSEntry;
+import com.patex.opds.OPDSLink;
 import com.patex.opds.controller.latest.SaveLatest;
-import com.patex.zombie.core.service.Resources;
-import com.patex.zombie.core.service.ZUserService;
-import com.patex.zombie.core.utils.LinkUtils;
-import com.patex.zombie.core.utils.Res;
+import com.patex.opds.extlib.ExtLibFeed;
+import com.patex.opds.extlib.ExtLibService;
+import com.patex.opds.extlib.LinkMapper;
+import com.patex.opds.service.UserService;
+import com.patex.utils.LinkUtils;
+import com.patex.utils.Res;
+import com.patex.utils.Resources;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,24 +20,20 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.annotation.PostConstruct;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static com.patex.zombie.core.controllers.OPDSController.*;
-import static com.patex.zombie.core.service.ZUserService.ADMIN_AUTHORITY;
-import static com.patex.zombie.core.service.ZUserService.USER;
 
 /**
  *
  */
 @Controller
 @RequestMapping(OPDSExtLibController.OPDS_EXT_LIB)
-public class OPDSExtLibController implements RootProvider {
-
+public class OPDSExtLibController {
+    static final String APPLICATION_ATOM_XML = "application/atom+xml;charset=UTF-8";
     private static final String EXT_LIB = "extLib";
-    static final String OPDS_EXT_LIB = "/" + PREFIX + "/" + EXT_LIB;
+    static final String OPDS_EXT_LIB = EXT_LIB;
 
 
     private final List<OPDSEntry> rootEntries = Collections.singletonList(
@@ -41,46 +42,35 @@ public class OPDSExtLibController implements RootProvider {
 
     private ExtLibService extLibService;
 
-    private OPDSController opdsController;
-
-    private ZUserService userService;
+    private UserService userService;
 
     private Resources resources;
 
-    public OPDSExtLibController(ExtLibService extLibService, OPDSController opdsController,
-                                ZUserService userService, Resources resources) {
+    public OPDSExtLibController(ExtLibService extLibService,
+                                UserService userService, Resources resources) {
         this.extLibService = extLibService;
-        this.opdsController = opdsController;
         this.userService = userService;
         this.resources = resources;
     }
 
-    @PostConstruct
-    public void setUp() {
-        opdsController.addRootPrivider(this);
-    }
-
-    @Override
-    public List<OPDSEntry> getRoot() {
-        return rootEntries;
-    }
-
     @RequestMapping(produces = APPLICATION_ATOM_XML)
-    public ModelAndView getExtLibraries() {
-        return createMav(new Res("opds.extlib.libraries"), extLibService.getRoot(OPDS_EXT_LIB));
+    public List<OPDSEntry> getExtLibraries() {
+//        return createMav(new Res("opds.extlib.libraries"), extLibService.getRoot(OPDS_EXT_LIB));
+        return  extLibService.getRoot(OPDS_EXT_LIB);
     }
 
     @SaveLatest
     @RequestMapping(value = "{id}", produces = APPLICATION_ATOM_XML)
-    public ModelAndView getExtLibData(@PathVariable(value = "id") long id,
+    public  ExtLibFeed getExtLibData(@PathVariable(value = "id") long id,
                                       @RequestParam(required = false) Map<String, String> requestParams) throws LibException {
         ExtLibFeed extLibFeed = extLibService.getDataForLibrary(id, requestParams);
         extLibFeed = extLibFeed.updateWithPrefix(OPDS_EXT_LIB + "/" + id + "/");
-        return createMav(new Res("first.value", extLibFeed.getTitle()), extLibFeed.getEntries());
+        return extLibFeed;
+//        return createMav(new Res("first.value", extLibFeed.getTitle()), extLibFeed.getEntries());
     }
 
     @RequestMapping(value = "{id}/download")
-    @Secured(ZUserService.USER)
+    @Secured(JwtTokenUtil.USER)
     public String downloadBook(@PathVariable(value = "id") long id,
                                @RequestParam(name = ExtLibService.REQUEST_P_NAME) String url,
                                @RequestParam(name = ExtLibService.PARAM_TYPE) String type)
@@ -92,7 +82,7 @@ public class OPDSExtLibController implements RootProvider {
 
 
     @RequestMapping(value = "{id}/action/{action}")
-    @Secured(ZUserService.USER)
+    @Secured(JwtTokenUtil.USER)
     public String actionExtLibData(@PathVariable(value = "id") long id,
                                    @PathVariable(value = "action") String action,
                                    @RequestParam Map<String, String> requestParams,
@@ -104,10 +94,10 @@ public class OPDSExtLibController implements RootProvider {
     }
 
     @RequestMapping(value = "runSubcriptionTask")
-    @Secured(ZUserService.ADMIN_AUTHORITY)
+    @Secured(JwtTokenUtil.ADMIN_AUTHORITY)
     public @ResponseBody
     String runSubcriptionTask() throws LibException {
         extLibService.checkSubscriptions();
-        return resources.get(userService.getUserLocale(), "opds.extlib.subscription.task.in.progress");
+        return resources.get(userService.getUserLocale(null), "opds.extlib.subscription.task.in.progress");
     }
 }

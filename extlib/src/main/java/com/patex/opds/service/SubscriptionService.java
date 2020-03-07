@@ -1,7 +1,7 @@
 package com.patex.opds.service;
 
-import com.patex.zombie.core.entities.Subscription;
-import com.patex.zombie.core.entities.SubscriptionRepository;
+import com.patex.opds.entities.Subscription;
+import com.patex.opds.entities.SubscriptionRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;

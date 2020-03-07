@@ -1,8 +1,8 @@
 package com.patex.zombie.core.messaging;
 
 import com.patex.model.User;
-import com.patex.zombie.core.service.Resources;
-import com.patex.zombie.core.utils.Res;
+import com.patex.utils.Resources;
+import com.patex.utils.Res;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;

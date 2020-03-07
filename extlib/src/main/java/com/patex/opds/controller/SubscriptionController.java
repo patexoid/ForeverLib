@@ -1,8 +1,9 @@
 package com.patex.opds.controller;
 
 import com.patex.LibException;
-import com.patex.zombie.core.entities.Subscription;
-import com.patex.zombie.core.service.SubscriptionService;
+import com.patex.jwt.JwtTokenUtil;
+import com.patex.opds.entities.Subscription;
+import com.patex.opds.service.SubscriptionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import static com.patex.zombie.core.service.ZUserService.USER;
 
 @Controller
 @RequestMapping("/subscription")
@@ -39,7 +39,7 @@ public class SubscriptionController {
     }
 
     @RequestMapping(method = RequestMethod.POST)
-    @Secured(ZUserService.USER)
+    @Secured(JwtTokenUtil.USER)
     public @ResponseBody
     Subscription updateSubscription(@RequestBody Subscription book) throws LibException {
         return subscriptionService.save(book);

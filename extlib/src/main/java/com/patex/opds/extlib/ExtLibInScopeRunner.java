@@ -1,6 +1,6 @@
 package com.patex.opds.extlib;
 
-import com.patex.zombie.core.entities.ExtLibrary;
+import com.patex.opds.entities.ExtLibrary;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

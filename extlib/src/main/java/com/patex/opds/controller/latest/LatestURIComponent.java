@@ -1,7 +1,7 @@
 package com.patex.opds.controller.latest;
 
-import com.patex.zombie.core.entities.ZUser;
-import com.patex.zombie.core.service.ZUserService;
+import com.patex.jwt.JwtTokenUtil;
+import com.patex.opds.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
@@ -17,17 +17,16 @@ import java.util.Map;
 public class LatestURIComponent {
 
     @Autowired
-    private ZUserService userService;
+    private UserService userService;
 
     private final Map<String, ModelAndView> latestForUser = new HashMap<>();
 
     public void afterMethod(ModelAndView view) {
-        ZUser currentUser = userService.getCurrentUser();
-        latestForUser.put(currentUser.getUsername(), view);
+        latestForUser.put(userService.getCurrentUser(), view);
     }
 
-    @Secured(ZUserService.USER)
+    @Secured(JwtTokenUtil.USER)
     public ModelAndView getLatestForCurrentUser(){
-        return latestForUser.get(userService.getCurrentUser().getUsername());
+        return latestForUser.get(userService.getCurrentUser());
     }
 }
