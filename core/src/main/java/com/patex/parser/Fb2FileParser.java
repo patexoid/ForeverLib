@@ -1,12 +1,12 @@
 package com.patex.parser;
 
 import com.patex.LibException;
-import com.patex.entities.Author;
-import com.patex.entities.Book;
-import com.patex.entities.BookGenre;
-import com.patex.entities.BookSequence;
-import com.patex.entities.Genre;
-import com.patex.entities.Sequence;
+import com.patex.entities.AuthorEntity;
+import com.patex.entities.BookEntity;
+import com.patex.entities.BookGenreEntity;
+import com.patex.entities.BookSequenceEntity;
+import com.patex.entities.GenreEntity;
+import com.patex.entities.SequenceEntity;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +60,7 @@ public class Fb2FileParser implements FileParser {
 
     private BookInfo parseTitleInfo(XMLEventReader reader, String fileName) {
         BookInfo bookInfo = new BookInfo();
-        bookInfo.setBook(new Book());
+        bookInfo.setBook(new BookEntity());
         try {
             parseTitleInfo(reader, bookInfo);
         } catch (XMLStreamException e) {
@@ -107,7 +107,7 @@ public class Fb2FileParser implements FileParser {
     }
 
     private void parseTitleInfo(XMLEventReader reader, BookInfo bookInfo) throws XMLStreamException {
-        Book book = bookInfo.getBook();
+        BookEntity book = bookInfo.getBook();
         while (reader.hasNext()) {
             XMLEvent event = reader.nextEvent();
             if (event.isEndElement() && "title-info".equals(event.asEndElement().getName().getLocalPart())) {
@@ -116,7 +116,7 @@ public class Fb2FileParser implements FileParser {
                 StartElement element = event.asStartElement();
                 String localPart = element.getName().getLocalPart();
                 if ("author".equals(localPart)) {
-                    Author author = parseAuthor(reader);
+                    AuthorEntity author = parseAuthor(reader);
                     book.addAuthor(author);
                 } else if ("coverpage".equals(localPart)) {
                     bookInfo.setCoverage(getImageCoverage(reader));
@@ -125,18 +125,18 @@ public class Fb2FileParser implements FileParser {
                 } else if ("annotation".equals(localPart)) {
                     book.setDescr(getText(reader, "annotation"));
                 } else if ("genre".equals(localPart)) {
-                    book.getGenres().add(new BookGenre(book, new Genre(reader.getElementText())));
+                    book.getGenres().add(new BookGenreEntity(book, new GenreEntity(reader.getElementText())));
                 } else if ("sequence".equals(localPart)) {
                     String sequenceName = element.getAttributeByName(new QName("", "name")).getValue();
-                    Integer order;
+                    int order;
                     try {
                         Attribute numberAttr = element.getAttributeByName(new QName("", "number"));
-                        order = numberAttr == null ? 0 : Integer.valueOf(numberAttr.getValue());
+                        order = numberAttr == null ? 0 : Integer.parseInt(numberAttr.getValue());
                     } catch (NumberFormatException e) {
                         order = 0;
                         log.warn("sequence {} without order, book: {}", sequenceName, book.getTitle());
                     }
-                    book.getSequences().add(new BookSequence(order, new Sequence(sequenceName)));
+                    book.getSequences().add(new BookSequenceEntity(order, new SequenceEntity(sequenceName)));
                 }
             }
         }
@@ -158,11 +158,11 @@ public class Fb2FileParser implements FileParser {
         return text.toString();
     }
 
-    private Author parseAuthor(XMLEventReader reader) throws XMLStreamException {
+    private AuthorEntity parseAuthor(XMLEventReader reader) throws XMLStreamException {
         String lastName = null;
         String firstName = null;
         String middleName = null;
-        Author author = new Author();
+        AuthorEntity author = new AuthorEntity();
         while (reader.hasNext()) {
             XMLEvent event = reader.nextEvent();
             if (event.isStartElement()) {

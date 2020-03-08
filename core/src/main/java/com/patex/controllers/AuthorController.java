@@ -1,6 +1,6 @@
 package com.patex.controllers;
 
-import com.patex.entities.Author;
+import com.patex.entities.AuthorEntity;
 import com.patex.service.AuthorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,14 +23,14 @@ public class AuthorController {
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public
     @ResponseBody
-    Author getAuthor(@PathVariable(value = "id") long id) {
+    AuthorEntity getAuthor(@PathVariable(value = "id") long id) {
         return authorService.getAuthor(id);
     }
 
     @RequestMapping(method = RequestMethod.GET)
     public
     @ResponseBody
-    Page<Author> getAuthors(Pageable pageable, @RequestParam(required = false) String prefix) {
+    Page<AuthorEntity> getAuthors(Pageable pageable, @RequestParam(required = false) String prefix) {
         log.trace("prefix:{} page:{} of {}",prefix,pageable.getPageNumber(),pageable.getPageSize());
         return authorService.getAuthor(pageable, prefix);
     }

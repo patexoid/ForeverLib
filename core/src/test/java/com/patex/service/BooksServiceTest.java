@@ -1,11 +1,11 @@
 package com.patex.service;
 
-import com.patex.entities.Author;
-import com.patex.entities.AuthorBook;
-import com.patex.entities.Book;
+import com.patex.entities.AuthorEntity;
+import com.patex.entities.AuthorBookEntity;
+import com.patex.entities.BookEntity;
 import com.patex.entities.BookRepository;
-import com.patex.entities.BookSequence;
-import com.patex.entities.Sequence;
+import com.patex.entities.BookSequenceEntity;
+import com.patex.entities.SequenceEntity;
 import com.patex.entities.ZUser;
 import com.patex.parser.BookImage;
 import com.patex.parser.BookInfo;
@@ -53,7 +53,7 @@ public class BooksServiceTest {
     private ByteArrayInputStream bookIS;
     private ZUser user;
     private BookInfo bookInfo;
-    private Book book;
+    private BookEntity book;
 
     @Before
     public void setUp() {
@@ -65,14 +65,14 @@ public class BooksServiceTest {
         bookIS = new ByteArrayInputStream(new byte[0]);
         user = new ZUser();
         bookInfo = new BookInfo();
-        book = new Book();
-        book.setAuthors(Collections.singleton(new Author(1L, FIRST_AUTHOR)));
-        book.setSequences(Collections.singletonList(new BookSequence(1, new Sequence(FIRST_SEQUENCE))));
+        book = new BookEntity();
+        book.setAuthors(Collections.singleton(new AuthorEntity(1L, FIRST_AUTHOR)));
+        book.setSequences(Collections.singletonList(new BookSequenceEntity(1, new SequenceEntity(FIRST_SEQUENCE))));
         bookInfo.setBook(book);
 
         when(parserService.getBookInfo(eq(FILE_NAME), any())).thenReturn(bookInfo);
         when(bookRepo.findFirstByTitleAndChecksum(any(), any())).thenReturn(Optional.empty());
-        when(bookRepo.save(any(Book.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(bookRepo.save(any(BookEntity.class))).thenAnswer(i -> i.getArguments()[0]);
         when(sequenceService.mergeSequences(any())).thenAnswer(i -> {
             Collection sequences = (Collection) i.getArguments()[0];
             if (sequences == null) {
@@ -93,7 +93,7 @@ public class BooksServiceTest {
 
     @Test
     public void verifyUploadBook() {
-        Book result = bookService.uploadBook(FILE_NAME, bookIS, user);
+        BookEntity result = bookService.uploadBook(FILE_NAME, bookIS, user);
         verify(bookRepo).save(this.book);
         verify(fileStorage).save(any(), eq(FILE_NAME));
         assertEquals(FILE_NAME, book.getFileName());
@@ -103,11 +103,11 @@ public class BooksServiceTest {
     @Test
     public void verifyUploadBookWithSavedAuthor() {
         long authorID = 42;
-        when(authorService.findFirstByNameIgnoreCase(FIRST_AUTHOR)).thenReturn(Optional.of(new Author(authorID, FIRST_AUTHOR)));
+        when(authorService.findFirstByNameIgnoreCase(FIRST_AUTHOR)).thenReturn(Optional.of(new AuthorEntity(authorID, FIRST_AUTHOR)));
 
-        Book result = bookService.uploadBook(FILE_NAME, bookIS, user);
+        BookEntity result = bookService.uploadBook(FILE_NAME, bookIS, user);
 
-        Author resultAuthor = result.getAuthorBooks().get(0).getAuthor();
+        AuthorEntity resultAuthor = result.getAuthorBooks().get(0).getAuthor();
         assertEquals(authorID, resultAuthor.getId().longValue());
     }
 
@@ -116,18 +116,18 @@ public class BooksServiceTest {
     public void verifyUploadBookWithSavedAuthorAndSequence() {
         long authorID = 42;
         long seqeunceId = 54;
-        Author savedAuthor = new Author(authorID, FIRST_AUTHOR);
-        Book savedBook = new Book();
-        Sequence sequence = new Sequence(seqeunceId, FIRST_SEQUENCE);
-        savedBook.setSequences(Collections.singletonList(new BookSequence(1, sequence, savedBook)));
-        savedAuthor.setBooks(Collections.singletonList(new AuthorBook(savedAuthor, savedBook)));
+        AuthorEntity savedAuthor = new AuthorEntity(authorID, FIRST_AUTHOR);
+        BookEntity savedBook = new BookEntity();
+        SequenceEntity sequence = new SequenceEntity(seqeunceId, FIRST_SEQUENCE);
+        savedBook.setSequences(Collections.singletonList(new BookSequenceEntity(1, sequence, savedBook)));
+        savedAuthor.setBooks(Collections.singletonList(new AuthorBookEntity(savedAuthor, savedBook)));
         when(authorService.findFirstByNameIgnoreCase(FIRST_AUTHOR)).thenReturn(Optional.of(savedAuthor));
 
-        Book result = bookService.uploadBook(FILE_NAME, bookIS, user);
+        BookEntity result = bookService.uploadBook(FILE_NAME, bookIS, user);
 
-        Author resultAuthor = result.getAuthorBooks().get(0).getAuthor();
+        AuthorEntity resultAuthor = result.getAuthorBooks().get(0).getAuthor();
         assertEquals(authorID, resultAuthor.getId().longValue());
-        Sequence resultSequnce = result.getSequences().get(0).getSequence();
+        SequenceEntity resultSequnce = result.getSequences().get(0).getSequence();
         assertEquals(seqeunceId, resultSequnce.getId().longValue());
     }
 
@@ -138,25 +138,25 @@ public class BooksServiceTest {
         long firstSavedSequenceId = 1L;
         long secondSavedSequenceId = 2L;
         long mergedSequenceId = 3L;
-        Author firstSavedAuthor = new Author(FIRST_AUTHOR);
-        Book firstSavedBook = new Book();
-        Sequence firstSequence = new Sequence(firstSavedSequenceId, FIRST_SEQUENCE);
-        firstSavedBook.setSequences(Collections.singletonList(new BookSequence(1, firstSequence, firstSavedBook)));
-        firstSavedAuthor.setBooks(Collections.singletonList(new AuthorBook(firstSavedAuthor, firstSavedBook)));
+        AuthorEntity firstSavedAuthor = new AuthorEntity(FIRST_AUTHOR);
+        BookEntity firstSavedBook = new BookEntity();
+        SequenceEntity firstSequence = new SequenceEntity(firstSavedSequenceId, FIRST_SEQUENCE);
+        firstSavedBook.setSequences(Collections.singletonList(new BookSequenceEntity(1, firstSequence, firstSavedBook)));
+        firstSavedAuthor.setBooks(Collections.singletonList(new AuthorBookEntity(firstSavedAuthor, firstSavedBook)));
         when(authorService.findFirstByNameIgnoreCase(FIRST_AUTHOR)).thenReturn(Optional.of(firstSavedAuthor));
 
-        Author secondSavedAuthor = new Author(SECOND_AUTHOR);
-        Book secondSavedBook = new Book();
-        Sequence secondSequence = new Sequence(secondSavedSequenceId, FIRST_SEQUENCE);
-        secondSavedBook.setSequences(Collections.singletonList(new BookSequence(1, secondSequence, secondSavedBook)));
-        secondSavedAuthor.setBooks(Collections.singletonList(new AuthorBook(secondSavedAuthor, secondSavedBook)));
+        AuthorEntity secondSavedAuthor = new AuthorEntity(SECOND_AUTHOR);
+        BookEntity secondSavedBook = new BookEntity();
+        SequenceEntity secondSequence = new SequenceEntity(secondSavedSequenceId, FIRST_SEQUENCE);
+        secondSavedBook.setSequences(Collections.singletonList(new BookSequenceEntity(1, secondSequence, secondSavedBook)));
+        secondSavedAuthor.setBooks(Collections.singletonList(new AuthorBookEntity(secondSavedAuthor, secondSavedBook)));
         when(authorService.findFirstByNameIgnoreCase(SECOND_AUTHOR)).thenReturn(Optional.of(secondSavedAuthor));
 
-        book.setAuthors(Arrays.asList(new Author(FIRST_AUTHOR), new Author(SECOND_AUTHOR)));
+        book.setAuthors(Arrays.asList(new AuthorEntity(FIRST_AUTHOR), new AuthorEntity(SECOND_AUTHOR)));
 
-        when(sequenceService.mergeSequences(any())).thenReturn(new Sequence(mergedSequenceId, FIRST_SEQUENCE));
+        when(sequenceService.mergeSequences(any())).thenReturn(new SequenceEntity(mergedSequenceId, FIRST_SEQUENCE));
 
-        Book result = bookService.uploadBook(FILE_NAME, bookIS, user);
+        BookEntity result = bookService.uploadBook(FILE_NAME, bookIS, user);
 
         verify(sequenceService).mergeSequences(anyList());
         assertEquals(mergedSequenceId, result.getSequences().get(0).getSequence().getId().longValue());
@@ -186,15 +186,15 @@ public class BooksServiceTest {
         String uploadedTitle = rsg.generate(10);
         String existedTitle = rsg.generate(10);
         BookInfo uploadedBookInfo = new BookInfo();
-        Book uploadedBook = new Book();
+        BookEntity uploadedBook = new BookEntity();
         uploadedBook.setTitle(uploadedTitle);
         uploadedBookInfo.setBook(uploadedBook);
         when(parserService.getBookInfo(eq(fileName), any(InputStream.class))).thenReturn(uploadedBookInfo);
-        Book savedBook = new Book();
+        BookEntity savedBook = new BookEntity();
         savedBook.setTitle(existedTitle);
         when(bookRepo.findFirstByTitleAndChecksum(eq(uploadedTitle), any())).thenReturn(Optional.of(savedBook));
 
-        Book book = bookService.uploadBook(fileName, bais, user);
+        BookEntity book = bookService.uploadBook(fileName, bais, user);
         assertEquals("should be saved book", existedTitle, book.getTitle());
     }
 
@@ -203,13 +203,13 @@ public class BooksServiceTest {
         String newAuthorName = rsg.generate(10);
         String existedAuthorName = rsg.generate(10);
         String fileName = rsg.generate(10);
-        Book book = new Book();
-        AuthorBook abWithNewAuthor = new AuthorBook();
-        Author newAuthor = new Author();
+        BookEntity book = new BookEntity();
+        AuthorBookEntity abWithNewAuthor = new AuthorBookEntity();
+        AuthorEntity newAuthor = new AuthorEntity();
         newAuthor.setName(newAuthorName);
         abWithNewAuthor.setAuthor(newAuthor);
-        AuthorBook abWithExistedAuthor = new AuthorBook();
-        Author existedAuthor = new Author();
+        AuthorBookEntity abWithExistedAuthor = new AuthorBookEntity();
+        AuthorEntity existedAuthor = new AuthorEntity();
         existedAuthor.setName(existedAuthorName);
         abWithExistedAuthor.setAuthor(existedAuthor);
         book.setAuthorBooks(Arrays.asList(abWithNewAuthor, abWithExistedAuthor));
@@ -217,11 +217,11 @@ public class BooksServiceTest {
         BookInfo bookInfo = new BookInfo();
         bookInfo.setBook(book);
         when(parserService.getBookInfo(eq(fileName), any())).thenReturn(bookInfo);
-        Author savedAuthor = new Author();
+        AuthorEntity savedAuthor = new AuthorEntity();
         savedAuthor.setName(existedAuthorName);
         when(authorService.findFirstByNameIgnoreCase(existedAuthorName)).thenReturn(Optional.of(savedAuthor));
 
-        Book saved = bookService.uploadBook(fileName, bais, new ZUser());
+        BookEntity saved = bookService.uploadBook(fileName, bais, new ZUser());
         assertTrue(saved.getAuthorBooks().get(0).getAuthor() == newAuthor);
         assertTrue(saved.getAuthorBooks().get(1).getAuthor() == savedAuthor);
     }
@@ -234,13 +234,13 @@ public class BooksServiceTest {
         String fileName = rsg.generate(10);
         long savedSeqId = RandomUtils.nextLong();
 
-        Book book = new Book();
+        BookEntity book = new BookEntity();
 
-        Sequence newSequence = new Sequence();
+        SequenceEntity newSequence = new SequenceEntity();
         newSequence.setName(sequenceName);
-        book.setSequences(Collections.singletonList(new BookSequence(2, newSequence)));
-        AuthorBook abWithExistedAuthor = new AuthorBook();
-        Author existedAuthor = new Author();
+        book.setSequences(Collections.singletonList(new BookSequenceEntity(2, newSequence)));
+        AuthorBookEntity abWithExistedAuthor = new AuthorBookEntity();
+        AuthorEntity existedAuthor = new AuthorEntity();
         existedAuthor.setName(existedAuthorName);
         abWithExistedAuthor.setAuthor(existedAuthor);
         book.setAuthorBooks(Collections.singletonList(abWithExistedAuthor));
@@ -248,17 +248,17 @@ public class BooksServiceTest {
         BookInfo bookInfo = new BookInfo();
         bookInfo.setBook(book);
         when(parserService.getBookInfo(eq(fileName), any())).thenReturn(bookInfo);
-        Author savedAuthor = new Author();
+        AuthorEntity savedAuthor = new AuthorEntity();
         savedAuthor.setName(existedAuthorName);
-        Book savedBook = new Book();
-        Sequence savedSequence = new Sequence();
+        BookEntity savedBook = new BookEntity();
+        SequenceEntity savedSequence = new SequenceEntity();
         savedSequence.setName(sequenceName);
         savedSequence.setId(savedSeqId);
-        savedBook.setSequences(Collections.singletonList(new BookSequence(1, savedSequence, savedBook)));
-        savedAuthor.getBooks().add(new AuthorBook(savedAuthor, savedBook));
+        savedBook.setSequences(Collections.singletonList(new BookSequenceEntity(1, savedSequence, savedBook)));
+        savedAuthor.getBooks().add(new AuthorBookEntity(savedAuthor, savedBook));
         when(authorService.findFirstByNameIgnoreCase(existedAuthorName)).thenReturn(Optional.of(savedAuthor));
 
-        Book saved = bookService.uploadBook(fileName, bais, new ZUser());
+        BookEntity saved = bookService.uploadBook(fileName, bais, new ZUser());
         assertTrue(saved.getSequences().get(0).getSequence() == savedSequence);
     }
 }

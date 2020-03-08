@@ -2,8 +2,8 @@ package api.com.patex;
 
 
 import com.patex.BookUploadInfo;
-import com.patex.entities.Author;
-import com.patex.entities.Book;
+import com.patex.entities.AuthorEntity;
+import com.patex.entities.BookEntity;
 import com.patex.entities.ZUser;
 import com.patex.utils.Tuple;
 import fb2Generator.Fb2Creator;
@@ -122,11 +122,11 @@ public class UploadIT {
         assertThat(response.getBody(), hasSize(1));
         Assert.assertTrue(response.getBody().stream().
                 allMatch(info -> info.getStatus().equals(BookUploadInfo.Status.Success)));
-        Book book = httpClient.get("book/" + response.getBody().get(0).getId(), Book.class);
+        BookEntity book = httpClient.get("book/" + response.getBody().get(0).getId(), BookEntity.class);
         assertThat(book.getTitle(), equalTo(title));
         assertThat(book.getDescr().trim(), equalTo(annotationLine));
         assertThat(book.getAuthorBooks(), hasSize(1));
-        Author author = book.getAuthorBooks().get(0).getAuthor();
+        AuthorEntity author = book.getAuthorBooks().get(0).getAuthor();
         assertThat(author.getName(), equalTo(lastName + " " + firstName + " " + middleName));
 
     }
@@ -150,8 +150,8 @@ public class UploadIT {
         assertThat(response.getBody(), hasSize(2));
         Assert.assertTrue(response.getBody().stream().
                 allMatch(info -> info.getStatus().equals(BookUploadInfo.Status.Success)));
-        Book book1 = httpClient.get("book/" + response.getBody().get(0).getId(), Book.class);
-        Book book2 = httpClient.get("book/" + response.getBody().get(1).getId(), Book.class);
+        BookEntity book1 = httpClient.get("book/" + response.getBody().get(0).getId(), BookEntity.class);
+        BookEntity book2 = httpClient.get("book/" + response.getBody().get(1).getId(), BookEntity.class);
         long authorId = book1.getAuthorBooks().get(0).getAuthor().getId();
         assertThat(book1.getAuthorBooks(), hasSize(1));
         assertThat(book2.getAuthorBooks(), hasSize(1));
@@ -180,8 +180,8 @@ public class UploadIT {
         assertThat(response.getBody(), hasSize(2));
         Assert.assertTrue(response.getBody().stream().
                 allMatch(info -> info.getStatus().equals(BookUploadInfo.Status.Success)));
-        Book book1 = httpClient.get("book/" + response.getBody().get(0).getId(), Book.class);
-        Book book2 = httpClient.get("book/" + response.getBody().get(1).getId(), Book.class);
+        BookEntity book1 = httpClient.get("book/" + response.getBody().get(0).getId(), BookEntity.class);
+        BookEntity book2 = httpClient.get("book/" + response.getBody().get(1).getId(), BookEntity.class);
         long sequenceId = book1.getSequences().get(0).getSequence().getId();
         Assert.assertTrue(sequenceId > 0);
         Assert.assertTrue(book2.getSequences().get(0).getSequence().getId() == sequenceId);
@@ -218,9 +218,9 @@ public class UploadIT {
         assertThat(response.getBody(), hasSize(3));
         Assert.assertTrue(response.getBody().stream().
                 allMatch(info -> info.getStatus().equals(BookUploadInfo.Status.Success)));
-        Book book1 = httpClient.get("book/" + response.getBody().get(0).getId(), Book.class);
-        Book book2 = httpClient.get("book/" + response.getBody().get(1).getId(), Book.class);
-        Book book3 = httpClient.get("book/" + response.getBody().get(2).getId(), Book.class);
+        BookEntity book1 = httpClient.get("book/" + response.getBody().get(0).getId(), BookEntity.class);
+        BookEntity book2 = httpClient.get("book/" + response.getBody().get(1).getId(), BookEntity.class);
+        BookEntity book3 = httpClient.get("book/" + response.getBody().get(2).getId(), BookEntity.class);
         long sequenceId = book1.getSequences().get(0).getSequence().getId();
         Assert.assertTrue(sequenceId > 0);
         Assert.assertTrue(book2.getSequences().get(0).getSequence().getId() == sequenceId);
@@ -254,8 +254,8 @@ public class UploadIT {
         assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
         Assert.assertTrue(response.getBody().stream().
                 allMatch(info -> info.getStatus().equals(BookUploadInfo.Status.Success)));
-        Book book1 = httpClient.get("book/" + response.getBody().get(0).getId(), Book.class);
-        Book book2 = httpClient.get("book/" + response.getBody().get(1).getId(), Book.class);
+        BookEntity book1 = httpClient.get("book/" + response.getBody().get(0).getId(), BookEntity.class);
+        BookEntity book2 = httpClient.get("book/" + response.getBody().get(1).getId(), BookEntity.class);
         long sequenceId = book1.getSequences().get(0).getSequence().getId();
         Assert.assertTrue(book2.getSequences().get(0).getSequence().getId() != sequenceId);
 
@@ -272,9 +272,9 @@ public class UploadIT {
         assertThat(response2.getStatusCode(), equalTo(HttpStatus.OK));
         Assert.assertTrue(response2.getBody().stream().
                 allMatch(info -> info.getStatus().equals(BookUploadInfo.Status.Success)));
-        book1 = httpClient.get("book/" + response.getBody().get(0).getId(), Book.class);
-        book2 = httpClient.get("book/" + response.getBody().get(1).getId(), Book.class);
-        Book book3 = httpClient.get("book/" + response2.getBody().get(0).getId(), Book.class);
+        book1 = httpClient.get("book/" + response.getBody().get(0).getId(), BookEntity.class);
+        book2 = httpClient.get("book/" + response.getBody().get(1).getId(), BookEntity.class);
+        BookEntity book3 = httpClient.get("book/" + response2.getBody().get(0).getId(), BookEntity.class);
         sequenceId = book1.getSequences().get(0).getSequence().getId();
         Assert.assertTrue(sequenceId > 0);
         Assert.assertTrue(book2.getSequences().get(0).getSequence().getId() == sequenceId);
@@ -295,11 +295,11 @@ public class UploadIT {
                 "file", files, new ParameterizedTypeReference<List<BookUploadInfo>>() {
                 });
 
-        Book book = httpClient.get("book/" + response.getBody().get(0).getId(), Book.class);
+        BookEntity book = httpClient.get("book/" + response.getBody().get(0).getId(), BookEntity.class);
         String newDescr = book.getDescr() + "\n  new line";
         book.setDescr(newDescr);
-        ResponseEntity<Book> responceBook = httpClient.post("book", book, MediaType.APPLICATION_JSON, Book.class);
-        Book updatedBook = responceBook.getBody();
+        ResponseEntity<BookEntity> responceBook = httpClient.post("book", book, MediaType.APPLICATION_JSON, BookEntity.class);
+        BookEntity updatedBook = responceBook.getBody();
         assertThat(updatedBook.getDescr(), equalTo(newDescr));
     }
 
@@ -315,11 +315,11 @@ public class UploadIT {
                 "file", files, new ParameterizedTypeReference<List<BookUploadInfo>>() {
                 });
 
-        Book book = httpClient.get("book/" + response.getBody().get(0).getId(), Book.class);
+        BookEntity book = httpClient.get("book/" + response.getBody().get(0).getId(), BookEntity.class);
         String newTitle = book.getTitle() + ". Few words";
         book.setTitle(newTitle);
-        ResponseEntity<Book> responceBook = httpClient.post("book", book, MediaType.APPLICATION_JSON, Book.class);
-        Book updatedBook = responceBook.getBody();
+        ResponseEntity<BookEntity> responceBook = httpClient.post("book", book, MediaType.APPLICATION_JSON, BookEntity.class);
+        BookEntity updatedBook = responceBook.getBody();
         assertThat(updatedBook.getTitle(), equalTo(newTitle));
     }
 
@@ -341,8 +341,8 @@ public class UploadIT {
         ResponseEntity<List<BookUploadInfo>> response2 = uploadBooks(t(randomAlphanumeric(10) + ".fb2", fbook2));
 
         httpClient.get("book/waitForDuplicateCheck", String.class);
-        Book book1 = httpClient.get("book/" + response1.getBody().get(0).getId(), Book.class);
-        Book book2 = httpClient.get("book/" + response2.getBody().get(0).getId(), Book.class);
+        BookEntity book1 = httpClient.get("book/" + response1.getBody().get(0).getId(), BookEntity.class);
+        BookEntity book2 = httpClient.get("book/" + response2.getBody().get(0).getId(), BookEntity.class);
         Assert.assertTrue(book1.isDuplicate());
         Assert.assertTrue(!book2.isDuplicate());
     }

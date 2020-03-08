@@ -10,8 +10,8 @@ import org.springframework.stereotype.Repository;
  */
 
 @Repository
-public interface SequenceRepository extends CrudRepository<Sequence, Long> {
+public interface SequenceRepository extends CrudRepository<SequenceEntity, Long> {
 
-    Page<Sequence> findAll(Pageable pageable);
+    Page<SequenceEntity> findAll(Pageable pageable);
 
 }

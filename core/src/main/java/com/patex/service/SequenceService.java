@@ -1,7 +1,7 @@
 package com.patex.service;
 
-import com.patex.entities.BookSequence;
-import com.patex.entities.Sequence;
+import com.patex.entities.BookSequenceEntity;
+import com.patex.entities.SequenceEntity;
 import com.patex.entities.SequenceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,16 +31,16 @@ public class SequenceService {
         this.entityManager = entityManager;
     }
 
-    public Sequence getSequence(long id) {
+    public SequenceEntity getSequence(long id) {
         return sequenceRepository.findById(id).get();
     }
 
     @Transactional(propagation = MANDATORY, isolation = Isolation.SERIALIZABLE)
-    public Sequence mergeSequences(List<Sequence> sequences) {
-        Sequence main = sequences.get(0);
+    public SequenceEntity mergeSequences(List<SequenceEntity> sequences) {
+        SequenceEntity main = sequences.get(0);
         if (sequences.size() != 1) {
             sequences.forEach(entityManager::refresh);
-            List<BookSequence> bookSequences = sequences.stream().
+            List<BookSequenceEntity> bookSequences = sequences.stream().
                     flatMap(s -> s.getBookSequences().stream()).collect(Collectors.toList());
             bookSequences.forEach(bs -> bs.setSequence(main));
             main.setBookSequences(bookSequences);

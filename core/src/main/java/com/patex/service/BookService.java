@@ -1,13 +1,13 @@
 package com.patex.service;
 
 import com.patex.LibException;
-import com.patex.entities.Author;
-import com.patex.entities.AuthorBook;
-import com.patex.entities.Book;
+import com.patex.entities.AuthorEntity;
+import com.patex.entities.AuthorBookEntity;
+import com.patex.entities.BookEntity;
 import com.patex.entities.BookRepository;
-import com.patex.entities.BookSequence;
-import com.patex.entities.FileResource;
-import com.patex.entities.Sequence;
+import com.patex.entities.BookSequenceEntity;
+import com.patex.entities.FileResourceEntity;
+import com.patex.entities.SequenceEntity;
 import com.patex.entities.ZUser;
 import com.patex.parser.BookImage;
 import com.patex.parser.BookInfo;
@@ -67,54 +67,54 @@ public class BookService {
         this.publisher = publisher;
     }
 
-    public Book uploadBook(String fileName, InputStream is, ZUser user) throws LibException {
+    public BookEntity uploadBook(String fileName, InputStream is, ZUser user) throws LibException {
         byte[] byteArray = loadFromStream(is);
         byte[] checksum = getChecksum(byteArray);
         BookInfo bookInfo = parserService.getBookInfo(fileName, new ByteArrayInputStream(byteArray));
-        Book book = bookInfo.getBook();
-        Book result = transactionService.transactionRequired(() -> {
-            Optional<Book> sameBook = bookRepository.findFirstByTitleAndChecksum(book.getTitle(), checksum);
+        BookEntity book = bookInfo.getBook();
+        BookEntity result = transactionService.transactionRequired(() -> {
+            Optional<BookEntity> sameBook = bookRepository.findFirstByTitleAndChecksum(book.getTitle(), checksum);
             if (sameBook.isPresent()) {
                 return sameBook.get();
             }
             log.trace("new book:{}", book.getFileName());
-            List<Author> authors = book.getAuthorBooks().stream().
-                    map(AuthorBook::getAuthor).
+            List<AuthorEntity> authors = book.getAuthorBooks().stream().
+                    map(AuthorBookEntity::getAuthor).
                     map(author -> authorService.findFirstByNameIgnoreCase(author.getName()).orElse(author)).
                     collect(Collectors.toList());
-            List<AuthorBook> authorsBooks = authors.stream().
-                    map(author -> new AuthorBook(author, book)).collect(Collectors.toList());
+            List<AuthorBookEntity> authorsBooks = authors.stream().
+                    map(author -> new AuthorBookEntity(author, book)).collect(Collectors.toList());
             book.setAuthorBooks(authorsBooks);
 
-            Map<String, List<Sequence>> sequenceMapList = authors.stream().
-                    flatMap(Author::getSequencesStream).
+            Map<String, List<SequenceEntity>> sequenceMapList = authors.stream().
+                    flatMap(AuthorEntity::getSequencesStream).
                     filter(sequence -> sequence.getId() != null). //already saved
-                    filter(StreamU.distinctByKey(Sequence::getId)).
-                    collect(Collectors.groupingBy(Sequence::getName, Collectors.toList()));
+                    filter(StreamU.distinctByKey(SequenceEntity::getId)).
+                    collect(Collectors.groupingBy(SequenceEntity::getName, Collectors.toList()));
             // some magic if 2 authors wrote the same sequence but different books
-            Map<String, Sequence> sequencesMap = sequenceMapList.entrySet().stream().
+            Map<String, SequenceEntity> sequencesMap = sequenceMapList.entrySet().stream().
                     collect(Collectors.toMap(Map.Entry::getKey, e -> sequenceService.mergeSequences(e.getValue())));
 
 
-            List<BookSequence> sequences = book.getSequences().stream().
+            List<BookSequenceEntity> sequences = book.getSequences().stream().
                     map(bs -> {
-                        Sequence sequence = bs.getSequence();
-                        return new BookSequence(bs.getSeqOrder(),
+                        SequenceEntity sequence = bs.getSequence();
+                        return new BookSequenceEntity(bs.getSeqOrder(),
                                 sequencesMap.getOrDefault(sequence.getName(), sequence), book);
                     }).collect(Collectors.toList());
             book.setSequences(sequences);
 
             String fileId = fileStorage.save(byteArray, fileName);
-            book.setFileResource(new FileResource(fileId, "application/fb2+zip", byteArray.length));//TODO improve me
+            book.setFileResource(new FileResourceEntity(fileId, "application/fb2+zip", byteArray.length));//TODO improve me
             BookImage bookImage = bookInfo.getBookImage();
             if (bookImage != null) {
                 String cover = saveCover(fileName, bookImage);
-                book.setCover(new FileResource(cover, bookImage.getType(), bookImage.getImage().length));
+                book.setCover(new FileResourceEntity(cover, bookImage.getType(), bookImage.getImage().length));
             }
             book.setFileName(fileName);
             book.setChecksum(checksum);
             book.setCreated(Instant.now());
-            Book save = bookRepository.save(book);
+            BookEntity save = bookRepository.save(book);
             someMagic(book);
             return save;
         });
@@ -122,11 +122,11 @@ public class BookService {
         return result;
     }
 
-    private void someMagic(Book book) {
+    private void someMagic(BookEntity book) {
         book.getAuthorBooks().stream().
                 filter(authorBook -> !authorBook.getAuthor().getBooks().contains(authorBook)).
                 forEach(authorBook -> {
-                    List<AuthorBook> books = new ArrayList<>(authorBook.getAuthor().getBooks());
+                    List<AuthorBookEntity> books = new ArrayList<>(authorBook.getAuthor().getBooks());
                     books.add(authorBook);
                     authorBook.getAuthor().setBooks(books);
                 });
@@ -154,23 +154,23 @@ public class BookService {
         return byteArray;
     }
 
-    public Book getBook(long id) {
+    public BookEntity getBook(long id) {
         return bookRepository.findById(id).get();
     }
 
-    public InputStream getBookInputStream(Book book) throws LibException {
+    public InputStream getBookInputStream(BookEntity book) throws LibException {
         return fileStorage.load(book.getFileResource().getFilePath());
     }
 
-    public InputStream getBookCoverInputStream(Book book) throws LibException {
+    public InputStream getBookCoverInputStream(BookEntity book) throws LibException {
         return fileStorage.load(book.getCover().getFilePath());
     }
 
-    public Page<Book> getBooks(Pageable pageable) {
+    public Page<BookEntity> getBooks(Pageable pageable) {
         return bookRepository.findAll(pageable);
     }
 
-    public Book updateBook(Book book) throws LibException {
+    public BookEntity updateBook(BookEntity book) throws LibException {
         if (bookRepository.existsById(book.getId())) {
             return bookRepository.save(book);
         }
@@ -198,15 +198,15 @@ public class BookService {
         return fileStorage.save(bookImage.getImage(), "image", coverName);
     }
 
-    public Book save(Book entity) {
+    public BookEntity save(BookEntity entity) {
         return bookRepository.save(entity);
     }
 
-    public Iterable<Book> findAll() {
+    public Iterable<BookEntity> findAll() {
         return bookRepository.findAll();
     }
 
-    public Page<Book> getNewBooks(PageRequest pageRequest) {
+    public Page<BookEntity> getNewBooks(PageRequest pageRequest) {
        return bookRepository.findAllByOrderByCreatedDesc(pageRequest);
     }
 }

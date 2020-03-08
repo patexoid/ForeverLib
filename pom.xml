@@ -15,7 +15,10 @@
         <module>fb2generated</module>
         <module>localization</module>
         <module>fuzzySearch</module>
+        <module>common</module>
         <module>core</module>
+        <module>extlib</module>
+        <module>opds</module>
     </modules>
     <profiles>
         <profile>
