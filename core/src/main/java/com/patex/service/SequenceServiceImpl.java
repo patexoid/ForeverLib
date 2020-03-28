@@ -3,6 +3,10 @@ package com.patex.service;
 import com.patex.entities.BookSequenceEntity;
 import com.patex.entities.SequenceEntity;
 import com.patex.entities.SequenceRepository;
+import com.patex.mapper.SequenceMapper;
+import com.patex.zombie.model.Sequence;
+import com.patex.zombie.service.SequenceService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -19,39 +23,39 @@ import static org.springframework.transaction.annotation.Propagation.MANDATORY;
  * Created by potekhio on 15-Mar-16.
  */
 @Service
-public class SequenceService {
+@RequiredArgsConstructor
+public class SequenceServiceImpl implements SequenceService {
 
     private final SequenceRepository sequenceRepository;
 
-    private final  EntityManager entityManager;
+    private final SequenceMapper mapper;
 
-    @Autowired
-    public SequenceService(SequenceRepository sequenceRepository, EntityManager entityManager) {
-        this.sequenceRepository = sequenceRepository;
-        this.entityManager = entityManager;
+
+    @Override
+    public Sequence getSequence(long id) {
+        return sequenceRepository.findById(id).map(mapper::toDto).get();
     }
 
-    public SequenceEntity getSequence(long id) {
-        return sequenceRepository.findById(id).get();
-    }
-
+    @Override
     @Transactional(propagation = MANDATORY, isolation = Isolation.SERIALIZABLE)
-    public SequenceEntity mergeSequences(List<SequenceEntity> sequences) {
-        SequenceEntity main = sequences.get(0);
-        if (sequences.size() != 1) {
-            sequences.forEach(entityManager::refresh);
-            List<BookSequenceEntity> bookSequences = sequences.stream().
+    public Sequence mergeSequences(List<Sequence> sequences) {
+        List<SequenceEntity> sequenceEntities = sequenceRepository.
+                findAllByIdIn(sequences.stream().map(Sequence::getId).collect(Collectors.toList()));
+
+        SequenceEntity main = sequenceEntities.get(0);
+        if (sequenceEntities.size() != 1) {
+            List<BookSequenceEntity> bookSequences = sequenceEntities.stream().
                     flatMap(s -> s.getBookSequences().stream()).collect(Collectors.toList());
             bookSequences.forEach(bs -> bs.setSequence(main));
             main.setBookSequences(bookSequences);
             sequenceRepository.save(main);
-            sequences.stream().skip(1).forEach(s -> {
+            sequenceEntities.stream().skip(1).forEach(s -> {
                 s.setBookSequences(new ArrayList<>());
                 sequenceRepository.delete(s);
             });
 
         }
-        return main;
+        return mapper.toDto(main);
     }
 
 

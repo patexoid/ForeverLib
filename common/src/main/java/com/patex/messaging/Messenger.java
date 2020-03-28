@@ -1,11 +1,11 @@
 package com.patex.messaging;
 
-import com.patex.entities.ZUser;
+import com.patex.zombie.model.User;
 
 /**
  * Created by Alexey on 24.04.2017.
  */
 public interface Messenger {
 
-    void sendToUser(String message, ZUser user);
+    void sendToUser(String message, User user);
 }

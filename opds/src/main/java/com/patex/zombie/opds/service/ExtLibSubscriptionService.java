@@ -1,11 +1,11 @@
 package com.patex.zombie.opds.service;
 
-import com.patex.LibException;
-import com.patex.service.ZUserService;
-import com.patex.utils.ExecutorCreator;
+import com.patex.zombie.LibException;
 import com.patex.zombie.opds.entity.ExtLibrary;
-import com.patex.zombie.opds.entity.Subscription;
+import com.patex.zombie.opds.entity.SubscriptionEntity;
 import com.patex.zombie.opds.entity.SubscriptionRepository;
+import com.patex.zombie.service.ExecutorCreator;
+import com.patex.zombie.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -23,14 +23,14 @@ public class ExtLibSubscriptionService {
 
     private final ExtLibDownloadService downloadService;
 
-    private final ZUserService userService;
+    private final UserService userService;
 
     private final ExecutorService executor;
 
 
     public ExtLibSubscriptionService(SubscriptionRepository subscriptionRepo,
                                      ExtLibDownloadService downloadService,
-                                     ZUserService userService,
+                                     UserService userService,
                                      ExecutorCreator executorCreator) {
         this.subscriptionRepo = subscriptionRepo;
         this.downloadService = downloadService;
@@ -40,7 +40,7 @@ public class ExtLibSubscriptionService {
 
     public void addSubscription(ExtLibrary library, String uri) throws LibException {
         if (find(library, uri).isEmpty()) {
-            Subscription saved = subscriptionRepo.save(new Subscription(library, uri, userService.getCurrentUser()));
+            SubscriptionEntity saved = subscriptionRepo.save(new SubscriptionEntity(library, uri, userService.getCurrentUser().getUsername()));
             executor.execute(() -> checkSubscription(library, saved));
         }
     }
@@ -49,17 +49,17 @@ public class ExtLibSubscriptionService {
         subscriptionRepo.deleteById(id);
     }
 
-    private void checkSubscription(ExtLibrary library, Subscription subscription) {
+    private void checkSubscription(ExtLibrary library, SubscriptionEntity subscription) {
         downloadService.downloadAll(library, subscription.getLink(), subscription.getUser());
     }
 
     public void checkSubscriptions(ExtLibrary library) {
-        Collection<Subscription> subscriptions = subscriptionRepo.findAllByExtLibrary(library);
+        Collection<SubscriptionEntity> subscriptions = subscriptionRepo.findAllByExtLibrary(library);
         subscriptions.forEach(subscription ->
                 downloadService.downloadAll(library, subscription.getLink(), subscription.getUser()));
     }
 
-    public Optional<Subscription> find(ExtLibrary library, String url) {
+    public Optional<SubscriptionEntity> find(ExtLibrary library, String url) {
         return subscriptionRepo.findFirstByExtLibraryAndLink(library, url);
     }
 }

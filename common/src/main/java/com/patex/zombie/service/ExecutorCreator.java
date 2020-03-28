@@ -1,4 +1,4 @@
-package com.patex.utils;
+package com.patex.zombie.service;
 
 import org.slf4j.Logger;
 import org.springframework.security.concurrent.DelegatingSecurityContextExecutorService;

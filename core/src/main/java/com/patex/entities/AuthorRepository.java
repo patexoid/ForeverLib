@@ -1,5 +1,6 @@
 package com.patex.entities;
 
+import com.patex.zombie.model.AggrResult;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;

@@ -1,23 +1,14 @@
 package com.patex.service;
 
-import com.patex.entities.BookEntity;
-import com.patex.entities.ZUser;
+import com.patex.zombie.model.Book;
+import com.patex.zombie.model.User;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-public class BookCreationEvent  {
-    private final BookEntity book;
+@RequiredArgsConstructor
+@Getter
+public class BookCreationEvent {
 
-    private final ZUser user;
-
-    public BookCreationEvent(BookEntity book, ZUser user) {
-        this.book = book;
-        this.user = user;
-    }
-
-    public BookEntity getBook() {
-        return book;
-    }
-
-    public ZUser getUser() {
-        return user;
-    }
+    private final Book book;
+    private final User user;
 }

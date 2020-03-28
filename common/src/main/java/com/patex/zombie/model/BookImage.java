@@ -1,4 +1,4 @@
-package com.patex.parser;
+package com.patex.zombie.model;
 
 public class BookImage {
 

@@ -1,6 +1,7 @@
 package com.patex.zombie.opds.model;
 
-import com.patex.service.Resources;
+
+import com.patex.zombie.service.Resources;
 
 import java.util.Locale;
 

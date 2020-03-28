@@ -1,20 +1,22 @@
 package com.patex.zombie.opds.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.patex.entities.ZUser;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 /**
  * Created by Alexey on 07.05.2017.
  */
 @Entity
-public class Subscription {
+@Table(name = "SUBSCRIPTION")
+public class SubscriptionEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,14 +28,14 @@ public class Subscription {
 
     private String link;
 
-    @ManyToOne(optional = false)
-    private ZUser user;
+    @Column(name="USER_USERNAME")
+    private String user;
 
-    public Subscription() {
+    public SubscriptionEntity() {
 
     }
 
-    public Subscription(ExtLibrary extLibrary, String link, ZUser user) {
+    public SubscriptionEntity(ExtLibrary extLibrary, String link, String user) {
         this.extLibrary = extLibrary;
         this.link = link;
         this.user = user;
@@ -63,13 +65,11 @@ public class Subscription {
         this.link = link;
     }
 
-    public ZUser getUser() {
+    public String getUser() {
         return user;
     }
 
-    public void setUser(ZUser user) {
+    public void setUser(String user) {
         this.user = user;
     }
-
-
 }

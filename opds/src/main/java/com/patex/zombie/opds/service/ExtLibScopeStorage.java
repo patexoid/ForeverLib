@@ -1,6 +1,6 @@
 package com.patex.zombie.opds.service;
 
-import com.patex.utils.Tuple;
+import com.patex.zombie.model.Tuple;
 import com.patex.zombie.opds.entity.ExtLibrary;
 import org.springframework.stereotype.Component;
 

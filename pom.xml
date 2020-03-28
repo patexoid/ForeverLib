@@ -17,8 +17,9 @@
         <module>fuzzySearch</module>
         <module>common</module>
         <module>core</module>
-        <module>extlib</module>
         <module>opds</module>
+        <module>extlib</module>
+        <module>exec</module>
     </modules>
     <profiles>
         <profile>

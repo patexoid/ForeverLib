@@ -1,6 +1,6 @@
 package com.patex.zombie.opds.service;
 
-import com.patex.zombie.opds.entity.Subscription;
+import com.patex.zombie.opds.entity.SubscriptionEntity;
 import com.patex.zombie.opds.entity.SubscriptionRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,15 +18,15 @@ public class SubscriptionService {
         this.subscriptionRepository = subscriptionRepository;
     }
 
-    public Subscription save(Subscription entity) {
+    public SubscriptionEntity save(SubscriptionEntity entity) {
         return subscriptionRepository.save(entity);
     }
 
-    public Subscription findOne(Long aLong) {
+    public SubscriptionEntity findOne(Long aLong) {
         return subscriptionRepository.findById(aLong).get();
     }
 
-    public Page<Subscription> findAll(Pageable pageable) {
+    public Page<SubscriptionEntity> findAll(Pageable pageable) {
         return subscriptionRepository.findAll(pageable);
     }
 }

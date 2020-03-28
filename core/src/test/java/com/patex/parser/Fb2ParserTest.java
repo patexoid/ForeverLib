@@ -1,6 +1,7 @@
 package com.patex.parser;
 
 import com.patex.entities.BookEntity;
+import com.patex.zombie.model.BookImage;
 import fb2Generator.Fb2Creator;
 import org.apache.commons.text.RandomStringGenerator;
 import org.junit.Test;

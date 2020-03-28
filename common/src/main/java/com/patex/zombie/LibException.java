@@ -1,4 +1,4 @@
-package com.patex;
+package com.patex.zombie;
 
 /**
  * Created by Alexey on 13.03.2016.

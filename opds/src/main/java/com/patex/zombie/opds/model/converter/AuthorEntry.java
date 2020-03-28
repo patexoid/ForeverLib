@@ -1,8 +1,8 @@
 package com.patex.zombie.opds.model.converter;
 
-import com.patex.entities.AuthorEntity;
-import com.patex.utils.LinkUtils;
-import com.patex.utils.Res;
+import com.patex.zombie.LinkUtils;
+import com.patex.zombie.model.Author;
+import com.patex.zombie.model.Res;
 import com.patex.zombie.opds.model.OPDSContent;
 import com.patex.zombie.opds.model.OPDSEntry;
 import com.patex.zombie.opds.model.OPDSLink;
@@ -23,7 +23,7 @@ public class AuthorEntry implements OPDSEntry {
     private final Instant date;
 
 
-    public AuthorEntry(AuthorEntity author) {
+    public AuthorEntry(Author author) {
         id = "author:" + author.getId();
         title = new Res("first.value", author.getName());
         if (author.getDescr() != null) {

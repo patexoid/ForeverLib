@@ -1,9 +1,10 @@
 package com.patex.controllers;
 
-import com.patex.LibException;
+import com.patex.zombie.LibException;
 import com.patex.entities.ZUser;
-import com.patex.entities.ZUserConfig;
+import com.patex.entities.ZUserConfigEntity;
 import com.patex.service.ZUserService;
+import com.patex.zombie.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
@@ -19,7 +20,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import static com.patex.service.ZUserService.USER;
+import static com.patex.zombie.service.UserService.USER;
 
 /**
  * Created by Alexey on 25.03.2017.
@@ -34,7 +35,7 @@ public class ZUserController {
 
     @RequestMapping(method = RequestMethod.POST)
     @Secured(USER)
-    public ZUser save(ZUser user) {
+    public User save(User user) {
         return userDetailsService.save(user);
     }
 
@@ -55,7 +56,7 @@ public class ZUserController {
 
     @RequestMapping(value = "/current", method = RequestMethod.GET)
     public @ResponseBody
-    ZUser getCurrentUser() {
+    User getCurrentUser() {
         return userDetailsService.getCurrentUser();
     }
 
@@ -69,7 +70,7 @@ public class ZUserController {
 
     @RequestMapping(value = "/updateConfig", method = RequestMethod.GET)
     @Secured(USER)
-    public void updateUserConfig(ZUserConfig newConfig) {
+    public void updateUserConfig(ZUserConfigEntity newConfig) {
         userDetailsService.updateUserConfig(newConfig);
     }
 }

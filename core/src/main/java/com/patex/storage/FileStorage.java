@@ -1,6 +1,6 @@
 package com.patex.storage;
 
-import com.patex.LibException;
+import com.patex.zombie.LibException;
 
 import java.io.InputStream;
 

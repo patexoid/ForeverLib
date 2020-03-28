@@ -1,15 +1,17 @@
 package com.patex.zombie.opds.controller;
 
-import com.patex.entities.*;
+import com.patex.zombie.LinkUtils;
+import com.patex.zombie.model.AggrResult;
+import com.patex.zombie.model.Author;
+import com.patex.zombie.model.Book;
+import com.patex.zombie.model.Res;
+import com.patex.zombie.model.Sequence;
+import com.patex.zombie.model.SequenceBook;
 import com.patex.zombie.opds.model.OPDSMetadata;
 import com.patex.zombie.opds.model.OpdsView;
 import com.patex.zombie.opds.controller.latest.LatestURIComponent;
 import com.patex.zombie.opds.controller.latest.SaveLatest;
-import com.patex.service.AuthorService;
-import com.patex.service.BookService;
-import com.patex.service.SequenceService;
-import com.patex.utils.LinkUtils;
-import com.patex.utils.Res;
+import com.patex.zombie.service.AuthorService;
 import com.patex.zombie.opds.model.converter.AuthorEntry;
 import com.patex.zombie.opds.model.converter.BookEntry;
 import com.patex.zombie.opds.model.converter.ExpandedAuthorEntries;
@@ -17,6 +19,8 @@ import com.patex.zombie.opds.model.OPDSEntry;
 import com.patex.zombie.opds.model.OPDSEntryImpl;
 import com.patex.zombie.opds.model.OPDSLink;
 import com.patex.zombie.opds.model.converter.SequenceEntry;
+import com.patex.zombie.service.BookService;
+import com.patex.zombie.service.SequenceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -144,7 +148,7 @@ public class OPDSController {
     @SaveLatest
     @RequestMapping(value = "author/{id}", produces = APPLICATION_ATOM_XML)
     public ModelAndView getAuthor(@PathVariable(value = "id") long id) {
-        AuthorEntity authors = authorService.getAuthor(id);
+        Author authors = authorService.getAuthor(id);
         return createMav(new Res("opds.author.books", authors.getName()), authors, author ->
                 new ExpandedAuthorEntries(author).getEntries()
         );
@@ -153,10 +157,9 @@ public class OPDSController {
     @SaveLatest
     @RequestMapping(value = "author/{id}/alphabet", produces = APPLICATION_ATOM_XML)
     public ModelAndView getAuthorBookAlphabet(@PathVariable(value = "id") long id) {
-        AuthorEntity bookAuthor = authorService.getAuthor(id);
+        Author bookAuthor = authorService.getAuthor(id);
         return createMav(new Res("opds.author.books.alphabet", bookAuthor.getName()), bookAuthor, author ->
                 author.getBooks().stream().
-                        map(AuthorBookEntity::getBook).
                         filter(book -> !book.isDuplicate()).
                         map(BookEntry::new).
                         collect(Collectors.toList()));
@@ -165,10 +168,9 @@ public class OPDSController {
     @SaveLatest
     @RequestMapping(value = "authorsequenceless/{id}", produces = APPLICATION_ATOM_XML)
     public ModelAndView getAuthorBookNoSequence(@PathVariable(value = "id") long id) {
-        AuthorEntity bookAuthor = authorService.getAuthor(id);
+        Author bookAuthor = authorService.getAuthor(id);
         return createMav(new Res("opds.author.books.sequenceless", bookAuthor.getName()), bookAuthor, author ->
                 author.getBooksNoSequence().stream().
-                        map(AuthorBookEntity::getBook).
                         filter(book -> !book.isDuplicate()).
                         map(BookEntry::new).
                         collect(Collectors.toList()));
@@ -177,11 +179,11 @@ public class OPDSController {
     @SaveLatest
     @RequestMapping(value = "sequence/{id}", produces = APPLICATION_ATOM_XML)
     public ModelAndView getBookBySequence(@PathVariable(value = "id") long id) {
-        SequenceEntity sequence = sequenceService.getSequence(id);
+        Sequence sequence = sequenceService.getSequence(id);
         return createMav(new Res("opds.author.books.sequence", sequence.getName()), sequence, seq ->
-                seq.getBookSequences().stream().
-                        sorted(Comparator.comparing(BookSequenceEntity::getSeqOrder)).
-                        map(BookSequenceEntity::getBook).
+                seq.getBooks().stream().
+                        sorted(Comparator.comparing(SequenceBook::getSeqOrder)).
+                        map(SequenceBook::getBook).
                         filter(book -> !book.isDuplicate()).
                         map(BookEntry::new).
                         collect(Collectors.toList())
@@ -191,9 +193,9 @@ public class OPDSController {
     @SaveLatest
     @RequestMapping(value = "authorsequences/{id}", produces = APPLICATION_ATOM_XML)
     public ModelAndView getAuthorSequences(@PathVariable(value = "id") long id) {
-        AuthorEntity author = authorService.getAuthor(id);
+        Author author = authorService.getAuthor(id);
         return createMav(new Res("opds.author.sequence", author.getName()), author,
-                a -> a.getSequencesStream().map(SequenceEntry::new).
+                a -> a.getSequences().stream().map(SequenceEntry::new).
                         collect(Collectors.toList()));
     }
 
@@ -209,7 +211,7 @@ public class OPDSController {
     @RequestMapping(value = "newBooks")
     public ModelAndView getNewBooks(@RequestParam(required = false, defaultValue = "0", name = "page") int page,
                                     @RequestParam(required = false, defaultValue = "20", name = "pageSize") int pageSize) {
-        Page<BookEntity> bookPage = bookService.getNewBooks(PageRequest.of(page, pageSize));
+        Page<Book> bookPage = bookService.getNewBooks(PageRequest.of(page, pageSize));
 
         return createMav(new Res("opds.newBooks"), bookPage.getContent(), b -> b.stream().map(BookEntry::new).
                 collect(Collectors.toList()));

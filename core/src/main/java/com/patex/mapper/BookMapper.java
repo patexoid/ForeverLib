@@ -18,6 +18,8 @@ public interface BookMapper {
 
     Book toDto(BookEntity bookEntity);
 
+    BookEntity toEntity(Book bookEntity);
+
     default BookAuthor toBookAuthor(AuthorEntity authorEntity) {
         return new BookAuthor(authorEntity.getId(), authorEntity.getName());
     }

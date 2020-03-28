@@ -1,8 +1,8 @@
 package com.patex.zombie.opds.model.converter;
 
+import com.patex.zombie.model.Res;
 import com.patex.zombie.opds.model.OPDSContent;
 import com.patex.zombie.opds.model.OPDSEntry;
-import com.patex.utils.Res;
 import com.patex.zombie.opds.model.OPDSLink;
 import com.rometools.rome.feed.synd.SyndEntry;
 

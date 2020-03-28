@@ -1,9 +1,9 @@
 package com.patex.zombie.opds.controller;
 
-import com.patex.LibException;
-import com.patex.zombie.opds.entity.Subscription;
+import com.patex.zombie.LibException;
+import com.patex.zombie.opds.entity.SubscriptionEntity;
 import com.patex.zombie.opds.service.SubscriptionService;
-import com.patex.service.ZUserService;
+import com.patex.zombie.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,20 +28,20 @@ public class SubscriptionController {
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public @ResponseBody
-    Subscription getSubscription(@PathVariable(value = "id") long id) {
+    SubscriptionEntity getSubscription(@PathVariable(value = "id") long id) {
         return subscriptionService.findOne(id);
     }
 
     @RequestMapping(method = RequestMethod.GET)
     public @ResponseBody
-    Page<Subscription> getSubscriptions(Pageable pageable) {
+    Page<SubscriptionEntity> getSubscriptions(Pageable pageable) {
         return subscriptionService.findAll(pageable);
     }
 
     @RequestMapping(method = RequestMethod.POST)
-    @Secured(ZUserService.USER)
+    @Secured(UserService.USER)
     public @ResponseBody
-    Subscription updateSubscription(@RequestBody Subscription book) throws LibException {
+    SubscriptionEntity updateSubscription(@RequestBody SubscriptionEntity book) throws LibException {
         return subscriptionService.save(book);
     }
 

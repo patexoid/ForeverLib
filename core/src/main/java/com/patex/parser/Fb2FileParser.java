@@ -1,12 +1,13 @@
 package com.patex.parser;
 
-import com.patex.LibException;
+import com.patex.zombie.LibException;
 import com.patex.entities.AuthorEntity;
 import com.patex.entities.BookEntity;
 import com.patex.entities.BookGenreEntity;
 import com.patex.entities.BookSequenceEntity;
 import com.patex.entities.GenreEntity;
 import com.patex.entities.SequenceEntity;
+import com.patex.zombie.model.BookImage;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,12 +65,12 @@ public class Fb2FileParser implements FileParser {
         try {
             parseTitleInfo(reader, bookInfo);
         } catch (XMLStreamException e) {
-            log.error("Can't parse title for:"+fileName+" errorMessage:"+e.getMessage());
+            log.error("Can't parse title for:" + fileName + " errorMessage:" + e.getMessage());
         }
         try {
             parseBodyAndBinary(reader, bookInfo);
         } catch (Exception e) {
-            log.error("Can't parse body for:"+fileName+" errorMessage:"+e.getMessage());
+            log.error("Can't parse body for:" + fileName + " errorMessage:" + e.getMessage());
         }
         return bookInfo;
     }

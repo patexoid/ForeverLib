@@ -1,7 +1,7 @@
 package com.patex.zombie.opds.controller.latest;
 
-import com.patex.entities.ZUser;
-import com.patex.service.ZUserService;
+import com.patex.zombie.model.User;
+import com.patex.zombie.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
@@ -17,16 +17,16 @@ import java.util.Map;
 public class LatestURIComponent {
 
     @Autowired
-    private ZUserService userService;
+    private UserService userService;
 
     private final Map<String, ModelAndView> latestForUser = new HashMap<>();
 
     public void afterMethod(ModelAndView view) {
-        ZUser currentUser = userService.getCurrentUser();
+        User currentUser = userService.getCurrentUser();
         latestForUser.put(currentUser.getUsername(), view);
     }
 
-    @Secured(ZUserService.USER)
+    @Secured(UserService.USER)
     public ModelAndView getLatestForCurrentUser(){
         return latestForUser.get(userService.getCurrentUser().getUsername());
     }

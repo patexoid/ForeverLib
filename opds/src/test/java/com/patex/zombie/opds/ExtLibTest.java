@@ -1,24 +1,25 @@
 package com.patex.zombie.opds;
 
 import com.google.common.util.concurrent.MoreExecutors;
-import com.patex.entities.BookEntity;
-import com.patex.entities.ZUser;
 import com.patex.messaging.MessengerService;
-import com.patex.service.BookService;
-import com.patex.service.TransactionService;
-import com.patex.utils.ExecutorCreator;
+import com.patex.zombie.model.Book;
+import com.patex.zombie.model.User;
 import com.patex.zombie.opds.entity.ExtLibrary;
 import com.patex.zombie.opds.entity.SavedBookRepository;
 import com.patex.zombie.opds.model.ExtLibFeed;
 import com.patex.zombie.opds.model.OPDSContent;
-import com.patex.zombie.opds.model.converter.LinkMapper;
 import com.patex.zombie.opds.model.OPDSEntry;
 import com.patex.zombie.opds.model.OPDSLink;
+import com.patex.zombie.opds.model.converter.LinkMapper;
 import com.patex.zombie.opds.service.ExtLibConnection;
 import com.patex.zombie.opds.service.ExtLibDownloadService;
 import com.patex.zombie.opds.service.ExtLibInScopeRunner;
 import com.patex.zombie.opds.service.ExtLibScopeStorage;
 import com.patex.zombie.opds.service.ExtLibService;
+import com.patex.zombie.service.BookService;
+import com.patex.zombie.service.ExecutorCreator;
+import com.patex.zombie.service.TransactionService;
+import com.patex.zombie.service.UserService;
 import com.rometools.rome.feed.synd.SyndContentImpl;
 import com.rometools.rome.feed.synd.SyndEntryImpl;
 import com.rometools.rome.feed.synd.SyndFeedImpl;
@@ -57,6 +58,7 @@ public class ExtLibTest {
     private String opdsPath;
     private ExtLibDownloadService downloadService;
     private BookService bookService;
+    private UserService userService;
     private ExtLibConnection connectionService;
     private SyndFeedImpl syndFeed;
     private SyndLinkImpl syndLink;
@@ -76,6 +78,7 @@ public class ExtLibTest {
         extLibrary.setUrl(url);
         extLibrary.setOpdsPath(opdsPath);
         bookService = Mockito.mock(BookService.class);
+        userService = Mockito.mock(UserService.class);
         connectionService = Mockito.mock(ExtLibConnection.class);
         downloadService = createExtLib();
 
@@ -224,14 +227,14 @@ public class ExtLibTest {
 
         connectionService =
                 Mockito.spy(new ExtLibConnection(url, "", null, null, null, 0, null,
-                        executorCreator, bookService, 300));
+                        executorCreator, bookService, userService, 300));
         downloadService = createExtLib();
         URLConnection urlConnection1 = Mockito.mock(URLConnection.class);
         String fileName1 = rsg.generate(10);
         Mockito.when(urlConnection1.getHeaderField("Content-Disposition")).thenReturn("attachment; filename=\"" + fileName1 + "\"");
         InputStream isMock1 = Mockito.mock(InputStream.class);
         Mockito.when(urlConnection1.getInputStream()).thenReturn(isMock1);
-        BookEntity book1 = new BookEntity();
+        Book book1 = new Book();
         book1.setId(RandomUtils.nextLong(0, 1000));
         Mockito.when(connectionService.getConnection(url + uri1)).thenReturn(urlConnection1);
 
@@ -241,7 +244,7 @@ public class ExtLibTest {
         Mockito.when(urlConnection2.getHeaderField("Content-Disposition")).thenReturn("attachment; filename=\"" + fileName2 + "\"");
         InputStream isMock2 = Mockito.mock(InputStream.class);
         Mockito.when(urlConnection2.getInputStream()).thenReturn(isMock2);
-        BookEntity book2 = new BookEntity();
+        Book book2 = new Book();
         book2.setId(RandomUtils.nextLong(0, 1000));
         Mockito.when(connectionService.getConnection(url + uri2)).thenReturn(urlConnection2);
 
@@ -256,8 +259,8 @@ public class ExtLibTest {
 
 
         bais.reset();
-        ZUser user = new ZUser();
-        downloadService.downloadAll(extLibrary, uri, user);
+        User user = new User();
+        downloadService.downloadAll(extLibrary, uri, user.getUsername());
         Thread.sleep(3000);
     }
 
@@ -273,18 +276,18 @@ public class ExtLibTest {
     public void testDownloadAction() throws Exception {
         String uri = rsg.generate(10);
         connectionService = Mockito.spy(new ExtLibConnection(url, "", null, null, null, 0, null,
-                executorCreator, bookService, 300));
+                executorCreator, bookService, userService, 300));
         URLConnection urlConnection = Mockito.mock(URLConnection.class);
         String fileName = rsg.generate(10);
         Mockito.when(urlConnection.getHeaderField("Content-Disposition")).thenReturn("attachment; filename=\"" + fileName + "\"");
         InputStream isMock = Mockito.mock(InputStream.class);
         Mockito.when(urlConnection.getInputStream()).thenReturn(isMock);
-        BookEntity book = new BookEntity();
+        Book book = new Book();
         book.setId(RandomUtils.nextLong(0, 1000));
-        ZUser user = new ZUser();
+        User user = new User();
         Mockito.when(connectionService.getConnection(url + uri)).thenReturn(urlConnection);
         String type = rsg.generate(10);
-        downloadService.downloadBook(extLibrary, uri, type, user);
+        downloadService.downloadBook(extLibrary, uri, type, user.getUsername());
     }
 
     private void checkLync(SyndLinkImpl syndLink, OPDSLink link) {

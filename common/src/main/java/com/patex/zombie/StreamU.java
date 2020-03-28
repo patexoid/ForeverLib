@@ -1,4 +1,4 @@
-package com.patex.utils;
+package com.patex.zombie;
 
 import java.util.HashSet;
 import java.util.Set;

@@ -1,4 +1,4 @@
-package com.patex.utils;
+package com.patex.zombie.model;
 
 /**
  * Created by Alexey on 30.07.2017.

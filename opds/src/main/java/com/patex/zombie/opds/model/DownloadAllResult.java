@@ -1,8 +1,8 @@
 package com.patex.zombie.opds.model;
 
-import com.patex.entities.BookEntity;
-import com.patex.service.Resources;
-import com.patex.utils.Res;
+import com.patex.zombie.model.Book;
+import com.patex.zombie.model.Res;
+import com.patex.zombie.service.Resources;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,9 +21,9 @@ public class DownloadAllResult extends Res {
     private final List<String> authors;
     private final List<Res> emptyBooks;
     private final List<Res> failed;
-    private final List<BookEntity> success;
+    private final List<Book> success;
 
-    public DownloadAllResult(List<String> authors, List<Res> emptyBooks, List<Res> failed, List<BookEntity> success) {
+    public DownloadAllResult(List<String> authors, List<Res> emptyBooks, List<Res> failed, List<Book> success) {
         super("opds.extLib.download.all.result");
         this.authors = authors;
         this.emptyBooks = emptyBooks;
@@ -41,7 +41,7 @@ public class DownloadAllResult extends Res {
                 Collections.emptyList(), Collections.singletonList(failed), Collections.emptyList());
     }
 
-    public static DownloadAllResult success(List<String> authors, BookEntity success) {
+    public static DownloadAllResult success(List<String> authors, Book success) {
         return new DownloadAllResult(authors,
                 Collections.emptyList(), Collections.emptyList(), Collections.singletonList(success));
     }
@@ -53,7 +53,7 @@ public class DownloadAllResult extends Res {
         emptyBooks.addAll(other.emptyBooks);
         ArrayList<Res> failed = new ArrayList<>(this.failed);
         failed.addAll(other.failed);
-        ArrayList<BookEntity> success = new ArrayList<>(this.success);
+        ArrayList<Book> success = new ArrayList<>(this.success);
         success.addAll(other.success);
         return new DownloadAllResult(authors, emptyBooks, failed, success);
     }
@@ -68,7 +68,7 @@ public class DownloadAllResult extends Res {
         String authors = this.authors.stream().collect(Collectors.groupingBy(o -> o)).
                 entrySet().stream().sorted(Comparator.comparingInt(o -> -o.getValue().size())).
                 limit(5).map(Map.Entry::getKey).reduce(concat).orElse("");
-        String success = this.success.stream().map(BookEntity::getTitle).sorted().reduce(concat).orElse("");
+        String success = this.success.stream().map(Book::getTitle).sorted().reduce(concat).orElse("");
         String empty = emptyBooks.stream().
                 map(res -> res.getMessage(resources, loc)).sorted().
                 reduce(concat).orElse("");
@@ -78,7 +78,7 @@ public class DownloadAllResult extends Res {
         return resources.get(loc, getKey(), authors, success, empty, failed);
     }
 
-    public List<BookEntity> getSuccess() {
+    public List<Book> getSuccess() {
         return success;
     }
 

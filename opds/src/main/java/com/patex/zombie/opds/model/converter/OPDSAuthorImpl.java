@@ -1,6 +1,7 @@
 package com.patex.zombie.opds.model.converter;
 
-import com.patex.entities.AuthorEntity;
+import com.patex.zombie.model.Author;
+import com.patex.zombie.model.BookAuthor;
 
 /**
  * Created by Alexey on 23.05.2017.
@@ -10,7 +11,7 @@ public class OPDSAuthorImpl implements OPDSAuthor {
     private final String name;
     private final String uri;
 
-    public OPDSAuthorImpl(AuthorEntity author) {
+    public OPDSAuthorImpl(BookAuthor author) {
         name = author.getName();
         uri = "/opds/author/" + author.getId();
     }

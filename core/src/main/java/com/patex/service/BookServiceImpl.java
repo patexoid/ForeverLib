@@ -1,28 +1,38 @@
 package com.patex.service;
 
-import com.patex.LibException;
-import com.patex.entities.AuthorEntity;
 import com.patex.entities.AuthorBookEntity;
+import com.patex.entities.AuthorEntity;
+import com.patex.entities.AuthorRepository;
 import com.patex.entities.BookEntity;
 import com.patex.entities.BookRepository;
 import com.patex.entities.BookSequenceEntity;
 import com.patex.entities.FileResourceEntity;
 import com.patex.entities.SequenceEntity;
-import com.patex.entities.ZUser;
-import com.patex.parser.BookImage;
+import com.patex.entities.SequenceRepository;
+import com.patex.mapper.BookMapper;
 import com.patex.parser.BookInfo;
 import com.patex.parser.ParserService;
 import com.patex.storage.StorageService;
-import com.patex.utils.StreamU;
+import com.patex.zombie.LibException;
+import com.patex.zombie.StreamU;
+import com.patex.zombie.model.Book;
+import com.patex.zombie.model.BookImage;
+import com.patex.zombie.model.User;
+import com.patex.zombie.service.BookService;
+import com.patex.zombie.service.SequenceService;
+import com.patex.zombie.service.TransactionService;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 
+import javax.persistence.EntityManager;
+import javax.transaction.Transactional;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,43 +41,34 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.springframework.transaction.annotation.Propagation.MANDATORY;
 
 /**
  *
- *
  */
 @Service
-public class BookService {
-   private static final Logger log = LoggerFactory.getLogger(BookService.class);
-
-
+@RequiredArgsConstructor
+public class BookServiceImpl implements BookService {
+    private static final Logger log = LoggerFactory.getLogger(BookService.class);
     private final BookRepository bookRepository;
-    private final SequenceService sequenceService;
-    private final AuthorService authorService;
+    private final SequenceRepository sequenceRepository;
+    private final AuthorRepository authorRepository;
     private final ParserService parserService;
     private final StorageService fileStorage;
     private final TransactionService transactionService;
-
     private final ApplicationEventPublisher publisher;
+    private final BookMapper bookMapper;
+    private final EntityManager entityManager;
 
-    @Autowired
-    public BookService(BookRepository bookRepository, SequenceService sequenceService,
-                       AuthorService authorService, ParserService parserService, StorageService fileStorage,
-                       TransactionService transactionService, ApplicationEventPublisher publisher) {
-        this.bookRepository = bookRepository;
-        this.sequenceService = sequenceService;
-        this.authorService = authorService;
-        this.parserService = parserService;
-        this.fileStorage = fileStorage;
-        this.transactionService = transactionService;
-        this.publisher = publisher;
-    }
-
-    public BookEntity uploadBook(String fileName, InputStream is, ZUser user) throws LibException {
+    @Override
+    public Book uploadBook(String fileName, InputStream is, User user) throws LibException {
         byte[] byteArray = loadFromStream(is);
         byte[] checksum = getChecksum(byteArray);
         BookInfo bookInfo = parserService.getBookInfo(fileName, new ByteArrayInputStream(byteArray));
@@ -80,7 +81,7 @@ public class BookService {
             log.trace("new book:{}", book.getFileName());
             List<AuthorEntity> authors = book.getAuthorBooks().stream().
                     map(AuthorBookEntity::getAuthor).
-                    map(author -> authorService.findFirstByNameIgnoreCase(author.getName()).orElse(author)).
+                    map(author -> authorRepository.findFirstByNameIgnoreCase(author.getName()).orElse(author)).
                     collect(Collectors.toList());
             List<AuthorBookEntity> authorsBooks = authors.stream().
                     map(author -> new AuthorBookEntity(author, book)).collect(Collectors.toList());
@@ -93,7 +94,7 @@ public class BookService {
                     collect(Collectors.groupingBy(SequenceEntity::getName, Collectors.toList()));
             // some magic if 2 authors wrote the same sequence but different books
             Map<String, SequenceEntity> sequencesMap = sequenceMapList.entrySet().stream().
-                    collect(Collectors.toMap(Map.Entry::getKey, e -> sequenceService.mergeSequences(e.getValue())));
+                    collect(Collectors.toMap(Map.Entry::getKey, e -> mergeSequences(e.getValue())));
 
 
             List<BookSequenceEntity> sequences = book.getSequences().stream().
@@ -118,8 +119,27 @@ public class BookService {
             someMagic(book);
             return save;
         });
-        publisher.publishEvent(new BookCreationEvent(result, user));
-        return result;
+        Book dto = bookMapper.toDto(result);
+        publisher.publishEvent(new BookCreationEvent(dto, user));
+        return dto;
+    }
+
+    private SequenceEntity mergeSequences(List<SequenceEntity> sequences) {
+        SequenceEntity main = sequences.get(0);
+        if (sequences.size() != 1) {
+            sequences.forEach(entityManager::refresh);
+            List<BookSequenceEntity> bookSequences = sequences.stream().
+                    flatMap(s -> s.getBookSequences().stream()).collect(Collectors.toList());
+            bookSequences.forEach(bs -> bs.setSequence(main));
+            main.setBookSequences(bookSequences);
+            sequenceRepository.save(main);
+            sequences.stream().skip(1).forEach(s -> {
+                s.setBookSequences(new ArrayList<>());
+                sequenceRepository.delete(s);
+            });
+
+        }
+        return main;
     }
 
     private void someMagic(BookEntity book) {
@@ -154,27 +174,33 @@ public class BookService {
         return byteArray;
     }
 
-    public BookEntity getBook(long id) {
-        return bookRepository.findById(id).get();
+    @Override
+    public Optional<Book> getBook(long id) {
+        return bookRepository.findById(id).map(bookMapper::toDto);
     }
 
-    public InputStream getBookInputStream(BookEntity book) throws LibException {
+    @Override
+    public InputStream getBookInputStream(Book book) throws LibException {
         return fileStorage.load(book.getFileResource().getFilePath());
     }
 
-    public InputStream getBookCoverInputStream(BookEntity book) throws LibException {
+    @Override
+    public InputStream getBookCoverInputStream(Book book) throws LibException {
         return fileStorage.load(book.getCover().getFilePath());
     }
 
-    public Page<BookEntity> getBooks(Pageable pageable) {
-        return bookRepository.findAll(pageable);
+    @Override
+    public Page<Book> getBooks(Pageable pageable) {
+        return bookRepository.findAll(pageable).map(bookMapper::toDto);
     }
 
-    public BookEntity updateBook(BookEntity book) throws LibException {
-        if (bookRepository.existsById(book.getId())) {
-            return bookRepository.save(book);
-        }
-        throw new LibException("Book not found");
+    @Override
+    @Transactional
+    public Book updateBook(Book book) throws LibException {
+        return bookRepository.findById(book.getId()).
+                map(be -> bookMapper.updateEntity(book, be)).
+                map(bookMapper::toDto).
+                orElseThrow(() -> new LibException("Book not found"));
     }
 
     private byte[] getChecksum(byte[] bookByteArray) throws LibException {
@@ -189,7 +215,8 @@ public class BookService {
     }
 
 
-    String saveCover(String fileName, BookImage bookImage) {
+    @Override
+    public String saveCover(String fileName, BookImage bookImage) {
         String coverName = fileName;
         String[] type = bookImage.getType().split("/");
         if (type.length > 1) {
@@ -198,15 +225,30 @@ public class BookService {
         return fileStorage.save(bookImage.getImage(), "image", coverName);
     }
 
-    public BookEntity save(BookEntity entity) {
-        return bookRepository.save(entity);
+    @Override
+    public Book save(Book book) {
+        BookEntity entity = bookMapper.toEntity(book);
+        return bookMapper.toDto(bookRepository.save(entity));
     }
 
-    public Iterable<BookEntity> findAll() {
-        return bookRepository.findAll();
+    @Override
+    public Stream<Book> findAll() {
+        return bookRepository.findAll().map(bookMapper::toDto);
     }
 
-    public Page<BookEntity> getNewBooks(PageRequest pageRequest) {
-       return bookRepository.findAllByOrderByCreatedDesc(pageRequest);
+    @Override
+    public Page<Book> getNewBooks(PageRequest pageRequest) {
+        return bookRepository.findAllByOrderByCreatedDesc(pageRequest).map(bookMapper::toDto);
+    }
+
+    @Override
+    public List<Book> getSameAuthorsBook(Book primaryBook) {
+        return bookRepository.findById(primaryBook.getId()).stream().map(BookEntity::getAuthorBooks).
+                flatMap(Collection::stream).map(AuthorBookEntity::getAuthor).
+                flatMap(a -> a.getBooks().stream().map(AuthorBookEntity::getBook)).
+                filter(book -> !book.getId().equals(primaryBook.getId())).
+                filter(StreamU.distinctByKey(BookEntity::getId)).
+                map(bookMapper::toDto).
+                collect(Collectors.toList());
     }
 }

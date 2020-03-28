@@ -1,7 +1,5 @@
 package com.patex.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -11,13 +9,14 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
-import java.util.Locale;
+import javax.persistence.Table;
 
 /**
  * Created by Alexey on 22.04.2017.
  */
 @Entity
-public class ZUserConfig {
+@Table(name="ZUSER_CONFIG")
+public class ZUserConfigEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -64,13 +63,5 @@ public class ZUserConfig {
 
     public void setLang(String lang) {
         this.lang = lang;
-    }
-
-    @JsonIgnore
-    public Locale getLocale() {
-        if (lang != null) {
-            return new Locale(lang);
-        }
-        return null;
     }
 }

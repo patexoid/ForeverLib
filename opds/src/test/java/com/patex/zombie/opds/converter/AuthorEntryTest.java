@@ -1,6 +1,6 @@
 package com.patex.zombie.opds.converter;
 
-import com.patex.entities.AuthorEntity;
+import com.patex.zombie.model.Author;
 import com.patex.zombie.opds.model.converter.AuthorEntry;
 import org.junit.Test;
 
@@ -10,7 +10,7 @@ public class AuthorEntryTest {
 
     @Test
     public void testId() {
-        AuthorEntity author = new AuthorEntity();
+        Author author = new Author();
         long id = 42L;
         author.setId(id);
         author.setUpdated(Instant.now());
@@ -22,7 +22,7 @@ public class AuthorEntryTest {
 
     @Test
     public void testName() {
-        AuthorEntity author = new AuthorEntity();
+        Author author = new Author();
         String name = "name";
         author.setName(name);
         author.setUpdated(Instant.now());
@@ -32,7 +32,7 @@ public class AuthorEntryTest {
 
     @Test
     public void testContent() {
-        AuthorEntity author = new AuthorEntity();
+        Author author = new Author();
         author.setUpdated(Instant.now());
         String content = "blah\nblahh";
         author.setDescr(content);
@@ -42,7 +42,7 @@ public class AuthorEntryTest {
 
     @Test
     public void testEmptyContent() {
-        AuthorEntity author = new AuthorEntity();
+        Author author = new Author();
         author.setUpdated(Instant.now());
         AuthorEntry entry = new AuthorEntry(author);
         EntryVerifier.verifyContent(entry);

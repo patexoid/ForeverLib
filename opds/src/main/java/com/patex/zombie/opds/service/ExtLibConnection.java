@@ -4,17 +4,17 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import com.patex.LibException;
-import com.patex.entities.BookEntity;
-import com.patex.entities.ZUser;
-import com.patex.service.BookService;
-import com.patex.utils.ExecutorCreator;
+import com.patex.zombie.LibException;
+import com.patex.zombie.model.Book;
 import com.patex.zombie.opds.entity.ExtLibrary;
 import com.patex.zombie.opds.model.ExtLibFeed;
-import com.patex.zombie.opds.model.converter.ExtLibOPDSEntry;
-import com.patex.zombie.opds.model.converter.LinkMapper;
 import com.patex.zombie.opds.model.OPDSEntry;
 import com.patex.zombie.opds.model.OPDSLink;
+import com.patex.zombie.opds.model.converter.ExtLibOPDSEntry;
+import com.patex.zombie.opds.model.converter.LinkMapper;
+import com.patex.zombie.service.BookService;
+import com.patex.zombie.service.ExecutorCreator;
+import com.patex.zombie.service.UserService;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.FeedException;
 import com.rometools.rome.io.SyndFeedInput;
@@ -56,7 +56,7 @@ public class ExtLibConnection {
     private final static Pattern fileNamePattern = Pattern.compile("attachment; filename=\"([^\"]+)\"");
     private final static Logger log = LoggerFactory.getLogger(ExtLibConnection.class);
     private final Semaphore semaphore = new Semaphore(2);
-    private final Cache<String, BookEntity> bookCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
+    private final Cache<String, Book> bookCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
     private final ExecutorService executor;
     private final String url;
     private final String prefix;
@@ -65,11 +65,12 @@ public class ExtLibConnection {
     private final BookService bookService;
     private final Proxy proxy;
     private final int timeout;
+    private final UserService userService;
 
     @VisibleForTesting
     public ExtLibConnection(String url, String prefix, String login, String password,
                             String proxyHost, Integer proxyPort, Proxy.Type proxyType, ExecutorCreator executorCreator,
-                            BookService bookService,
+                            BookService bookService, UserService userService,
                             int timeout) {
         this.executor = executorCreator.createExecutor("ExtLib:" + url + " Connection", log);
         this.url = url;
@@ -83,19 +84,22 @@ public class ExtLibConnection {
         }
         this.bookService = bookService;
         this.timeout = timeout;
+        this.userService = userService;
     }
 
     @Autowired
     public ExtLibConnection(BookService bookService, ExtLibScopeStorage extLibScope,
-                            @Value("${extlib.connection.timeout}") int timeout, ExecutorCreator executorCreator) {
-        this(bookService, extLibScope.getCurrentExtLib(), timeout, executorCreator);
+                            @Value("${extlib.connection.timeout}") int timeout, ExecutorCreator executorCreator,
+                            UserService userService) {
+        this(bookService, extLibScope.getCurrentExtLib(), timeout, executorCreator, userService);
     }
 
-    ExtLibConnection(BookService bookService, ExtLibrary extLibrary, int timeout, ExecutorCreator executorCreator) {
+    ExtLibConnection(BookService bookService, ExtLibrary extLibrary, int timeout, ExecutorCreator executorCreator,
+                     UserService userService) {
         this(extLibrary.getUrl(), extLibrary.getOpdsPath(), extLibrary.getLogin(), extLibrary.getPassword(),
                 extLibrary.getProxyHost(), extLibrary.getProxyPort(), extLibrary.getProxyType(),
                 executorCreator,
-                bookService, timeout);
+                bookService, userService, timeout);
     }
 
     @VisibleForTesting
@@ -125,7 +129,7 @@ public class ExtLibConnection {
         }
     }
 
-    public BookEntity downloadBook(String uri, String type, ZUser user) {
+    public Book downloadBook(String uri, String type, String user) {
         try {
             return bookCache.get(uri, () -> getData(uri, conn -> downloadBook(type, conn, user)));
         } catch (ExecutionException | UncheckedExecutionException e) {
@@ -137,7 +141,7 @@ public class ExtLibConnection {
         }
     }
 
-    private BookEntity downloadBook(String type, URLConnection conn, ZUser user) throws LibException, IOException {
+    private Book downloadBook(String type, URLConnection conn, String user) throws LibException, IOException {
         String contentDisposition = conn.getHeaderField("Content-Disposition");
         String fileName;
         if (contentDisposition != null) {
@@ -151,7 +155,7 @@ public class ExtLibConnection {
         } else {
             fileName = UUID.randomUUID().toString() + "." + type;
         }
-        return bookService.uploadBook(fileName, conn.getInputStream(), user);
+        return bookService.uploadBook(fileName, conn.getInputStream(), userService.getUser(user));
     }
 
     public ExtLibFeed getFeed(String uri) throws LibException {

@@ -1,6 +1,7 @@
 package com.patex.parser;
 
 import com.patex.entities.BookEntity;
+import com.patex.zombie.model.BookImage;
 
 
 public class BookInfo {

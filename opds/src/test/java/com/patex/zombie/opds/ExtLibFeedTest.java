@@ -1,9 +1,9 @@
 package com.patex.zombie.opds;
 
-import com.patex.utils.Res;
+import com.patex.zombie.model.Res;
 import com.patex.zombie.opds.model.ExtLibFeed;
-import com.patex.zombie.opds.model.OPDSEntryBuilder;
 import com.patex.zombie.opds.model.OPDSEntry;
+import com.patex.zombie.opds.model.OPDSEntryBuilder;
 import com.patex.zombie.opds.model.OPDSLink;
 import org.hamcrest.collection.IsCollectionWithSize;
 import org.junit.Test;

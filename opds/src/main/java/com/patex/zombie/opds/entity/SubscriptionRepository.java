@@ -13,11 +13,11 @@ import java.util.Optional;
  */
 
 @Repository
-public interface SubscriptionRepository extends CrudRepository<Subscription, Long> {
+public interface SubscriptionRepository extends CrudRepository<SubscriptionEntity, Long> {
 
-    Page<Subscription> findAll(Pageable pageable);
+    Page<SubscriptionEntity> findAll(Pageable pageable);
 
-    Optional<Subscription> findFirstByExtLibraryAndLink(ExtLibrary library, String link);
+    Optional<SubscriptionEntity> findFirstByExtLibraryAndLink(ExtLibrary library, String link);
 
-    Collection<Subscription> findAllByExtLibrary(ExtLibrary library);
+    Collection<SubscriptionEntity> findAllByExtLibrary(ExtLibrary library);
 }

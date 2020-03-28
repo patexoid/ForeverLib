@@ -1,4 +1,4 @@
-package com.patex;
+package com.patex.zombie.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

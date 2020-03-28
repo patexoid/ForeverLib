@@ -1,19 +1,20 @@
 package com.patex.zombie.opds.service;
 
-import com.patex.LibException;
-import com.patex.entities.*;
+import com.patex.zombie.LibException;
+import com.patex.zombie.model.Book;
+import com.patex.zombie.model.Res;
+import com.patex.zombie.model.User;
 import com.patex.zombie.opds.entity.ExtLibrary;
 import com.patex.zombie.opds.entity.ExtLibraryRepository;
-import com.patex.zombie.opds.entity.Subscription;
+import com.patex.zombie.opds.entity.SubscriptionEntity;
 import com.patex.zombie.opds.model.ExtLibFeed;
 import com.patex.zombie.opds.model.OPDSEntryImpl;
 import com.patex.zombie.opds.model.converter.ExtLibOPDSEntry;
 import com.patex.zombie.opds.model.converter.LinkMapper;
 import com.patex.zombie.opds.model.OPDSEntry;
 import com.patex.zombie.opds.model.OPDSLink;
-import com.patex.service.ZUserService;
-import com.patex.utils.ExecutorCreator;
-import com.patex.utils.Res;
+import com.patex.zombie.service.ExecutorCreator;
+import com.patex.zombie.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -50,7 +51,7 @@ public class ExtLibService {
     private final ExtLibDownloadService downloadService;
     private final ExtLibSubscriptionService subscriptionService;
     private final ExtLibraryRepository extLibRepo;
-    private final ZUserService userService;
+    private final UserService userService;
 
     private final ExecutorService executor;
 
@@ -58,7 +59,7 @@ public class ExtLibService {
     public ExtLibService(ExtLibDownloadService downloadService,
                          ExtLibSubscriptionService subscriptionService,
                          ExtLibraryRepository extLibRepo,
-                         ZUserService userService,
+                         UserService userService,
                          ExecutorCreator executorCreator) {
         this.downloadService = downloadService;
         this.subscriptionService = subscriptionService;
@@ -103,13 +104,13 @@ public class ExtLibService {
     }
 
     private String downloadBook(ExtLibrary library, String uri, String type) throws LibException {
-        ZUser user = userService.getCurrentUser();
-        BookEntity book = downloadService.downloadBook(library, uri, type, user);
+        User user = userService.getCurrentUser();
+        Book book = downloadService.downloadBook(library, uri, type, user.getUsername());
         return "/book/loadFile/" + book.getId();
     }
 
     private void downloadAll(ExtLibrary library, String uri) {
-        downloadService.downloadAll(library, uri, userService.getCurrentUser());
+        downloadService.downloadAll(library, uri, userService.getCurrentUser().getUsername());
 //        return LinkMapper.mapToUri("?", uri);
     }
 
@@ -170,7 +171,7 @@ public class ExtLibService {
                         OPDS_CATALOG));
     }
 
-    private OPDSEntryImpl toUnsbscribeEntry(String uri, ExtLibFeed feed, Subscription subscription) {
+    private OPDSEntryImpl toUnsbscribeEntry(String uri, ExtLibFeed feed, SubscriptionEntity subscription) {
         String id = UNSUBSCRIBE_ID_PREFIX + ":" + uri;
         String href = LinkMapper.mapToUri("action/" + Action.unsubscribe + "?id=" + subscription.getId() + "&", uri);
         return new OPDSEntryImpl(id, Instant.now(),

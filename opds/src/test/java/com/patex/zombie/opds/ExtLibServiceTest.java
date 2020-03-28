@@ -1,13 +1,11 @@
 package com.patex.zombie.opds;
 
-import com.patex.entities.BookEntity;
-import com.patex.entities.ZUser;
-import com.patex.service.ZUserService;
-import com.patex.utils.ExecutorCreator;
-import com.patex.utils.Res;
+import com.patex.zombie.model.Book;
+import com.patex.zombie.model.Res;
+import com.patex.zombie.model.User;
 import com.patex.zombie.opds.entity.ExtLibrary;
 import com.patex.zombie.opds.entity.ExtLibraryRepository;
-import com.patex.zombie.opds.entity.Subscription;
+import com.patex.zombie.opds.entity.SubscriptionEntity;
 import com.patex.zombie.opds.model.ExtLibFeed;
 import com.patex.zombie.opds.model.OPDSEntryBuilder;
 import com.patex.zombie.opds.model.OPDSEntry;
@@ -15,6 +13,8 @@ import com.patex.zombie.opds.model.OPDSLink;
 import com.patex.zombie.opds.service.ExtLibDownloadService;
 import com.patex.zombie.opds.service.ExtLibService;
 import com.patex.zombie.opds.service.ExtLibSubscriptionService;
+import com.patex.zombie.service.ExecutorCreator;
+import com.patex.zombie.service.UserService;
 import org.hamcrest.collection.IsCollectionWithSize;
 import org.junit.Assert;
 import org.junit.Before;
@@ -51,7 +51,7 @@ public class ExtLibServiceTest {
     private ExtLibraryRepository repository;
 
     @Mock
-    private ZUserService userService;
+    private UserService userService;
 
     @Mock
     private ExtLibDownloadService downloadService;
@@ -67,7 +67,7 @@ public class ExtLibServiceTest {
     private ExtLibService extLibService;
 
     private ExtLibrary library;
-    private ZUser user = new ZUser();
+    private User user = new User();
     private String entryUrl = "entryUrl";
 
     @Before
@@ -75,14 +75,14 @@ public class ExtLibServiceTest {
         library = new ExtLibrary();
         library.setId(ID);
         library.setName(LIBRARY_NAME);
-        BookEntity book = new BookEntity();
+        Book book = new Book();
         book.setId(BOOK_ID);
 
         Mockito.when(repository.findAll()).thenReturn(Collections.singleton(library));
         Mockito.when(repository.findById(ID)).thenReturn(Optional.of(library));
 
         Mockito.when(userService.getCurrentUser()).thenReturn(user);
-        Mockito.when(downloadService.downloadBook(library, URI, TYPE, user)).thenReturn(book);
+        Mockito.when(downloadService.downloadBook(library, URI, TYPE, user.getUsername())).thenReturn(book);
 
 
         final Object[] objects = new Object[]{};
@@ -128,7 +128,7 @@ public class ExtLibServiceTest {
         params.put(REQUEST_P_NAME, downloadAllURL);
         extLibService.actionExtLibData(ID, ExtLibService.Action.downloadAll.name(), params);
 
-        Mockito.verify(downloadService).downloadAll(library, downloadAllURL, user);
+        Mockito.verify(downloadService).downloadAll(library, downloadAllURL, user.getUsername());
     }
 
     @Test
@@ -202,7 +202,7 @@ public class ExtLibServiceTest {
     public void shouldHaveUnSubscribeEntry() {
         HashMap<String, String> params = new HashMap<>();
         params.put(REQUEST_P_NAME, entryUrl);
-        Subscription subscription = new Subscription();
+        SubscriptionEntity subscription = new SubscriptionEntity();
         subscription.setId(92L);
         Mockito.when(subscriptionService.find(library, entryUrl)).thenReturn(Optional.of(subscription));
 

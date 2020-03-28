@@ -1,19 +1,20 @@
 package com.patex.zombie.opds.service;
 
 
-import com.patex.LibException;
-import com.patex.entities.*;
+import com.patex.messaging.MessengerService;
+import com.patex.zombie.LibException;
+import com.patex.zombie.model.Book;
+import com.patex.zombie.model.User;
 import com.patex.zombie.opds.entity.ExtLibrary;
 import com.patex.zombie.opds.entity.SavedBook;
 import com.patex.zombie.opds.entity.SavedBookRepository;
 import com.patex.zombie.opds.model.DownloadAllResult;
 import com.patex.zombie.opds.model.ExtLibFeed;
-import com.patex.messaging.MessengerService;
 import com.patex.zombie.opds.model.converter.OPDSAuthor;
 import com.patex.zombie.opds.model.OPDSEntry;
 import com.patex.zombie.opds.model.OPDSLink;
-import com.patex.service.TransactionService;
-import com.patex.utils.ExecutorCreator;
+import com.patex.zombie.service.ExecutorCreator;
+import com.patex.zombie.service.TransactionService;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.slf4j.Logger;
@@ -68,13 +69,13 @@ public class ExtLibDownloadService {
         return uriO.map(NameValuePair::getValue);
     }
 
-    public BookEntity downloadBook(ExtLibrary library, String uri, String type, ZUser user) throws LibException {
+    public Book downloadBook(ExtLibrary library, String uri, String type, String user) throws LibException {
         return transactionService.transactionRequired(() -> {
             SavedBook savedInfo =
                     savedBookRepo.findSavedBooksByExtLibraryAndExtId(library, uri).
                             orElseGet(() -> new SavedBook(library, uri));
             try {
-                BookEntity book = scopeRunner.runInScope(library, () -> connection.downloadBook(uri, type, user));
+                Book book = scopeRunner.runInScope(library, () -> connection.downloadBook(uri, type, user));
                 savedInfo.success();
                 savedBookRepo.save(savedInfo);
                 return book;
@@ -95,14 +96,14 @@ public class ExtLibDownloadService {
         return connection.getFeed(uri);
     }
 
-    public CompletableFuture<Optional<DownloadAllResult>> downloadAll(ExtLibrary library, String uri, ZUser user) {
+    public CompletableFuture<Optional<DownloadAllResult>> downloadAll(ExtLibrary library, String uri, String user) {
 
         Supplier<Optional<DownloadAllResult>> supplier = () ->
                 scopeRunner.runInScope(library, () -> downloadAll(uri, user, library));
         return CompletableFuture.supplyAsync(supplier, executor);
     }
 
-    private Optional<DownloadAllResult> downloadAll(String uri, ZUser user, ExtLibrary library) {
+    private Optional<DownloadAllResult> downloadAll(String uri, String user, ExtLibrary library) {
         List<OPDSEntry> entries = getAllEntries(uri);
         Set<String> saved = getAlreadySaved(library, entries);
         Optional<DownloadAllResult> downloadResult = entries.stream().
@@ -150,7 +151,7 @@ public class ExtLibDownloadService {
                 map(SavedBook::getExtId).collect(Collectors.toSet());
     }
 
-    private DownloadAllResult download(OPDSEntry entry, ZUser user, ExtLibrary library) {
+    private DownloadAllResult download(OPDSEntry entry, String user, ExtLibrary library) {
         List<OPDSLink> links = entry.getLinks().stream().
                 filter(link -> link.getType().contains(FB2_TYPE)).
                 collect(Collectors.toList());
@@ -170,7 +171,7 @@ public class ExtLibDownloadService {
                 if (type.contains("/")) {
                     type = type.substring(type.lastIndexOf("/") + 1);
                 }
-                BookEntity book = downloadBook(library, uri, type, user);
+                Book book = downloadBook(library, uri, type, user);
                 return DownloadAllResult.success(authors, book);
             } catch (LibException e) {
                 log.warn(e.getMessage(), e);

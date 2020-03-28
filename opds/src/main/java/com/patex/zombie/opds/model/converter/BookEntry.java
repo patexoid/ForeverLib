@@ -1,9 +1,8 @@
 package com.patex.zombie.opds.model.converter;
 
-import com.patex.entities.AuthorBookEntity;
-import com.patex.entities.BookEntity;
-import com.patex.utils.LinkUtils;
-import com.patex.utils.Res;
+import com.patex.zombie.LinkUtils;
+import com.patex.zombie.model.Book;
+import com.patex.zombie.model.Res;
 import com.patex.zombie.opds.model.OPDSContent;
 import com.patex.zombie.opds.model.OPDSEntry;
 import com.patex.zombie.opds.model.OPDSLink;
@@ -27,18 +26,18 @@ public class BookEntry implements OPDSEntry {
     private final List<OPDSContent> content;
     private final List<OPDSLink> links;
 
-    public BookEntry(BookEntity book) {
+    public BookEntry(Book book) {
         id = "book:" + book.getId();
         updated = book.getCreated();
         title = new Res("first.value", book.getTitle());
-        authors = book.getAuthorBooks().stream().map(AuthorBookEntity::getAuthor).map(OPDSAuthorImpl::new).
+        authors = book.getAuthors().stream().map(OPDSAuthorImpl::new).
                 collect(Collectors.toList());
         // TODO entry.setCategories();
 
         List<OPDSContent> content0 = new ArrayList<>();
         content0.add(new OPDSContent(book.getDescr()));
         content0.addAll(book.getSequences().stream().
-                map(bs -> " Серия:" + bs.getSequence().getName() + " #" + bs.getSeqOrder()).
+                map(bs -> " Серия:" + bs.getSequenceName() + " #" + bs.getSeqOrder()).
                 map(OPDSContent::new).
                 collect(Collectors.toList()));
         content = Collections.unmodifiableList(content0);

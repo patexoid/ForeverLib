@@ -1,8 +1,11 @@
 package com.patex.zombie.opds.converter;
 
-import com.patex.entities.*;
-import com.patex.zombie.opds.model.converter.ExpandedAuthorEntries;
+import com.patex.zombie.model.Author;
+import com.patex.zombie.model.Book;
+import com.patex.zombie.model.Sequence;
+import com.patex.zombie.model.SequenceBook;
 import com.patex.zombie.opds.model.OPDSEntry;
+import com.patex.zombie.opds.model.converter.ExpandedAuthorEntries;
 import org.hamcrest.collection.IsCollectionWithSize;
 import org.junit.Assert;
 import org.junit.Test;
@@ -14,14 +17,12 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.patex.zombie.opds.converter.EntryVerifier.*;
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.junit.Assert.assertThat;
 
 public class ExpandedAuthorEntryTest {
 
     @Test
     public void testEmptyAuthor() {
-        AuthorEntity author = new AuthorEntity();
+        Author author = new Author();
         long id = 42L;
         author.setId(id);
         String name = "name";
@@ -39,14 +40,14 @@ public class ExpandedAuthorEntryTest {
 
     @Test
     public void testAuthorWithBookNoSequence() {
-        AuthorEntity author = new AuthorEntity();
-        BookEntity book1 = new BookEntity();
-        BookEntity book2 = new BookEntity();
+        Author author = new Author();
+        Book book1 = new Book();
+        Book book2 = new Book();
         Instant created = Instant.now().minus(30, ChronoUnit.DAYS);
         book1.setCreated(created);
         Instant createdLater = Instant.now();
         book2.setCreated(createdLater);
-        author.setBooks(Arrays.asList(new AuthorBookEntity(author, book1), new AuthorBookEntity(author, book2)));
+        author.setBooksNoSequence(Arrays.asList(book1, book2));
         Instant authorUpdated = Instant.now();
         author.setUpdated(authorUpdated);
         List<OPDSEntry> entries = new ExpandedAuthorEntries(author).getEntries();
@@ -60,20 +61,19 @@ public class ExpandedAuthorEntryTest {
 
     @Test
     public void testAuthorWithBookWithSequence() {
-        AuthorEntity author = new AuthorEntity();
-        SequenceEntity sequence = new SequenceEntity("sequence");
-        BookEntity book1 = new BookEntity();
-        BookSequenceEntity bookSequence1 = new BookSequenceEntity(1, sequence, book1);
-        book1.setSequences(Collections.singletonList(bookSequence1));
-        BookEntity book2 = new BookEntity();
-        BookSequenceEntity bookSequence2 = new BookSequenceEntity(2, sequence, book2);
-        book2.setSequences(Collections.singletonList(bookSequence2));
-        sequence.setBookSequences(Arrays.asList(bookSequence1, bookSequence2));
+        Author author = new Author();
+        Sequence sequence = new Sequence();
+        sequence.setName("sequence");
+        Book book1 = new Book();
+        SequenceBook bookSequence1 = new SequenceBook(1, book1);
+        Book book2 = new Book();
+        SequenceBook bookSequence2 = new SequenceBook(2, book2);
+        sequence.setBooks(Arrays.asList(bookSequence1, bookSequence2));
         Instant created = Instant.now().minus(30, ChronoUnit.DAYS);
         book1.setCreated(created);
         Instant createdLater = Instant.now();
         book2.setCreated(createdLater);
-        author.setBooks(Arrays.asList(new AuthorBookEntity(author, book1), new AuthorBookEntity(author, book2)));
+        author.setSequences(Collections.singletonList(sequence));
 
         Instant authorUpdated = Instant.now();
         author.setUpdated(authorUpdated);

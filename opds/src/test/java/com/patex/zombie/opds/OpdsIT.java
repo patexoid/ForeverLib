@@ -1,7 +1,7 @@
 package com.patex.zombie.opds;
 
-import com.patex.BookUploadInfo;
-import com.patex.entities.ZUser;
+import com.patex.zombie.model.BookUploadInfo;
+import com.patex.zombie.model.User;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,11 +32,11 @@ public class OpdsIT {
         httpClient = new HttpTestClient("http://localhost:8080");
         httpClient.setCreds("testUser","simplePassword");
         try {
-            httpClient.get("user/current", ZUser.class);
+            httpClient.get("user/current", User.class);
         } catch (HttpClientErrorException e) {
             httpClient.setCreds(null,null);
             httpClient.post("user/create", "{\"username\":\"testUser\", \"password\":\"simplePassword\"}",
-                    MediaType.APPLICATION_JSON, ZUser.class);
+                    MediaType.APPLICATION_JSON, User.class);
         }
         httpClient.setCreds("testUser","simplePassword");
     }

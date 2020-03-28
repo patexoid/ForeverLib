@@ -1,11 +1,11 @@
 package com.patex.zombie.opds.model;
 
-import com.patex.entities.ZUser;
-import com.patex.entities.ZUserConfig;
+import com.patex.zombie.model.Res;
+import com.patex.zombie.model.User;
+import com.patex.zombie.model.UserConfig;
 import com.patex.zombie.opds.model.converter.OPDSAuthor;
-import com.patex.service.Resources;
-import com.patex.service.ZUserService;
-import com.patex.utils.Res;
+import com.patex.zombie.service.Resources;
+import com.patex.zombie.service.UserService;
 import com.rometools.rome.feed.atom.*;
 import com.rometools.rome.feed.synd.SyndPerson;
 import org.springframework.stereotype.Service;
@@ -24,11 +24,11 @@ public class OpdsView extends AbstractAtomFeedView {
     public static final String ENTRIES = "Entries";
     public static final String OPDS_METADATA = "opdsMetaData";
 
-    private final ZUserService userService;
+    private final UserService userService;
 
     private final Resources res;
 
-    public OpdsView(ZUserService userService, Resources res) {
+    public OpdsView(UserService userService, Resources res) {
         setFeedType("opds.atom_1.0");
         this.userService = userService;
         this.res = res;
@@ -39,8 +39,8 @@ public class OpdsView extends AbstractAtomFeedView {
     protected List<Entry> buildFeedEntries(Map<String, Object> model,
                                            HttpServletRequest request, HttpServletResponse response) {
         List<OPDSEntry> entries = (List<OPDSEntry>) model.get(ENTRIES);
-        ZUser user = userService.getCurrentUser();
-        ZUserConfig userConfig = user.getUserConfig();
+        User user = userService.getCurrentUser();
+        UserConfig userConfig = user.getUserConfig();
         Locale locale;
         if (userConfig != null) {
             locale = userConfig.getLocale();
@@ -110,8 +110,8 @@ public class OpdsView extends AbstractAtomFeedView {
 
     @Override
     protected void buildFeedMetadata(Map<String, Object> model, Feed feed, HttpServletRequest request) {
-        ZUser user = userService.getCurrentUser();
-        ZUserConfig userConfig = user.getUserConfig();
+        User user = userService.getCurrentUser();
+        UserConfig userConfig = user.getUserConfig();
         Locale locale;
         if (userConfig != null) {
             locale = userConfig.getLocale();

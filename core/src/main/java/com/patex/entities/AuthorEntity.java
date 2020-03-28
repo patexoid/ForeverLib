@@ -2,7 +2,7 @@ package com.patex.entities;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.patex.utils.StreamU;
+import com.patex.zombie.StreamU;
 
 import javax.persistence.*;
 import java.time.Instant;

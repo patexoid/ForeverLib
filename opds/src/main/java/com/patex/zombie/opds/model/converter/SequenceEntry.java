@@ -1,10 +1,11 @@
 package com.patex.zombie.opds.model.converter;
 
-import com.patex.entities.BookEntity;
-import com.patex.entities.BookSequenceEntity;
-import com.patex.entities.SequenceEntity;
-import com.patex.utils.LinkUtils;
-import com.patex.utils.Res;
+import com.patex.zombie.LinkUtils;
+import com.patex.zombie.model.Book;
+import com.patex.zombie.model.BookSequence;
+import com.patex.zombie.model.Res;
+import com.patex.zombie.model.Sequence;
+import com.patex.zombie.model.SequenceBook;
 import com.patex.zombie.opds.model.OPDSContent;
 import com.patex.zombie.opds.model.OPDSEntry;
 import com.patex.zombie.opds.model.OPDSLink;
@@ -24,15 +25,15 @@ public class SequenceEntry implements OPDSEntry {
     private final List<OPDSLink> links;
     private final Instant date;
 
-    public SequenceEntry(SequenceEntity sequence) {
+    public SequenceEntry(Sequence sequence) {
 
         id = "sequence:" + sequence.getId();
         title = new Res("first.value", sequence.getName());
         content = Collections.
-                singletonList(new OPDSContent("Количество книг в серии: " + sequence.getBookSequences().size()));
+                singletonList(new OPDSContent("Количество книг в серии: " + sequence.getBooks().size()));
         links = Collections.singletonList(
                 new OPDSLink(LinkUtils.makeURL("/opds/sequence", sequence.getId()), OPDSLink.OPDS_CATALOG));
-        date = sequence.getBookSequences().stream().map(BookSequenceEntity::getBook).map(BookEntity::getCreated).
+        date = sequence.getBooks().stream().map(SequenceBook::getBook).map(Book::getCreated).
                 max(Instant::compareTo).orElse(Instant.now());
     }
 

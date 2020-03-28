@@ -1,15 +1,17 @@
 package com.patex.service;
 
-import com.patex.LibException;
 import com.patex.entities.ZUser;
 import com.patex.entities.ZUserAuthority;
-import com.patex.entities.ZUserConfig;
+import com.patex.entities.ZUserConfigEntity;
 import com.patex.entities.ZUserConfigRepository;
 import com.patex.entities.ZUserRepository;
+import com.patex.mapper.UserMapper;
+import com.patex.zombie.LibException;
+import com.patex.zombie.model.User;
+import com.patex.zombie.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,25 +24,25 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 /**
  * Created by Alexey on 25.03.2017.
  */
 @Service
-public class ZUserService implements UserDetailsService {
+public class ZUserService implements UserService, UserDetailsService {
 
-    public static final String GUEST = "GUEST";
-    public static final String USER = "ROLE_USER";
-    public static final String ADMIN_AUTHORITY = "ROLE_ADMIN";
-    public static final ZUser anonim = new ZUser("anonimus", true);
-   private static final Logger log = LoggerFactory.getLogger(ZUserService.class);
+    public static final String ANONIMUS = "anonimus";
+    public static final ZUser anonim = new ZUser(ANONIMUS, true);
+    private static final Logger log = LoggerFactory.getLogger(ZUserService.class);
 
     static {
-        ZUserConfig userConfig = new ZUserConfig();
+        ZUserConfigEntity userConfig = new ZUserConfigEntity();
         userConfig.setLang("en");
         anonim.setUserConfig(userConfig);
     }
 
+    private final UserMapper userMapper;
     private final ZUserRepository userRepo;
 
     private final ZUserConfigRepository userConfigRepo;
@@ -49,24 +51,15 @@ public class ZUserService implements UserDetailsService {
 
     private final ApplicationEventPublisher publisher;
 
-    @Autowired
-    public ZUserService(ZUserRepository userRepo,
-                        ZUserConfigRepository userConfigRepo,
-                        PasswordEncoder passwordEncoder,
-                        ApplicationEventPublisher publisher) {
+    public ZUserService(UserMapper userMapper, ZUserRepository userRepo, ZUserConfigRepository userConfigRepo, PasswordEncoder passwordEncoder, ApplicationEventPublisher publisher) {
+        this.userMapper = userMapper;
         this.userRepo = userRepo;
         this.userConfigRepo = userConfigRepo;
         this.passwordEncoder = passwordEncoder;
         this.publisher = publisher;
     }
 
-    @Override
-    public ZUser loadUserByUsername(String username) throws UsernameNotFoundException {
-        ZUser user = userRepo.findById(username).get();
-        return user == null ? anonim : user;
-    }
-
-    public ZUser getCurrentUser() {
+    private ZUser getCurrentZUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Object principal = auth.getPrincipal();
         if (principal instanceof ZUser) {
@@ -75,14 +68,23 @@ public class ZUserService implements UserDetailsService {
         return anonim;
     }
 
-    public ZUser save(ZUser user) {
-        ZUser currentUser = getCurrentUser();
+    @Override
+    public ZUser loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepo.findById(username).orElse(anonim);
+    }
+
+    public User getCurrentUser() {
+        return userMapper.toDto(getCurrentZUser());
+    }
+
+    public User save(User user) {
+        ZUser currentUser = getCurrentZUser();
         if (currentUser.getUsername().equals(user.getUsername()) ||
                 currentUser.getAuthorities().stream().anyMatch(o -> ADMIN_AUTHORITY.equals(o.getAuthority()))) {
-            ZUser updatedUser = new ZUser();
-            BeanUtils.copyProperties(user, updatedUser);
-            updatedUser.setPassword(currentUser.getPassword());
-            return userRepo.save(updatedUser);
+            ZUser zUser = loadUserByUsername(user.getUsername());
+            ZUser updatedUser = userMapper.updateEntity(user, zUser);
+            updatedUser.setPassword(passwordEncoder.encode(user.getPassword()));
+            return userMapper.toDto(zUser);
         }
         return user;
     }
@@ -93,7 +95,7 @@ public class ZUserService implements UserDetailsService {
             user.getAuthorities().add(new ZUserAuthority(user, ADMIN_AUTHORITY));
         }
         if (user.getUserConfig() == null) {
-            user.setUserConfig(new ZUserConfig());
+            user.setUserConfig(new ZUserConfigEntity());
         }
         if (user.getUserConfig().getLang() == null) {
             user.getUserConfig().setLang("en");
@@ -106,8 +108,8 @@ public class ZUserService implements UserDetailsService {
     }
 
     public void updatePassword(String oldPassword, String newPassword) throws LibException {
-        ZUser currentUser = getCurrentUser();
-        if (currentUser == anonim) {
+        User currentUser = getCurrentUser();
+        if (currentUser.getUsername().equals(ANONIMUS)) {//TODO FIX that
             throw new LibException("Unable to change password for anonim user");
         }
         ZUser user = loadUserByUsername(currentUser.getUsername());
@@ -118,21 +120,21 @@ public class ZUserService implements UserDetailsService {
         userRepo.save(user);
     }
 
-    public void updateUserConfig(ZUserConfig newConfig) {
-        updateUserConfig(getCurrentUser(), newConfig);
+    public void updateUserConfig(ZUserConfigEntity newConfig) {
+        updateUserConfig(getCurrentZUser(), newConfig);
     }
 
 
-    private void updateUserConfig(ZUser user, ZUserConfig newConfig) {
+    private void updateUserConfig(ZUser user, ZUserConfigEntity newConfig) {
 
-        ZUserConfig userConfig = user.getUserConfig();
+        ZUserConfigEntity userConfig = user.getUserConfig();
         if (userConfig == null) {
-            userConfig = new ZUserConfig();
+            userConfig = new ZUserConfigEntity();
             user.setUserConfig(userConfig);
             userConfig.setUser(userRepo.findById(user.getUsername()).get());
 
         }
-        PropertyDescriptor[] pds = BeanUtils.getPropertyDescriptors(ZUserConfig.class);
+        PropertyDescriptor[] pds = BeanUtils.getPropertyDescriptors(ZUserConfigEntity.class);
         for (PropertyDescriptor pd : pds) {
             if (!"id".equals(pd.getName()) && !"user".equals(pd.getName())) {
                 Method writeMethod = pd.getWriteMethod();
@@ -152,12 +154,17 @@ public class ZUserService implements UserDetailsService {
         userConfigRepo.save(userConfig);
     }
 
-    public Collection<ZUser> getByRole(String role) {
-        return userRepo.findAllByAuthoritiesIs(role);
+    @Override
+    public Collection<User> getByRole(String role) {
+        return userRepo.findAllByAuthoritiesIs(role).stream().map(userMapper::toDto).collect(Collectors.toList());
     }
 
+    @Override
     public Locale getUserLocale() {
         return getCurrentUser().getUserConfig().getLocale();
     }
 
+    public User getUser(String username) {
+        return userRepo.findById(username).map(userMapper::toDto).orElseThrow();
+    }
 }

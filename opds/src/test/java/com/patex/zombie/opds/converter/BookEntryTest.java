@@ -1,7 +1,7 @@
 package com.patex.zombie.opds.converter;
 
-import com.patex.entities.BookEntity;
-import com.patex.entities.FileResourceEntity;
+import com.patex.zombie.model.Book;
+import com.patex.zombie.model.FileResource;
 import com.patex.zombie.opds.model.converter.BookEntry;
 import org.junit.Test;
 
@@ -11,23 +11,23 @@ public class BookEntryTest {
 
     @Test
     public void testId() {
-        BookEntity book = createBook();
+        Book book = createBook();
         long id = 42L;
         book.setId(id);
         BookEntry entry = new BookEntry(book);
         EntryVerifier.verifyId("" + id, entry);
     }
 
-    private BookEntity createBook() {
-        BookEntity book = new BookEntity();
+    private Book createBook() {
+        Book book = new Book();
         book.setCreated(Instant.now());
-        book.setFileResource(new FileResourceEntity("dsd", "sds", 42));
+        book.setFileResource(new FileResource("dsd", "sds", 42));
         return book;
     }
 
     @Test
     public void testName() {
-        BookEntity book = createBook();
+        Book book = createBook();
         String title = "name";
         book.setTitle(title);
         BookEntry entry = new BookEntry(book);
@@ -36,7 +36,7 @@ public class BookEntryTest {
 
     @Test
     public void testContent() {
-        BookEntity book = createBook();
+        Book book = createBook();
         String content = "blah\nblahh";
         book.setDescr(content);
         BookEntry entry = new BookEntry(book);
@@ -45,7 +45,7 @@ public class BookEntryTest {
 
     @Test
     public void testDate() {
-        BookEntity book = createBook();
+        Book book = createBook();
         Instant created = Instant.now();
         book.setCreated(created);
         BookEntry entry = new BookEntry(book);

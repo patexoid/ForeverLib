@@ -1,6 +1,8 @@
 package com.patex.zombie.opds.controller;
 
-import com.patex.LibException;
+import com.patex.zombie.LibException;
+import com.patex.zombie.LinkUtils;
+import com.patex.zombie.model.Res;
 import com.patex.zombie.opds.model.ExtLibFeed;
 import com.patex.zombie.opds.service.ExtLibService;
 import com.patex.zombie.opds.model.converter.LinkMapper;
@@ -8,10 +10,8 @@ import com.patex.zombie.opds.model.OPDSEntryBuilder;
 import com.patex.zombie.opds.model.OPDSEntry;
 import com.patex.zombie.opds.model.OPDSLink;
 import com.patex.zombie.opds.controller.latest.SaveLatest;
-import com.patex.service.Resources;
-import com.patex.service.ZUserService;
-import com.patex.utils.LinkUtils;
-import com.patex.utils.Res;
+import com.patex.zombie.service.Resources;
+import com.patex.zombie.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
@@ -50,7 +50,7 @@ public class OPDSExtLibController implements RootProvider {
     private OPDSController opdsController;
 
     @Autowired
-    private ZUserService userService;
+    private UserService userService;
 
     @Autowired
     private Resources resources;
@@ -80,7 +80,7 @@ public class OPDSExtLibController implements RootProvider {
     }
 
     @RequestMapping(value = "{id}/download")
-    @Secured(ZUserService.USER)
+    @Secured(UserService.USER)
     public String downloadBook(@PathVariable(value = "id") long id,
                                @RequestParam(name = ExtLibService.REQUEST_P_NAME) String url,
                                @RequestParam(name = ExtLibService.PARAM_TYPE) String type)
@@ -92,7 +92,7 @@ public class OPDSExtLibController implements RootProvider {
 
 
     @RequestMapping(value = "{id}/action/{action}")
-    @Secured(ZUserService.USER)
+    @Secured(UserService.USER)
     public String actionExtLibData(@PathVariable(value = "id") long id,
                                    @PathVariable(value = "action") String action,
                                    @RequestParam Map<String, String> requestParams,
@@ -104,7 +104,7 @@ public class OPDSExtLibController implements RootProvider {
     }
 
     @RequestMapping(value = "runSubcriptionTask")
-    @Secured(ZUserService.ADMIN_AUTHORITY)
+    @Secured(UserService.ADMIN_AUTHORITY)
     public @ResponseBody
     String runSubcriptionTask() throws LibException {
         extLibService.checkSubscriptions();

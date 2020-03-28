@@ -1,7 +1,6 @@
 package com.patex.messaging;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.patex.entities.ZUser;
+import com.patex.zombie.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
@@ -38,7 +37,6 @@ public class TelegramMessenger implements Messenger {
         spliterator = new TextSpliterator(MAX_MESSAGE_SIZE, DELIMS);
     }
 
-    @VisibleForTesting
     TelegramMessenger(MessengerService messagingComponent, TelegramBot telegramBot,
                       String baseUrl, TextSpliterator spliterator) {
         this.messagingComponent = messagingComponent;
@@ -63,7 +61,7 @@ public class TelegramMessenger implements Messenger {
     }
 
     @Override
-    public void sendToUser(String message, ZUser user) {
+    public void sendToUser(String message, User user) {
         if (user.getUserConfig() != null) {
             sendToUser(message, user.getUserConfig().getTelegramChatId());
         }
