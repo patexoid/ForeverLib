@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -28,7 +30,9 @@ public class ExtLibraryController {
         return service.findAll(pageable);
     }
 
-    public ExtLibrary save(ExtLibrary entity) {
+
+    @PostMapping
+    public @ResponseBody ExtLibrary save(@RequestBody ExtLibrary entity) {
         return service.save(entity);
     }
 

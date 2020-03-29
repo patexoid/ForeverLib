@@ -1,13 +1,13 @@
 version: "3.7"
 services:
   library:
-    build: .
+    build: exec
     ports:
       - "8080:8080"
       - "5005:5005"
-    /volumes:
-      -./storage:/storage
-      -./config:/app/config
+    volumes:
+      - ./storage:/storage
+      - ./config:/app/config
     networks:
       external:
         aliases:
@@ -20,9 +20,9 @@ services:
       - db-data:/var/lib/postgresql/data
       - ./initdb:/docker-entrypoint-initdb.d
     environment:
-      - POSTGRES_DB=dev-db
-      - POSTGRES_USER=dev
-      - POSTGRES_PASSWORD=dev
+      - POSTGRES_DB=lib
+      - POSTGRES_USER=su
+      - POSTGRES_PASSWORD=password
     networks:
       external:
         aliases:
