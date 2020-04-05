@@ -1,8 +1,8 @@
 language: java
 install: true
-script: mvn -P prod verify
+script: mvn verify
 jdk:
-  - openjdk11
+  - openjdk12
 cache:
   directories:
     - .autoconf
@@ -16,7 +16,7 @@ deploy:
   api_key:
       secure: "$GITHUB_DEPLOY_TOKEN"
   file:
-     $TRAVIS_BUILD_DIR/core/target/zombieCore.jar
+     $TRAVIS_BUILD_DIR/exec/target/zombieCore.jar
   on:
     tags: true
     

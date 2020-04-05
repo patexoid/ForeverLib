@@ -1,43 +1,41 @@
 package com.patex.service;
 
-import com.patex.entities.Author;
-import com.patex.entities.AuthorBook;
-import com.patex.entities.Book;
-import com.patex.entities.FileResource;
-import com.patex.entities.ZUser;
-import com.patex.parser.BookImage;
+import com.patex.entities.AuthorBookEntity;
+import com.patex.entities.AuthorEntity;
+import com.patex.entities.AuthorRepository;
+import com.patex.entities.BookEntity;
+import com.patex.mapper.BookMapper;
+import com.patex.zombie.model.BookImage;
 import com.patex.parser.BookInfo;
 import com.patex.parser.ParserService;
+import com.patex.zombie.model.Book;
+import com.patex.zombie.model.FileResource;
+import com.patex.zombie.model.User;
+import com.patex.zombie.service.BookService;
+import com.patex.zombie.service.TransactionService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @Service
+@RequiredArgsConstructor
 public class AdminService {
 
     private final BookService bookService;
-    private final AuthorService authorService;
+    private final AuthorRepository authorService;
     private final TransactionService transactionService;
     private final ParserService parserService;
     private final ApplicationEventPublisher publisher;
+    private final BookMapper bookMapper;
 
-    public AdminService(BookService bookService, AuthorService authorService,
-                        TransactionService transactionService, ParserService parserService,
-                        ApplicationEventPublisher publisher) {
-        this.bookService = bookService;
-        this.authorService = authorService;
-        this.transactionService = transactionService;
-        this.parserService = parserService;
-        this.publisher = publisher;
-    }
 
     public void updateCovers() {
-        Iterable<Book> books = bookService.findAll();
-        StreamSupport.stream(books.spliterator(), false).
+        bookService.findAll().
                 filter(book -> book.getCover() == null).forEach(
                 book -> transactionService.newTransaction(() -> updateCover(book))
         );
@@ -56,21 +54,21 @@ public class AdminService {
         bookService.save(book);
     }
 
-    public void publisEventForExistingBooks(ZUser user) {
-        Iterable<Book> books = bookService.findAll();
-        StreamSupport.stream(books.spliterator(), false).
+    public void publisEventForExistingBooks(User user) {
+        bookService.findAll().
                 filter(book -> !book.isDuplicate()).
                 map(book -> new BookCreationEvent(book, user)).
                 forEach(publisher::publishEvent);
     }
 
-    public void checkDuplicatesForAuthor(ZUser user, Long authorId) {
+    public void checkDuplicatesForAuthor(User user, Long authorId) {
         transactionService.transactionRequired(
                 () -> {
-                    Author author = authorService.getAuthor(authorId);
-                    List<Book> books = author.getBooks().stream().map(AuthorBook::getBook).collect(Collectors.toList());
+                    List<BookEntity> books = authorService.findById(authorId).stream().map(AuthorEntity::getBooks).
+                            flatMap(Collection::stream).
+                            map(AuthorBookEntity::getBook).collect(Collectors.toList());
                     books.forEach(book -> book.setDuplicate(false));
-                    books.stream().map(book -> new BookCreationEvent(book, user)).
+                    books.stream().map(book -> new BookCreationEvent(bookMapper.toDto(book), user)).
                             forEach(publisher::publishEvent);
                 }
         );

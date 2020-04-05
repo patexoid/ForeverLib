@@ -1,6 +1,6 @@
 package com.patex.parser;
 
-import com.patex.LibException;
+import com.patex.zombie.LibException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;

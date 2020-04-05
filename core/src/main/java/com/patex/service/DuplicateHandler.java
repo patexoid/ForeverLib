@@ -1,15 +1,8 @@
 package com.patex.service;
 
 
-import com.patex.LibException;
-import com.patex.entities.Author;
-import com.patex.entities.AuthorBook;
-import com.patex.entities.Book;
 import com.patex.entities.BookCheckQueue;
 import com.patex.entities.BookCheckQueueRepository;
-import com.patex.entities.BookSequence;
-import com.patex.entities.Sequence;
-import com.patex.entities.ZUser;
 import com.patex.messaging.MessengerService;
 import com.patex.parser.ParserService;
 import com.patex.shingle.ShingleCacheStorage;
@@ -17,9 +10,16 @@ import com.patex.shingle.ShingleSearch;
 import com.patex.shingle.Shingleable;
 import com.patex.storage.StorageService;
 import com.patex.utils.BlockingExecutor;
-import com.patex.utils.ExecutorCreator;
-import com.patex.utils.Res;
-import com.patex.utils.StreamU;
+import com.patex.zombie.LibException;
+import com.patex.zombie.model.Book;
+import com.patex.zombie.model.BookAuthor;
+import com.patex.zombie.model.BookSequence;
+import com.patex.zombie.model.Res;
+import com.patex.zombie.model.User;
+import com.patex.zombie.service.BookService;
+import com.patex.zombie.service.ExecutorCreator;
+import com.patex.zombie.service.TransactionService;
+import com.patex.zombie.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +40,6 @@ import java.io.InputStream;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -48,6 +47,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Component
+
 public class DuplicateHandler {
 
     private static final Logger log = LoggerFactory.getLogger(DuplicateHandler.class);
@@ -60,22 +60,26 @@ public class DuplicateHandler {
     private final ParserService parserService;
     private final ShingleSearch<Book, Long> shingleSearch;
     private final ExecutorService scheduleExecutor;
+    private final UserService userService;
 
     private final Semaphore lock = new Semaphore(0);
     private final BlockingExecutor blockingExecutor;
     private final int threadCount;
+
 
     @Autowired
     public DuplicateHandler(BookCheckQueueRepository bookCheckQueueRepo, TransactionService transactionService,
                             BookService bookService, MessengerService messenger, StorageService fileStorage,
                             ParserService parserService,
                             ExecutorCreator executorCreator,
+                            UserService userService,
                             @Value("${duplicateCheck.threadCount:0}") int threadCount,
                             @Value("${duplicateCheck.shingleCoeff:1}") int coef,
                             @Value("${duplicateCheck.fastCacheSize:100}") int cacheSize,
                             @Value("${duplicateCheck.storageCacheFolder:}") String storageFolder) {
         this.bookCheckQueueRepo = bookCheckQueueRepo;
         this.transactionService = transactionService;
+        this.userService = userService;
         this.bookService = bookService;
         this.messenger = messenger;
         this.fileStorage = fileStorage;
@@ -156,18 +160,15 @@ public class DuplicateHandler {
     }
 
     private synchronized void scheduleCheck(BookCreationEvent event) {
-        Book newBook = bookService.getBook(event.getBook().getId());
+        Book newBook = bookService.getBook(event.getBook().getId()).get();
         if (!newBook.isDuplicate()) {
-            bookCheckQueueRepo.saveAndFlush(new BookCheckQueue(newBook, event.getUser()));
+            bookCheckQueueRepo.saveAndFlush(new BookCheckQueue(newBook.getId(), event.getUser().getUsername()));
             lock.release();
         }
     }
 
     private List<Book> getSameAuthorsBook(Book primaryBook) {
-        return primaryBook.getAuthorBooks().stream().map(AuthorBook::getAuthor).
-                flatMap(a -> a.getBooks().stream().map(AuthorBook::getBook)).
-                filter(book -> !book.getId().equals(primaryBook.getId())).
-                filter(StreamU.distinctByKey(Book::getId)).
+        return bookService.getSameAuthorsBook(primaryBook).stream().
                 filter(book -> !book.isDuplicate()).
                 sorted(Comparator.comparing(
                         book -> StringUtils.getLevenshteinDistance(book.getTitle(), primaryBook.getTitle()))).
@@ -175,23 +176,26 @@ public class DuplicateHandler {
     }
 
     private void checkForDuplicate(BookCheckQueue bookCheckQueue) {
-        Book primary = bookService.getBook(bookCheckQueue.getBook().getId());
+        Book primary = bookService.getBook(bookCheckQueue.getBook()).get();
+        User user = userService.getUser(bookCheckQueue.getUser());
         try {
             shingleSearch.findSimilar(primary).
-                    ifPresent(book -> markDuplications(primary, book, bookCheckQueue.getUser()));
+                    ifPresent(book -> {
+                        markDuplications(primary, book, user);
+                    });
             bookCheckQueueRepo.deleteById(bookCheckQueue.getId());
             log.trace("duplicate id=" + bookCheckQueue.getId());
         } catch (Exception e) {
             log.error("Duplication check exception book " +
                     " book.id= " + primary.getId() +
-                            " book.title = " + primary.getTitle() +
-                            " book.filename" + primary.getFileName() +
-                            " exception=" + e.getMessage());
-            log.trace("",e);
+                    " book.title = " + primary.getTitle() +
+                    " book.filename" + primary.getFileName() +
+                    " exception=" + e.getMessage());
+            log.trace("", e);
         }
     }
 
-    private void markDuplications(Book first, Book second, ZUser user) {
+    private void markDuplications(Book first, Book second, User user) {
         try {
             Book primary, secondary;
             if (first.getContentSize() > second.getContentSize()) {
@@ -203,27 +207,25 @@ public class DuplicateHandler {
             }
 
             List<Long> sequences = primary.getSequences().stream().
-                    map(BookSequence::getSequence).
-                    filter(Objects::nonNull).//todo delete later
-                    map(Sequence::getId).
+                    map(BookSequence::getId).
                     collect(Collectors.toList());
-            List<Long> authors = primary.getAuthorBooks().stream().map(AuthorBook::getAuthor).map(Author::getId).
+            List<Long> authors = primary.getAuthors().stream().map(BookAuthor::getId).
                     collect(Collectors.toList());
 
             secondary.setDuplicate(true);
             this.bookService.updateBook(secondary);
             shingleSearch.invalidate(secondary);
-            for (AuthorBook authorBook : secondary.getAuthorBooks()) {
-                Author author = authorBook.getAuthor();
+
+
+            for (BookAuthor author : secondary.getAuthors()) {
                 if (!authors.contains(author.getId())) {
-                    primary.getAuthorBooks().add(new AuthorBook(author, primary));
+                    primary.getAuthors().add(new BookAuthor(author.getId(), author.getName()));
                 }
             }
-            for (BookSequence bookSequence : secondary.getSequences()) {
-                Sequence sequence = bookSequence.getSequence();
+            for (BookSequence sequence : secondary.getSequences()) {
                 if (!sequences.contains(sequence.getId())) {
                     primary.getSequences().
-                            add(new BookSequence(bookSequence.getSeqOrder(), sequence, primary));
+                            add(new BookSequence(sequence.getId(), sequence.getSeqOrder(), sequence.getSequenceName()));
                 }
             }
             String message = "Book:" + first.getTitle() + "\nPrimary: " + primary.getTitle() + "\nDuplicate: " +
@@ -232,7 +234,7 @@ public class DuplicateHandler {
             if (user != null) {
                 Res messageRes = new Res("duplicate.check.result", first.getTitle(),
                         primary.getTitle(), secondary.getTitle());
-                messenger.sendMessageToUser(messageRes, user);
+                messenger.sendMessageToUser(messageRes, user.getUsername());
             }
             this.bookService.updateBook(primary);
         } catch (Exception e) {
@@ -253,7 +255,7 @@ public class DuplicateHandler {
         BookShingleCacheStorage(String storageFolder) {
             this.storageFolder = storageFolder;
             File dir = new File(storageFolder);
-            if(!dir.exists()){
+            if (!dir.exists()) {
                 dir.mkdirs();
             }
         }

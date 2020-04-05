@@ -1,6 +1,6 @@
 package com.patex.parser;
 
-import com.patex.LibException;
+import com.patex.zombie.LibException;
 
 import java.io.InputStream;
 import java.util.Iterator;

@@ -9,7 +9,7 @@
             <column name="CHECKSUM"/>
         </createIndex>
         <addColumn tableName="BOOK">
-            <column name="COVER_ID" type="BIGINT(19)">
+            <column name="COVER_ID" type="BIGINT">
                 <constraints foreignKeyName="BOOK_COVER_FILE_RESOURCE_ID" references="FILE_RESOURCE(ID)"/>
             </column>
         </addColumn>

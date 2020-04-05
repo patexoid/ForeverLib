@@ -1,0 +1,34 @@
+version: "3.7"
+services:
+  library:
+    build: .
+    ports:
+      - "8080:8080"
+      - "5005:5005"
+    volumes:
+      - ./storage:/storage
+      - ./config:/app/config
+    networks:
+      external:
+        aliases:
+          - library
+  postgres:
+    image: postgres:11.4
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_DB=lib
+      - POSTGRES_USER=su
+      - POSTGRES_PASSWORD=password
+    networks:
+      external:
+        aliases:
+          - postgres
+volumes:
+  db-data:
+networks:
+  external:
+

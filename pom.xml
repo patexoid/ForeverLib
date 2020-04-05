@@ -11,11 +11,23 @@
     <artifactId>main</artifactId>
     <packaging>pom</packaging>
     <version>0.38</version>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.1.2</version>
+            </plugin>
+        </plugins>
+    </build>
     <modules>
         <module>fb2generated</module>
         <module>localization</module>
         <module>fuzzySearch</module>
+        <module>common</module>
         <module>core</module>
+        <module>opds</module>
+        <module>exec</module>
     </modules>
     <profiles>
         <profile>

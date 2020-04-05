@@ -1,7 +1,9 @@
 package com.patex.service;
 
-import com.patex.entities.ZUser;
-import com.patex.utils.ExecutorCreator;
+import com.patex.zombie.service.BookService;
+import com.patex.zombie.service.ExecutorCreator;
+import com.patex.zombie.model.User;
+import com.patex.zombie.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,7 +56,7 @@ public class DirWatcherService {
 
     @PostConstruct
     public void setUp() {
-        Optional<ZUser> user = getAdminUser();
+        Optional<User> user = getAdminUser();
         user.ifPresent(zUser -> run());
     }
 
@@ -75,7 +77,7 @@ public class DirWatcherService {
 
     private void watch() {
         try {
-            if(!Files.exists(directoryPath)){
+            if (!Files.exists(directoryPath)) {
                 Files.createDirectories(directoryPath);
             }
             WatchService watchService = directoryPath.getFileSystem().newWatchService();
@@ -83,7 +85,7 @@ public class DirWatcherService {
                     StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE);
             while (running) {
                 WatchKey watchKey = watchService.take();
-                Optional<ZUser> user = getAdminUser();
+                Optional<User> user = getAdminUser();
                 assert user.isPresent();
                 watchKey.pollEvents().stream().
                         filter(e -> StandardWatchEventKinds.ENTRY_CREATE.equals(e.kind())).
@@ -101,7 +103,7 @@ public class DirWatcherService {
     }
 
     private void initStart() {
-        Optional<ZUser> user = getAdminUser();
+        Optional<User> user = getAdminUser();
         user.ifPresent(zUser -> {
             File dir = directoryPath.toFile();
             for (File file : Objects.requireNonNull(dir.listFiles())) {
@@ -110,11 +112,11 @@ public class DirWatcherService {
         });
     }
 
-    private Optional<ZUser> getAdminUser() {
-        return zUserService.getByRole(ZUserService.ADMIN_AUTHORITY).stream().findFirst();
+    private Optional<User> getAdminUser() {
+        return zUserService.getByRole(UserService.ADMIN_AUTHORITY).stream().findFirst();
     }
 
-    private void processFile(File file, ZUser adminUser) {
+    private void processFile(File file, User adminUser) {
         try (FileInputStream fis = new FileInputStream(file)) {
             bookService.uploadBook(file.getName(), fis, adminUser);
         } catch (Exception e) {

@@ -1,20 +1,21 @@
 package com.patex.parser;
 
-import com.patex.entities.Book;
+import com.patex.entities.BookEntity;
+import com.patex.zombie.model.BookImage;
 
 
 public class BookInfo {
 
-    private Book book;
+    private BookEntity book;
 
     private String coverage;
     private BookImage bookImage;
 
-    public Book getBook() {
+    public BookEntity getBook() {
         return book;
     }
 
-    public void setBook(Book book) {
+    public void setBook(BookEntity book) {
         this.book = book;
     }
 

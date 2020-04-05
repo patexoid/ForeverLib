@@ -38,7 +38,7 @@ public class ZUser implements UserDetails, CredentialsContainer {
 
     @OneToOne(fetch = FetchType.EAGER, cascade = {CascadeType.ALL}, mappedBy = "user")
     @JsonIgnore
-    private ZUserConfig userConfig;
+    private ZUserConfigEntity userConfig;
 
 
     public ZUser() {
@@ -101,11 +101,11 @@ public class ZUser implements UserDetails, CredentialsContainer {
         password = null;
     }
 
-    public ZUserConfig getUserConfig() {
+    public ZUserConfigEntity getUserConfig() {
         return userConfig;
     }
 
-    public void setUserConfig(ZUserConfig userConfig) {
+    public void setUserConfig(ZUserConfigEntity userConfig) {
         this.userConfig = userConfig;
     }
 

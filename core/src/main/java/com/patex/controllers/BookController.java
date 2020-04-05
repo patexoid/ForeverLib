@@ -1,12 +1,12 @@
 package com.patex.controllers;
 
-import com.patex.BookUploadInfo;
-import com.patex.LibException;
-import com.patex.entities.Book;
+import com.patex.zombie.model.BookUploadInfo;
 import com.patex.service.AdminService;
-import com.patex.service.BookService;
 import com.patex.service.DuplicateHandler;
 import com.patex.service.ZUserService;
+import com.patex.zombie.LibException;
+import com.patex.zombie.model.Book;
+import com.patex.zombie.service.BookService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,16 +30,18 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.patex.service.ZUserService.ADMIN_AUTHORITY;
-import static com.patex.service.ZUserService.USER;
+import static com.patex.zombie.service.UserService.ADMIN_AUTHORITY;
+import static com.patex.zombie.service.UserService.USER;
 
 @Controller
 @RequestMapping("/book")
 public class BookController {
 
-   private static final Logger log = LoggerFactory.getLogger(BookController.class);
+    private static final Logger log = LoggerFactory.getLogger(BookController.class);
 
     @Autowired
     private BookService bookService;
@@ -56,7 +58,7 @@ public class BookController {
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public @ResponseBody
-    Book getBook(@PathVariable(value = "id") long id) {
+    Optional<Book> getBook(@PathVariable(value = "id") long id) {
         return bookService.getBook(id);
     }
 
@@ -96,29 +98,29 @@ public class BookController {
 
     @RequestMapping(value = "/loadFile/{id}", method = RequestMethod.GET)
     public ResponseEntity<InputStreamResource> downloadBook(@PathVariable("id") int bookId) throws LibException {
+        return bookService.getBook(bookId).map(book -> {
+            InputStream inputStream = bookService.getBookInputStream(book);
+            HttpHeaders respHeaders = new HttpHeaders();
+            respHeaders.setContentLength(book.getFileResource().getSize());
+            respHeaders.setContentDispositionFormData("attachment", book.getFileName());
+            InputStreamResource isr = new InputStreamResource(inputStream);
+            return new ResponseEntity<>(isr, respHeaders, HttpStatus.OK);
 
-        Book book = bookService.getBook(bookId);
-        InputStream inputStream = bookService.getBookInputStream(book);
-        HttpHeaders respHeaders = new HttpHeaders();
-        respHeaders.setContentLength(book.getFileResource().getSize());
-        respHeaders.setContentDispositionFormData("attachment", book.getFileName());
-        InputStreamResource isr = new InputStreamResource(inputStream);
-        return new ResponseEntity<>(isr, respHeaders, HttpStatus.OK);
+        }).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+
     }
 
     @RequestMapping(value = "/cover/{id}", method = RequestMethod.GET)
     public ResponseEntity<InputStreamResource> getCover(@PathVariable("id") int bookId) throws LibException {
-        Book book = bookService.getBook(bookId);
-        if(book.getCover()!=null) {
-            InputStream inputStream = bookService.getBookCoverInputStream(book);
-            HttpHeaders respHeaders = new HttpHeaders();
-            respHeaders.setContentLength(book.getCover().getSize());
-            respHeaders.add("Content-Type", book.getCover().getType());
-            InputStreamResource isr = new InputStreamResource(inputStream);
-            return new ResponseEntity<>(isr, respHeaders, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        return bookService.getBook(bookId).filter(book -> Objects.isNull(book.getCover())).
+                map(book -> {
+                    InputStream inputStream = bookService.getBookCoverInputStream(book);
+                    HttpHeaders respHeaders = new HttpHeaders();
+                    respHeaders.setContentLength(book.getCover().getSize());
+                    respHeaders.add("Content-Type", book.getCover().getType());
+                    InputStreamResource isr = new InputStreamResource(inputStream);
+                    return new ResponseEntity<>(isr, respHeaders, HttpStatus.OK);
+                }).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @RequestMapping(value = "/waitForDuplicateCheck", method = RequestMethod.GET)

@@ -1,6 +1,6 @@
 package com.patex.storage;
 
-import com.patex.LibException;
+import com.patex.zombie.LibException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
