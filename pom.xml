@@ -22,8 +22,6 @@
     </build>
     <modules>
         <module>fb2generated</module>
-        <module>localization</module>
-        <module>fuzzySearch</module>
         <module>common</module>
         <module>core</module>
         <module>opds</module>
