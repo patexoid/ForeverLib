@@ -1,0 +1,34 @@
+spring:
+  jackson:
+    serialization:
+      write_dates_as_timestamps: false
+  datasource:
+    url: jdbc:h2:file:./bin/h2/db;AUTO_SERVER=TRUE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+    hikari:
+      maximum-pool-size: 20
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  servlet:
+    multipart:
+      max-request-size: 1024MB
+      max-file-size: 1024MB
+localStorage:
+  folder: ./storage
+telegram:
+  bot:
+    token:
+  name:
+  baseurl:
+duplicateCheck:
+  threadCount: 0
+  shingleCoeff: 1
+  fastCacheSize: 100
+  storageCacheFolder:
+bulkUploadDir:
+  extlib:
+    connection:
+      timeout: 300

@@ -1,16 +1,26 @@
 FROM maven:3.6.1-jdk-13-alpine as builder
 WORKDIR /app/build
+
+COPY ./common/pom.xml /app/build/common/
+COPY ./core/pom.xml /app/build/core/
+COPY ./exec/pom.xml /app/build/exec/
+COPY ./fb2generated/pom.xml /app/build/fb2generated/
+COPY ./fuzzySearch/pom.xml /app/build/fuzzySearch/
+COPY ./localization/pom.xml /app/build/localization/
+COPY ./opds/pom.xml /app/build/opds/
+COPY ./pom.xml /app/build/
+RUN mvn package verify
+RUN mvn dependency:resolve-plugins
+
 COPY ./common /app/build/common
 COPY ./core /app/build/core
 COPY ./exec /app/build/exec
-COPY ./extlib /app/build/extlib
 COPY ./fb2generated /app/build/fb2generated
 COPY ./fuzzySearch /app/build/fuzzySearch
 COPY ./localization /app/build/localization
 COPY ./opds  /app/build/opds
 COPY ./web /app/build/web
 COPY ./Dockerfile /app/build/
-COPY ./pom.xml /app/build/
 RUN mvn package
 
 FROM openjdk:12-alpine
