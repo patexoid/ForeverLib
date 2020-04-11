@@ -27,7 +27,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 @Component
-@ConditionalOnExpression("!'${bulkUploadDir}'.isEmpty()")
+@ConditionalOnExpression("!'${localStorage.bulk-upload.folder}'.isEmpty()")
 public class DirWatcherService {
     private static final Logger log = LoggerFactory.getLogger(DirWatcherService.class);
 
@@ -39,7 +39,7 @@ public class DirWatcherService {
     private volatile boolean running = false;
 
     @Autowired
-    public DirWatcherService(@Value("${bulkUploadDir}") String path,
+    public DirWatcherService(@Value("${localStorage.bulk-upload.folder}") String path,
                              BookService bookService, ZUserService zUserService,
                              ExecutorCreator executorCreator) {
         this(FileSystems.getDefault().getPath(path), bookService, zUserService,

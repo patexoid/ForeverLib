@@ -12,12 +12,16 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+  liquibase:
+    change-log: classpath:db-changelog.main.xml
   servlet:
     multipart:
       max-request-size: 1024MB
       max-file-size: 1024MB
 localStorage:
   folder: ./storage
+  bulk-upload:
+    folder:
 telegram:
   bot:
     token:
@@ -28,7 +32,6 @@ duplicateCheck:
   shingleCoeff: 1
   fastCacheSize: 100
   storageCacheFolder:
-bulkUploadDir:
-  extlib:
-    connection:
-      timeout: 300
+extlib:
+  connection:
+    timeout: 300

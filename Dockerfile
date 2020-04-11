@@ -1,12 +1,11 @@
 FROM maven:3.6.1-jdk-13-alpine as builder
 WORKDIR /app/build
-
+ARG GITHUB_PACKAGE
+COPY ./.travis.settings.xml /root/.m2/settings.xml
 COPY ./common/pom.xml /app/build/common/
 COPY ./core/pom.xml /app/build/core/
 COPY ./exec/pom.xml /app/build/exec/
 COPY ./fb2generated/pom.xml /app/build/fb2generated/
-COPY ./fuzzySearch/pom.xml /app/build/fuzzySearch/
-COPY ./localization/pom.xml /app/build/localization/
 COPY ./opds/pom.xml /app/build/opds/
 COPY ./pom.xml /app/build/
 RUN mvn package verify
@@ -16,11 +15,8 @@ COPY ./common /app/build/common
 COPY ./core /app/build/core
 COPY ./exec /app/build/exec
 COPY ./fb2generated /app/build/fb2generated
-COPY ./fuzzySearch /app/build/fuzzySearch
-COPY ./localization /app/build/localization
-COPY ./opds  /app/build/opds
+COPY ./opds /app/build/opds
 COPY ./web /app/build/web
-COPY ./Dockerfile /app/build/
 RUN mvn package
 
 FROM openjdk:12-alpine

@@ -16,7 +16,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 
 @Service
-@PropertySource("/application.properties")
+@PropertySource("/application.yml")
 @Profile("fileStorage")
 public class LocalFileStorage implements FileStorage {
 
