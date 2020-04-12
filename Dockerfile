@@ -1,6 +1,6 @@
 FROM maven:3.6.1-jdk-13-alpine as builder
 WORKDIR /app/build
-ARG GITHUB_PACKAGE
+ARG GITHUB_PACKAGE=${GITHUB_PACKAGE}
 COPY ./.travis.settings.xml /root/.m2/settings.xml
 COPY ./common/pom.xml /app/build/common/
 COPY ./core/pom.xml /app/build/core/
