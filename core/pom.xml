@@ -45,7 +45,6 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
                     <reuseForks>false</reuseForks>
-                    <forkCount>0</forkCount>
                 </configuration>
                 <executions>
                     <execution>
