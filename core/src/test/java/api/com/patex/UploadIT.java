@@ -335,7 +335,7 @@ public class UploadIT {
     }
 
     @SuppressWarnings("ConstantConditions")
-    @Test(timeout = 10000)
+    @Test(timeout = 20000)
 //    @Ignore //TODO
     public void duplicateCheck() throws IOException {
         Random random = new Random();
