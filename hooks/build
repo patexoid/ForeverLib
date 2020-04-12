@@ -1,0 +1,2 @@
+#!/bin/bash
+docker build --build-arg GITHUB_PACKAGE=$GITHUB_PACKAGE -f $DOCKERFILE_PATH -t $IMAGE_NAME .
