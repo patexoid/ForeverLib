@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -28,15 +29,16 @@ import java.util.concurrent.Executors;
 
 @Component
 @ConditionalOnExpression("!'${localStorage.bulk-upload.folder}'.isEmpty()")
+@Profile("!docker")
 public class DirWatcherService {
     private static final Logger log = LoggerFactory.getLogger(DirWatcherService.class);
 
-    private final Path directoryPath;
+    protected final Path directoryPath;
     private final BookService bookService;
     private final ZUserService zUserService;
     private final Executor executor;
 
-    private volatile boolean running = false;
+    protected volatile boolean running = false;
 
     @Autowired
     public DirWatcherService(@Value("${localStorage.bulk-upload.folder}") String path,
@@ -112,11 +114,11 @@ public class DirWatcherService {
         });
     }
 
-    private Optional<User> getAdminUser() {
+    protected Optional<User> getAdminUser() {
         return zUserService.getByRole(UserService.ADMIN_AUTHORITY).stream().findFirst();
     }
 
-    private void processFile(File file, User adminUser) {
+    protected void processFile(File file, User adminUser) {
         try (FileInputStream fis = new FileInputStream(file)) {
             bookService.uploadBook(file.getName(), fis, adminUser);
         } catch (Exception e) {
