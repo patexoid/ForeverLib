@@ -196,14 +196,14 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.patex.zombielib2</groupId>
-            <artifactId>localization</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <groupId>com.patex</groupId>
+            <artifactId>plural-resource-bundle</artifactId>
+            <version>0.0.2</version>
         </dependency>
         <dependency>
-            <groupId>com.patex.zombielib2</groupId>
+            <groupId>com.patex</groupId>
             <artifactId>fuzzySearch</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>0.1.5</version>
         </dependency>
         <dependency>
             <groupId>org.mapstruct</groupId>
@@ -227,4 +227,18 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>central</id>
+            <url>https://repo1.maven.org/maven2</url>
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>true</enabled></snapshots>
+        </repository>
+        <repository>
+            <id>github</id>
+            <name>GitHub OWNER Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/patexoid/repo</url>
+        </repository>
+    </repositories>
 </project>

@@ -68,7 +68,7 @@ public class BookServiceImpl implements BookService {
     private final EntityManager entityManager;
 
     @Override
-    public Book uploadBook(String fileName, InputStream is, User user) throws LibException {
+    public synchronized Book uploadBook(String fileName, InputStream is, User user) throws LibException {//TODO fix transactions
         byte[] byteArray = loadFromStream(is);
         byte[] checksum = getChecksum(byteArray);
         BookInfo bookInfo = parserService.getBookInfo(fileName, new ByteArrayInputStream(byteArray));
