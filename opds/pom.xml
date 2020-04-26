@@ -50,9 +50,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.patex.zombielib2</groupId>
-            <artifactId>fb2-generated</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <groupId>com.patex</groupId>
+            <artifactId>fb2-java</artifactId>
+            <version>0.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -114,4 +114,17 @@
 
     </dependencies>
 
+    <repositories>
+        <repository>
+            <id>central</id>
+            <url>https://repo1.maven.org/maven2</url>
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>true</enabled></snapshots>
+        </repository>
+        <repository>
+            <id>github</id>
+            <name>GitHub OWNER Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/patexoid/repo</url>
+        </repository>
+    </repositories>
 </project>

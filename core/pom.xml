@@ -190,9 +190,9 @@
         </dependency>
 
         <dependency>
-            <groupId>com.patex.zombielib2</groupId>
-            <artifactId>fb2-generated</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <groupId>com.patex</groupId>
+            <artifactId>fb2-java</artifactId>
+            <version>0.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
