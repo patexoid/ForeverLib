@@ -2,12 +2,12 @@ package com.patex.zombie.opds;
 
 import com.patex.zombie.model.BookUploadInfo;
 import com.patex.zombie.model.User;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import fb2Generator.Fb2Creator;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.context.event.annotation.BeforeTestClass;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.IOException;
@@ -19,6 +19,9 @@ import java.util.Map;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  *
@@ -27,7 +30,7 @@ public class OpdsIT {
 
     private HttpTestClient httpClient;
 
-    @Before
+    @BeforeTestClass
     public void setUp() throws IOException {
         httpClient = new HttpTestClient("http://localhost:8080");
         httpClient.setCreds("testUser","simplePassword");
@@ -46,12 +49,12 @@ public class OpdsIT {
         httpClient.setCreds(null, null);
         try {
             httpClient.get("opds/latest",String.class);
-            Assert.fail("HttpClientErrorException should be thrown");
+            fail("HttpClientErrorException should be thrown");
         } catch (HttpClientErrorException e) {
-            Assert.assertThat(e.getStatusCode(),equalTo(HttpStatus.UNAUTHORIZED));
+            assertThat(e.getStatusCode(),equalTo(HttpStatus.UNAUTHORIZED));
             //expected
         } catch (Exception e) {
-            Assert.fail("HttpClientErrorException instead of "+e.getMessage()+"should be thrown");
+            fail("HttpClientErrorException instead of "+e.getMessage()+"should be thrown");
         }
 
     }
@@ -74,10 +77,10 @@ public class OpdsIT {
         Thread.sleep(1000);
         try {
             String value2 = httpClient.get("opds/latest", String.class);
-            Assert.assertThat(value2,containsString(lastName));
-            Assert.assertEquals(value2,value);
+            assertThat(value2,containsString(lastName));
+            assertEquals(value2,value);
         } catch (HttpClientErrorException e) {
-            Assert.fail(e.getMessage());
+            fail(e.getMessage());
         }
 
     }

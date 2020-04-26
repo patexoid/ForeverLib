@@ -6,6 +6,7 @@ COPY ./common/pom.xml /app/build/common/
 COPY ./core/pom.xml /app/build/core/
 COPY ./exec/pom.xml /app/build/exec/
 COPY ./opds/pom.xml /app/build/opds/
+COPY ./data-storage/pom.xml /app/build/data-storage/
 COPY ./pom.xml /app/build/
 RUN mvn package verify
 RUN mvn dependency:resolve-plugins
@@ -14,6 +15,7 @@ COPY ./common /app/build/common
 COPY ./core /app/build/core
 COPY ./exec /app/build/exec
 COPY ./opds /app/build/opds
+COPY ./data-storage /app/build/data-storage
 COPY ./web /app/build/web
 RUN mvn package
 
