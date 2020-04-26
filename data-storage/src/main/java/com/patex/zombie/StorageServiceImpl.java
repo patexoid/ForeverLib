@@ -1,6 +1,7 @@
-package com.patex.storage;
+package com.patex.zombie;
 
 import com.patex.zombie.LibException;
+import com.patex.zombie.service.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,17 +14,18 @@ import java.util.regex.Pattern;
  *
  */
 @Service
-public class StorageService {
+public class StorageServiceImpl implements StorageService {
 
     private static final Pattern DUPLICATE_FILENAME_PATTERN = Pattern.compile("([^\\\\.]+?)(?:_(\\d+)_)?\\.(.+)");
 
     private final FileStorage fileStorage;
 
     @Autowired
-    public StorageService(FileStorage fileStorage) {
+    public StorageServiceImpl(FileStorage fileStorage) {
         this.fileStorage = fileStorage;
     }
 
+    @Override
     public String save(byte[] file, String... filepath) throws LibException {
 
         if (fileStorage.exists(filepath)) {
@@ -47,6 +49,7 @@ public class StorageService {
         return fileStorage.save(file, filepath);
     }
 
+    @Override
     public InputStream load(String fileId) throws LibException {
         return fileStorage.load(fileId);
     }

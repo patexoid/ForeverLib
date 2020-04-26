@@ -1,4 +1,4 @@
-package com.patex.storage;
+package com.patex.zombie;
 
 import com.patex.zombie.LibException;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,7 +16,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 
 @Service
-@PropertySource("/application.yml")
 @Profile("fileStorage")
 public class LocalFileStorage implements FileStorage {
 

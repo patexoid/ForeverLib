@@ -8,7 +8,7 @@ import com.patex.parser.ParserService;
 import com.patex.shingle.ShingleCacheStorage;
 import com.patex.shingle.ShingleSearch;
 import com.patex.shingle.Shingleable;
-import com.patex.storage.StorageService;
+import com.patex.zombie.service.StorageService;
 import com.patex.utils.BlockingExecutor;
 import com.patex.zombie.LibException;
 import com.patex.zombie.model.Book;

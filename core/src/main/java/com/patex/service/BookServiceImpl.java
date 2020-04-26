@@ -12,14 +12,13 @@ import com.patex.entities.SequenceRepository;
 import com.patex.mapper.BookMapper;
 import com.patex.parser.BookInfo;
 import com.patex.parser.ParserService;
-import com.patex.storage.StorageService;
+import com.patex.zombie.service.StorageService;
 import com.patex.zombie.LibException;
 import com.patex.zombie.StreamU;
 import com.patex.zombie.model.Book;
 import com.patex.zombie.model.BookImage;
 import com.patex.zombie.model.User;
 import com.patex.zombie.service.BookService;
-import com.patex.zombie.service.SequenceService;
 import com.patex.zombie.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -29,10 +28,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
-import javax.transaction.Transactional;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -47,8 +45,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static org.springframework.transaction.annotation.Propagation.MANDATORY;
 
 /**
  *
@@ -237,6 +233,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Book> getNewBooks(PageRequest pageRequest) {
         return bookRepository.findAllByOrderByCreatedDesc(pageRequest).map(bookMapper::toDto);
     }
