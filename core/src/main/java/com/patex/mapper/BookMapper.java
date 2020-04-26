@@ -11,11 +11,13 @@ import com.patex.zombie.model.Genre;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Mapper(componentModel = "spring")
 public interface BookMapper {
 
+    @Transactional(readOnly = true)
     Book toDto(BookEntity bookEntity);
 
     BookEntity toEntity(Book bookEntity);
