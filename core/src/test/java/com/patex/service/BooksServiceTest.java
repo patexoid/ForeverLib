@@ -11,20 +11,21 @@ import com.patex.entities.SequenceRepository;
 import com.patex.mapper.BookMapperImpl;
 import com.patex.parser.BookInfo;
 import com.patex.parser.ParserService;
-import com.patex.storage.StorageService;
 import com.patex.zombie.model.Book;
 import com.patex.zombie.model.BookAuthor;
 import com.patex.zombie.model.BookImage;
 import com.patex.zombie.model.BookSequence;
-import com.patex.zombie.model.Sequence;
 import com.patex.zombie.model.User;
 import com.patex.zombie.service.BookService;
+import com.patex.zombie.service.StorageService;
 import com.patex.zombie.service.TransactionService;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.text.RandomStringGenerator;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.ApplicationEventPublisher;
 
 import javax.persistence.EntityManager;
@@ -43,6 +44,7 @@ import static org.mockito.Mockito.*;
 /**
  * Created by Alexey on 15.07.2017.
  */
+@RunWith(MockitoJUnitRunner.class)
 public class BooksServiceTest {
     private static final String FILE_NAME = "fileName";
     private static final String FIRST_AUTHOR = "first author";
@@ -85,14 +87,14 @@ public class BooksServiceTest {
         when(parserService.getBookInfo(eq(FILE_NAME), any())).thenReturn(bookInfo);
         when(bookRepo.findFirstByTitleAndChecksum(any(), any())).thenReturn(Optional.empty());
         when(bookRepo.save(any(BookEntity.class))).thenAnswer(i -> i.getArguments()[0]);
-        when(sequenceService.mergeSequences(any())).thenAnswer(i -> {
-            Collection sequences = (Collection) i.getArguments()[0];
-            if (sequences == null) {
-                return null;
-            } else {
-                return sequences.iterator().next();
-            }
-        });
+//        when(sequenceService.mergeSequences(any())).thenAnswer(i -> {
+//            Collection sequences = (Collection) i.getArguments()[0];
+//            if (sequences == null) {
+//                return null;
+//            } else {
+//                return sequences.iterator().next();
+//            }
+//        });
         when(authorRepo.findFirstByNameIgnoreCase(any())).thenReturn(Optional.empty());
 
         fileStorage = mock(StorageService.class);
