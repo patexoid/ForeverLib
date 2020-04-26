@@ -12,7 +12,7 @@ import com.patex.entities.SequenceRepository;
 import com.patex.mapper.BookMapper;
 import com.patex.parser.BookInfo;
 import com.patex.parser.ParserService;
-import com.patex.storage.StorageService;
+import com.patex.zombie.service.StorageService;
 import com.patex.zombie.LibException;
 import com.patex.zombie.StreamU;
 import com.patex.zombie.model.Book;

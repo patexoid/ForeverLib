@@ -9,9 +9,13 @@ import com.patex.zombie.model.BookUploadInfo;
 import com.patex.zombie.model.Tuple;
 import fb2Generator.Fb2Creator;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
+import org.hamcrest.collection.IsCollectionWithSize;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.SpringApplicationExtensionsKt;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
@@ -21,11 +25,14 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.Repeat;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.event.annotation.BeforeTestClass;
+import org.springframework.test.context.event.annotation.BeforeTestMethod;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,14 +40,11 @@ import java.util.Random;
 import java.util.stream.Stream;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.*;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @SuppressWarnings("ConstantConditions")
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @Import(TestConfiguration.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT, classes = {Application.class})
 @ActiveProfiles(value = {"test", "tempStorage"})
@@ -51,7 +55,7 @@ public class UploadIT {
 
     private HttpTestClient httpClient;
 
-    @Before
+    @BeforeTestClass
     public void setUp() throws IOException {
         httpClient = new HttpTestClient("http://localhost:" + port);
         httpClient.setCreds("testUser", "simplePassword");
@@ -78,11 +82,11 @@ public class UploadIT {
                 "file", files, new ParameterizedTypeReference<>() {
                 });
 
-        assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
-        assertThat(response.getBody(), hasSize(1));
+        assertThat(response.getStatusCode(), Matchers.equalTo(HttpStatus.OK));
+        assertThat(response.getBody(), IsCollectionWithSize.hasSize(1));
         BookUploadInfo bookInfo = response.getBody().get(0);
-        assertThat(bookInfo.getFileName(), equalTo(fileName));
-        assertThat(bookInfo.getStatus(), equalTo(BookUploadInfo.Status.Success));
+        assertThat(bookInfo.getFileName(), Matchers.equalTo(fileName));
+        assertThat(bookInfo.getStatus(), Matchers.equalTo(BookUploadInfo.Status.Success));
 
     }
 
@@ -105,8 +109,8 @@ public class UploadIT {
                 "file", files, new ParameterizedTypeReference<>() {
                 });
 
-        assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
-        assertThat(response.getBody(), hasSize(4));
+        assertThat(response.getStatusCode(), Matchers.equalTo(HttpStatus.OK));
+        assertThat(response.getBody(), IsCollectionWithSize.hasSize(4));
         assertTrue(response.getBody().stream().
                 allMatch(info -> info.getStatus().equals(BookUploadInfo.Status.Success)));
     }
@@ -129,16 +133,16 @@ public class UploadIT {
         ResponseEntity<List<BookUploadInfo>> response = httpClient.uploadFiles("book/upload",
                 "file", files, new ParameterizedTypeReference<>() {
                 });
-        assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
-        assertThat(response.getBody(), hasSize(1));
+        assertThat(response.getStatusCode(), Matchers.equalTo(HttpStatus.OK));
+        assertThat(response.getBody(), IsCollectionWithSize.hasSize(1));
         assertTrue(response.getBody().stream().
                 allMatch(info -> info.getStatus().equals(BookUploadInfo.Status.Success)));
         Book book = httpClient.get("book/" + response.getBody().get(0).getId(), Book.class);
-        assertThat(book.getTitle(), equalTo(title));
-        assertThat(book.getDescr().trim(), equalTo(annotationLine));
-        assertThat(book.getAuthors(), hasSize(1));
+        assertThat(book.getTitle(), Matchers.equalTo(title));
+        assertThat(book.getDescr().trim(), Matchers.equalTo(annotationLine));
+        assertThat(book.getAuthors(), IsCollectionWithSize.hasSize(1));
         BookAuthor author = book.getAuthors().get(0);
-        assertThat(author.getName(), equalTo(lastName + " " + firstName + " " + middleName));
+        assertThat(author.getName(), Matchers.equalTo(lastName + " " + firstName + " " + middleName));
 
     }
 
@@ -157,15 +161,15 @@ public class UploadIT {
         ResponseEntity<List<BookUploadInfo>> response = httpClient.uploadFiles("book/upload",
                 "file", files, new ParameterizedTypeReference<>() {
                 });
-        assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
-        assertThat(response.getBody(), hasSize(2));
+        assertThat(response.getStatusCode(), Matchers.equalTo(HttpStatus.OK));
+        assertThat(response.getBody(), IsCollectionWithSize.hasSize(2));
         assertTrue(response.getBody().stream().
                 allMatch(info -> info.getStatus().equals(BookUploadInfo.Status.Success)));
         Book book1 = httpClient.get("book/" + response.getBody().get(0).getId(), Book.class);
         Book book2 = httpClient.get("book/" + response.getBody().get(1).getId(), Book.class);
         long authorId = book1.getAuthors().get(0).getId();
-        assertThat(book1.getAuthors(), hasSize(1));
-        assertThat(book2.getAuthors(), hasSize(1));
+        assertThat(book1.getAuthors(), IsCollectionWithSize.hasSize(1));
+        assertThat(book2.getAuthors(), IsCollectionWithSize.hasSize(1));
         assertTrue(authorId > 0);
         assertEquals((long) book2.getAuthors().get(0).getId(), authorId);
     }
@@ -187,8 +191,8 @@ public class UploadIT {
         ResponseEntity<List<BookUploadInfo>> response = httpClient.uploadFiles("book/upload",
                 "file", files, new ParameterizedTypeReference<>() {
                 });
-        assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
-        assertThat(response.getBody(), hasSize(2));
+        assertThat(response.getStatusCode(), Matchers.equalTo(HttpStatus.OK));
+        assertThat(response.getBody(), IsCollectionWithSize.hasSize(2));
         assertTrue(response.getBody().stream().
                 allMatch(info -> info.getStatus().equals(BookUploadInfo.Status.Success)));
         Book book1 = httpClient.get("book/" + response.getBody().get(0).getId(), Book.class);
@@ -225,8 +229,8 @@ public class UploadIT {
         ResponseEntity<List<BookUploadInfo>> response = httpClient.uploadFiles("book/upload",
                 "file", files, new ParameterizedTypeReference<>() {
                 });
-        assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
-        assertThat(response.getBody(), hasSize(3));
+        assertThat(response.getStatusCode(), Matchers.equalTo(HttpStatus.OK));
+        assertThat(response.getBody(), IsCollectionWithSize.hasSize(3));
         assertTrue(response.getBody().stream().
                 allMatch(info -> info.getStatus().equals(BookUploadInfo.Status.Success)));
         Book book1 = httpClient.get("book/" + response.getBody().get(0).getId(), Book.class);
@@ -262,7 +266,7 @@ public class UploadIT {
         ResponseEntity<List<BookUploadInfo>> response = httpClient.uploadFiles("book/upload",
                 "file", files, new ParameterizedTypeReference<>() {
                 });
-        assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
+        assertThat(response.getStatusCode(), Matchers.equalTo(HttpStatus.OK));
         assertTrue(response.getBody().stream().
                 allMatch(info -> info.getStatus().equals(BookUploadInfo.Status.Success)));
         Book book1 = httpClient.get("book/" + response.getBody().get(0).getId(), Book.class);
@@ -280,7 +284,7 @@ public class UploadIT {
         ResponseEntity<List<BookUploadInfo>> response2 = httpClient.uploadFiles("book/upload",
                 "file", file, new ParameterizedTypeReference<>() {
                 });
-        assertThat(response2.getStatusCode(), equalTo(HttpStatus.OK));
+        assertThat(response2.getStatusCode(), Matchers.equalTo(HttpStatus.OK));
         assertTrue(response2.getBody().stream().
                 allMatch(info -> info.getStatus().equals(BookUploadInfo.Status.Success)));
         book1 = httpClient.get("book/" + response.getBody().get(0).getId(), Book.class);
@@ -311,7 +315,7 @@ public class UploadIT {
         book.setDescr(newDescr);
         ResponseEntity<Book> responceBook = httpClient.post("book", book, MediaType.APPLICATION_JSON, Book.class);
         Book updatedBook = responceBook.getBody();
-        assertThat(updatedBook.getDescr(), equalTo(newDescr));
+        assertThat(updatedBook.getDescr(), Matchers.equalTo(newDescr));
     }
 
     @Test
@@ -331,13 +335,14 @@ public class UploadIT {
         book.setTitle(newTitle);
         ResponseEntity<Book> responceBook = httpClient.post("book", book, MediaType.APPLICATION_JSON, Book.class);
         Book updatedBook = responceBook.getBody();
-        assertThat(updatedBook.getTitle(), equalTo(newTitle));
+        assertThat(updatedBook.getTitle(), Matchers.equalTo(newTitle));
     }
 
     @SuppressWarnings("ConstantConditions")
-    @Test(timeout = 20000)
+    @Test()
 //    @Ignore //TODO
     public void duplicateCheck() throws IOException {
+        Assertions.assertTimeout(Duration.ofSeconds(30),() -> {
         Random random = new Random();
         Fb2Creator fb2Creator = new Fb2Creator(randomAlphanumeric(10)).
                 addAuthor(randomAlphanumeric(10), randomAlphanumeric(10), randomAlphanumeric(10)).
@@ -357,6 +362,7 @@ public class UploadIT {
         Book book2 = httpClient.get("book/" + response2.getBody().get(0).getId(), Book.class);
         assertTrue(book1.isDuplicate());
         assertFalse(book2.isDuplicate());
+        } );
     }
 
     public Tuple<String, InputStream> t(String _1, InputStream _2) {

@@ -1,4 +1,4 @@
-package com.patex.storage;
+package com.patex.zombie;
 
 import com.patex.zombie.LibException;
 
