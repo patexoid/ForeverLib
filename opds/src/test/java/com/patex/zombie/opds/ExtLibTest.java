@@ -226,8 +226,8 @@ public class ExtLibTest {
         syndEntry2.setContents(Collections.singletonList(syndContent2));
 
         connectionService =
-                Mockito.spy(new ExtLibConnection(url, "", null, null, null, 0, null,
-                        executorCreator, bookService, userService, 300));
+                Mockito.spy(new ExtLibConnection(url, "", null, null, null, 0, null, null, null,
+                        executorCreator, bookService, userService, 300, null));
         downloadService = createExtLib();
         URLConnection urlConnection1 = Mockito.mock(URLConnection.class);
         String fileName1 = rsg.generate(10);
@@ -275,8 +275,8 @@ public class ExtLibTest {
     @Test
     public void testDownloadAction() throws Exception {
         String uri = rsg.generate(10);
-        connectionService = Mockito.spy(new ExtLibConnection(url, "", null, null, null, 0, null,
-                executorCreator, bookService, userService, 300));
+        connectionService = Mockito.spy(new ExtLibConnection(url, "", null, null, null, 0, null,null, null,
+                executorCreator, bookService, userService, 300, null));
         URLConnection urlConnection = Mockito.mock(URLConnection.class);
         String fileName = rsg.generate(10);
         Mockito.when(urlConnection.getHeaderField("Content-Disposition")).thenReturn("attachment; filename=\"" + fileName + "\"");

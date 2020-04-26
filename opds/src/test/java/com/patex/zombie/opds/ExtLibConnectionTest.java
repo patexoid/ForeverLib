@@ -6,9 +6,9 @@ import com.patex.zombie.model.Book;
 import com.patex.zombie.model.User;
 import com.patex.zombie.opds.model.ExtLibFeed;
 import com.patex.zombie.opds.model.OPDSContent;
-import com.patex.zombie.opds.model.converter.OPDSAuthor;
 import com.patex.zombie.opds.model.OPDSEntry;
 import com.patex.zombie.opds.model.OPDSLink;
+import com.patex.zombie.opds.model.converter.OPDSAuthor;
 import com.patex.zombie.opds.service.ExtLibConnection;
 import com.patex.zombie.opds.service.ExtLibService;
 import com.patex.zombie.service.BookService;
@@ -29,7 +29,6 @@ import org.apache.commons.lang3.RandomUtils;
 import org.hamcrest.collection.IsCollectionWithSize;
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import java.io.ByteArrayInputStream;
@@ -74,8 +73,8 @@ public class ExtLibConnectionTest {
 
         ExecutorCreator executorCreator = mock(ExecutorCreator.class);
         when(executorCreator.createExecutor(any(), any())).thenReturn(MoreExecutors.newDirectExecutorService());
-        ExtLibConnection connectionService = Mockito.spy(new ExtLibConnection(URL, "", null, null, null, 0, null,
-                executorCreator, bookService, mock(UserService.class), 300));
+        ExtLibConnection connectionService = Mockito.spy(new ExtLibConnection(URL, "", null, null, null, 0, null, null, null,
+                executorCreator, bookService, mock(UserService.class), 300, null));
         when(connectionService.getConnection(URL + URI)).thenReturn(urlConnection);
         Book actual = connectionService.downloadBook(URI, TYPE, user.getUsername());
 
@@ -91,8 +90,8 @@ public class ExtLibConnectionTest {
         URLConnection urlConnection = mock(URLConnection.class);
         ExecutorCreator executorCreator = mock(ExecutorCreator.class);
         when(executorCreator.createExecutor(any(), any())).thenReturn(MoreExecutors.newDirectExecutorService());
-        ExtLibConnection connectionService = Mockito.spy(new ExtLibConnection(URL, "", null, null, null, 0, null,
-                executorCreator, bookService,null, 300));
+        ExtLibConnection connectionService = Mockito.spy(new ExtLibConnection(URL, "", null, null, null, 0, null, null, null,
+                executorCreator, bookService, null, 300, null));
         when(connectionService.getConnection(URL + URI)).thenReturn(urlConnection);
         connectionService.downloadBook(URI, TYPE, user.getUsername());
     }
@@ -131,8 +130,8 @@ public class ExtLibConnectionTest {
         byte[] bytes = expectedXML.getBytes();
         ExecutorCreator executorCreator = mock(ExecutorCreator.class);
         when(executorCreator.createExecutor(any(), any())).thenReturn(MoreExecutors.newDirectExecutorService());
-        ExtLibConnection connectionService = Mockito.spy(new ExtLibConnection(URL, "", null, null, null, 0, null,
-                executorCreator, mock(BookService.class),null, 300));
+        ExtLibConnection connectionService = Mockito.spy(new ExtLibConnection(URL, "", null, null, null, 0, null, null, null,
+                executorCreator, mock(BookService.class), null, 300, null));
         URLConnection urlConnection = mock(URLConnection.class);
         when(connectionService.getConnection(URL + URI)).thenReturn(urlConnection);
         when(urlConnection.getInputStream()).thenReturn(new ByteArrayInputStream(bytes));
@@ -180,8 +179,8 @@ public class ExtLibConnectionTest {
         byte[] bytes = expectedXML.getBytes();
         ExecutorCreator executorCreator = mock(ExecutorCreator.class);
         when(executorCreator.createExecutor(any(), any())).thenReturn(MoreExecutors.newDirectExecutorService());
-        ExtLibConnection connectionService = Mockito.spy(new ExtLibConnection(URL, "", null, null, null, 0, null,
-                executorCreator, mock(BookService.class),null, 300));
+        ExtLibConnection connectionService = Mockito.spy(new ExtLibConnection(URL, "", null, null, null, 0, null,null, null,
+                executorCreator, mock(BookService.class), null, 300,null));
         URLConnection urlConnection = mock(URLConnection.class);
         when(connectionService.getConnection(URL + URI)).thenReturn(urlConnection);
         when(urlConnection.getInputStream()).thenReturn(new ByteArrayInputStream(bytes));

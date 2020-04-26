@@ -45,4 +45,10 @@
             AND ab.BOOK_ID = b.ID);
         </sql>
     </changeSet>
+    <changeSet id="5" author="patex">
+        <addColumn tableName="EXT_LIBRARY">
+            <column name="PROXY_USER" type="VARCHAR(255)"/>
+            <column name="PROXY_PASSWORD" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

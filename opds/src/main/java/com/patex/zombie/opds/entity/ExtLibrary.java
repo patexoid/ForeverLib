@@ -1,6 +1,8 @@
 package com.patex.zombie.opds.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -15,6 +17,8 @@ import java.net.Proxy;
  *
  */
 @Entity
+@Getter
+@Setter
 public class ExtLibrary {
 
     @Id
@@ -41,75 +45,7 @@ public class ExtLibrary {
     @Enumerated(EnumType.STRING)
     private Proxy.Type proxyType;
 
-    public Long getId() {
-        return id;
-    }
+    private String proxyUser;
+    private String proxyPassword;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    public String getLogin() {
-        return login;
-    }
-
-    public void setLogin(String login) {
-        this.login = login;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getOpdsPath() {
-        return opdsPath;
-    }
-
-    public void setOpdsPath(String opdsPath) {
-        this.opdsPath = opdsPath;
-    }
-
-    public String getProxyHost() {
-        return proxyHost;
-    }
-
-    public void setProxyHost(String proxyHost) {
-        this.proxyHost = proxyHost;
-    }
-
-    public Integer getProxyPort() {
-        return proxyPort;
-    }
-
-    public void setProxyPort(Integer proxyPort) {
-        this.proxyPort = proxyPort;
-    }
-
-    public Proxy.Type getProxyType() {
-        return proxyType;
-    }
-
-    public void setProxyType(Proxy.Type proxyType) {
-        this.proxyType = proxyType;
-    }
 }

@@ -27,13 +27,18 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.net.Authenticator;
 import java.net.InetSocketAddress;
+import java.net.PasswordAuthentication;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -67,11 +72,15 @@ public class ExtLibConnection {
     private final int timeout;
     private final UserService userService;
 
+    private final ProxyAuthService proxyAuthService;
+
     @VisibleForTesting
     public ExtLibConnection(String url, String prefix, String login, String password,
-                            String proxyHost, Integer proxyPort, Proxy.Type proxyType, ExecutorCreator executorCreator,
+                            String proxyHost, Integer proxyPort,
+                            String proxyUser, String proxyPassword, Proxy.Type proxyType, ExecutorCreator executorCreator,
                             BookService bookService, UserService userService,
-                            int timeout) {
+                            int timeout, ProxyAuthService proxyAuthService) {
+        this.proxyAuthService = proxyAuthService;
         this.executor = executorCreator.createExecutor("ExtLib:" + url + " Connection", log);
         this.url = url;
         this.prefix = prefix;
@@ -79,27 +88,32 @@ public class ExtLibConnection {
         this.password = password;
         if (proxyType != null) {
             proxy = new Proxy(proxyType, new InetSocketAddress(proxyHost, proxyPort));
+            if (proxyUser != null) {
+                proxyAuthService.addAuth(proxyHost, proxyPort, proxyUser, proxyPassword);
+            }
         } else {
             proxy = Proxy.NO_PROXY;
         }
         this.bookService = bookService;
         this.timeout = timeout;
         this.userService = userService;
+
     }
 
     @Autowired
     public ExtLibConnection(BookService bookService, ExtLibScopeStorage extLibScope,
                             @Value("${extlib.connection.timeout}") int timeout, ExecutorCreator executorCreator,
-                            UserService userService) {
-        this(bookService, extLibScope.getCurrentExtLib(), timeout, executorCreator, userService);
+                            UserService userService, ProxyAuthService proxyAuthService) {
+        this(bookService, extLibScope.getCurrentExtLib(), timeout, executorCreator, userService, proxyAuthService);
     }
 
     ExtLibConnection(BookService bookService, ExtLibrary extLibrary, int timeout, ExecutorCreator executorCreator,
-                     UserService userService) {
+                     UserService userService, ProxyAuthService proxyAuthService) {
         this(extLibrary.getUrl(), extLibrary.getOpdsPath(), extLibrary.getLogin(), extLibrary.getPassword(),
-                extLibrary.getProxyHost(), extLibrary.getProxyPort(), extLibrary.getProxyType(),
+                extLibrary.getProxyHost(), extLibrary.getProxyPort(),
+                extLibrary.getProxyUser(), extLibrary.getProxyPassword(), extLibrary.getProxyType(),
                 executorCreator,
-                bookService, userService, timeout);
+                bookService, userService, timeout, proxyAuthService);
     }
 
     @VisibleForTesting
@@ -185,5 +199,29 @@ public class ExtLibConnection {
             }
         }
         return url + uri;
+    }
+
+    @Component
+    public static class ProxyAuthService extends Authenticator {
+
+        private final Map<String, PasswordAuthentication> creds = new HashMap<>();
+
+        @PostConstruct
+        public void setUp() {
+            Authenticator.setDefault(this);
+        }
+
+        public void addAuth(String host, int port, String username, String password) {
+            creds.put(getKey(host, port), new PasswordAuthentication(username, password.toCharArray()));
+        }
+
+        private String getKey(String host, int port) {
+            return host + ":" + port;
+        }
+
+        @Override
+        protected PasswordAuthentication getPasswordAuthentication() {
+            return creds.get(getKey(getRequestingHost(), getRequestingPort()));
+        }
     }
 }
