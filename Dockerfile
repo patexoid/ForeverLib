@@ -1,4 +1,4 @@
-FROM maven:3.6.1-jdk-13-alpine as builder
+FROM maven:3.6.3-openjdk-14-slim as builder
 WORKDIR /app/build
 ARG GITHUB_PACKAGE
 COPY ./.travis.settings.xml /root/.m2/settings.xml
@@ -19,7 +19,7 @@ COPY ./data-storage /app/build/data-storage
 COPY ./web /app/build/web
 RUN mvn package
 
-FROM openjdk:12-alpine
+FROM openjdk:14-alpine
 ENV APP_FILE zombieCore.jar
 ENV APP_HOME /app
 EXPOSE 8100 8100
