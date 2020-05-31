@@ -63,16 +63,18 @@ public class BookServiceImpl implements BookService {
     private final BookMapper bookMapper;
     private final EntityManager entityManager;
 
+
     @Override
     public synchronized Book uploadBook(String fileName, InputStream is, User user) throws LibException {//TODO fix transactions
-        byte[] byteArray = loadFromStream(is);
-        byte[] checksum = getChecksum(byteArray);
-        BookInfo bookInfo = parserService.getBookInfo(fileName, new ByteArrayInputStream(byteArray));
-        BookEntity book = bookInfo.getBook();
-        BookEntity result = transactionService.transactionRequired(() -> {
+
+        Book result =  transactionService.transactionRequired(() -> {
+            byte[] byteArray = loadFromStream(is);
+            byte[] checksum = getChecksum(byteArray);
+            BookInfo bookInfo = parserService.getBookInfo(fileName, new ByteArrayInputStream(byteArray));
+            BookEntity book = bookInfo.getBook();
             Optional<BookEntity> sameBook = bookRepository.findFirstByTitleAndChecksum(book.getTitle(), checksum);
             if (sameBook.isPresent()) {
-                return sameBook.get();
+                return bookMapper.toDto(sameBook.get());
             }
             log.trace("new book:{}", book.getFileName());
             List<AuthorEntity> authors = book.getAuthorBooks().stream().
@@ -91,7 +93,6 @@ public class BookServiceImpl implements BookService {
             // some magic if 2 authors wrote the same sequence but different books
             Map<String, SequenceEntity> sequencesMap = sequenceMapList.entrySet().stream().
                     collect(Collectors.toMap(Map.Entry::getKey, e -> mergeSequences(e.getValue())));
-
 
             List<BookSequenceEntity> sequences = book.getSequences().stream().
                     map(bs -> {
@@ -113,11 +114,10 @@ public class BookServiceImpl implements BookService {
             book.setCreated(Instant.now());
             BookEntity save = bookRepository.save(book);
             someMagic(book);
-            return save;
+            return bookMapper.toDto(save);
         });
-        Book dto = bookMapper.toDto(result);
-        publisher.publishEvent(new BookCreationEvent(dto, user));
-        return dto;
+        publisher.publishEvent(new BookCreationEvent(result, user));
+        return result;
     }
 
     private SequenceEntity mergeSequences(List<SequenceEntity> sequences) {
