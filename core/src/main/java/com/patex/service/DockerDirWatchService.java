@@ -42,9 +42,6 @@ public class DockerDirWatchService extends DirWatcherService {
 
     @Scheduled(fixedDelay = 30000)
     public void watch() {
-        if(!running){
-            return;
-        }
         Optional<User> adminUser = getAdminUser();
         if (adminUser.isEmpty()) {
             log.error("No admin User");
