@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Created by Alexey on 23.05.2017.
@@ -55,7 +56,8 @@ public class ExpandedAuthorEntries {
         Instant sequencelessDate = author.getBooksNoSequence().stream().
                 filter(Book::isPrimary).
                 map(Book::getCreated).
-                max(Instant::compareTo).orElse(Instant.now());
+                filter(Objects::nonNull).
+                max(Instant::compareTo).orElse(Instant.MIN);
         int booknoSequenceCount = (int) author.getBooksNoSequence().stream().
                 filter(Book::isPrimary).
                 count();
