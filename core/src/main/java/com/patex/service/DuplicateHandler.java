@@ -85,7 +85,7 @@ public class DuplicateHandler {
 
     private List<Book> getSameAuthorsBook(Book primaryBook) {
         return bookService.getSameAuthorsBook(primaryBook).stream().
-                filter(book -> !book.isDuplicate()).
+                filter(Book::isPrimary).
                 sorted(Comparator.comparing(
                         book -> levenshteinDistance.apply(book.getTitle(), primaryBook.getTitle()))).
                 collect(Collectors.toList());
