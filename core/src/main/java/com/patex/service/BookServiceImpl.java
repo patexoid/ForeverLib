@@ -240,9 +240,11 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public List<Book> getSameAuthorsBook(Book primaryBook) {
-        return bookRepository.findById(primaryBook.getId()).stream().map(BookEntity::getAuthorBooks).
-                flatMap(Collection::stream).map(AuthorBookEntity::getAuthor).
-                flatMap(a -> a.getBooks().stream().map(AuthorBookEntity::getBook)).
+        return bookRepository.findById(primaryBook.getId()).stream().
+                map(BookEntity::getAuthorBooks).flatMap(Collection::stream).
+                map(AuthorBookEntity::getAuthor).
+                map(AuthorEntity::getBooks).flatMap(Collection::stream).
+                map(AuthorBookEntity::getBook).
                 filter(book -> !book.getId().equals(primaryBook.getId())).
                 filter(StreamU.distinctByKey(BookEntity::getId)).
                 map(bookMapper::toDto).

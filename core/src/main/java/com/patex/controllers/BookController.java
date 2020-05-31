@@ -1,15 +1,15 @@
 package com.patex.controllers;
 
-import com.patex.zombie.model.BookUploadInfo;
 import com.patex.service.AdminService;
-import com.patex.service.DuplicateHandler;
+import com.patex.service.RabbitDuplicateHandler;
 import com.patex.service.ZUserService;
 import com.patex.zombie.LibException;
 import com.patex.zombie.model.Book;
+import com.patex.zombie.model.BookUploadInfo;
 import com.patex.zombie.service.BookService;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,22 +39,19 @@ import static com.patex.zombie.service.UserService.USER;
 
 @Controller
 @RequestMapping("/book")
+@RequiredArgsConstructor
 public class BookController {
 
     private static final Logger log = LoggerFactory.getLogger(BookController.class);
 
-    @Autowired
-    private BookService bookService;
-
-    @Autowired
-    private AdminService adminService;
+    private final BookService bookService;
 
 
-    @Autowired
-    private DuplicateHandler duplicateHandler;
+    private final AdminService adminService;
 
-    @Autowired
-    private ZUserService userService;
+    private final RabbitDuplicateHandler duplicateHandler;
+
+    private final ZUserService userService;
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public @ResponseBody
