@@ -1,15 +1,12 @@
 package com.patex.service;
 
 
-import com.patex.entities.BookCheckQueue;
-import com.patex.entities.BookCheckQueueRepository;
 import com.patex.messaging.MessengerService;
+import com.patex.model.BookCheckQueue;
 import com.patex.parser.ParserService;
 import com.patex.shingle.ShingleCacheStorage;
 import com.patex.shingle.ShingleSearch;
 import com.patex.shingle.Shingleable;
-import com.patex.zombie.service.StorageService;
-import com.patex.utils.BlockingExecutor;
 import com.patex.zombie.LibException;
 import com.patex.zombie.model.Book;
 import com.patex.zombie.model.BookAuthor;
@@ -17,84 +14,55 @@ import com.patex.zombie.model.BookSequence;
 import com.patex.zombie.model.Res;
 import com.patex.zombie.model.User;
 import com.patex.zombie.service.BookService;
-import com.patex.zombie.service.ExecutorCreator;
-import com.patex.zombie.service.TransactionService;
+import com.patex.zombie.service.StorageService;
 import com.patex.zombie.service.UserService;
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.event.EventListener;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Component
-
 public class DuplicateHandler {
 
     private static final Logger log = LoggerFactory.getLogger(DuplicateHandler.class);
-
-    private final BookCheckQueueRepository bookCheckQueueRepo;
-    private final TransactionService transactionService;
     private final BookService bookService;
     private final MessengerService messenger;
     private final StorageService fileStorage;
     private final ParserService parserService;
     private final ShingleSearch<Book, Long> shingleSearch;
-    private final ExecutorService scheduleExecutor;
     private final UserService userService;
 
-    private final Semaphore lock = new Semaphore(0);
-    private final BlockingExecutor blockingExecutor;
-    private final int threadCount;
+    private final LevenshteinDistance levenshteinDistance = new LevenshteinDistance();
 
 
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     @Autowired
-    public DuplicateHandler(BookCheckQueueRepository bookCheckQueueRepo, TransactionService transactionService,
-                            BookService bookService, MessengerService messenger, StorageService fileStorage,
+    public DuplicateHandler(BookService bookService, MessengerService messenger, StorageService fileStorage,
                             ParserService parserService,
-                            ExecutorCreator executorCreator,
                             UserService userService,
-                            @Value("${duplicateCheck.threadCount:0}") int threadCount,
                             @Value("${duplicateCheck.shingleCoeff:1}") int coef,
                             @Value("${duplicateCheck.fastCacheSize:100}") int cacheSize,
                             @Value("${duplicateCheck.storageCacheFolder:}") String storageFolder) {
-        this.bookCheckQueueRepo = bookCheckQueueRepo;
-        this.transactionService = transactionService;
         this.userService = userService;
         this.bookService = bookService;
         this.messenger = messenger;
         this.fileStorage = fileStorage;
         this.parserService = parserService;
-        if (threadCount == 0) {
-            int availableProcessors = Runtime.getRuntime().availableProcessors();
-            this.threadCount = availableProcessors > 1 ? availableProcessors / 2 : 1;
-        } else {
-            this.threadCount = threadCount;
-        }
-        scheduleExecutor = Executors.
-                newSingleThreadExecutor(executorCreator.createThreadFactory("scheduleExecutor-", log));
-        blockingExecutor = new BlockingExecutor(this.threadCount, this.threadCount * 5, 1,
-                TimeUnit.MINUTES, this.threadCount * 5,
-                executorCreator.createThreadFactory("checkForDuplicate-", log));
         shingleSearch = new ShingleSearch<>(this::getSameAuthorsBook, ShingleableBook::new, Book::getId,
                 coef, cacheSize);
         if (StringUtils.isNotEmpty(storageFolder)) {
@@ -102,89 +70,20 @@ public class DuplicateHandler {
         }
     }
 
-    @PostConstruct
-    public void postConstruct() {
-        Thread scheduler = new Thread(() -> {
-            try {
-                taskScheduler();
-            } catch (InterruptedException e) {
-                log.error(e.getMessage(), e);
-            }
-        });
-        scheduler.setName("Duplicate handler scheduler");
-        scheduler.setDaemon(true);
-        scheduler.setUncaughtExceptionHandler((t, e) -> log.error(e.getMessage(), e));
-        scheduler.start();
-    }
-
-    private void taskScheduler() throws InterruptedException {
-        long lastId = 0;
-        int pageSize = threadCount * 10;
-        //noinspection InfiniteLoopStatement
-        while (true) {
-            List<BookCheckQueue> checkQueue = bookCheckQueueRepo.
-                    findAllByIdGreaterThanOrderByIdAsc(PageRequest.of(0, pageSize), lastId).getContent();
-            if (checkQueue.isEmpty()) {
-                lock.acquire();
-                lock.drainPermits();
-            } else {
-                lastId = checkQueue.get(checkQueue.size() - 1).getId();
-                for (BookCheckQueue bcq : checkQueue) {
-                    blockingExecutor.execute(
-                            () -> transactionService.transactionRequired(() -> checkForDuplicate(bcq)));
-                }
-            }
-        }
-    }
-
-    public void waitForFinish() {
-        while (true) {
-            long count = bookCheckQueueRepo.count();
-            log.trace("duplicateCheck count:" + count);
-            if (count == 0) {
-                return;
-            }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                log.error(e.getMessage(), e);
-            }
-        }
-    }
-
-    @EventListener
-    public void onBookCreation(BookCreationEvent event) {
-        scheduleExecutor.execute(() ->
-                transactionService.transactionRequired(() ->
-                        scheduleCheck(event)));
-    }
-
-    private synchronized void scheduleCheck(BookCreationEvent event) {
-        Book newBook = bookService.getBook(event.getBook().getId()).get();
-        if (!newBook.isDuplicate()) {
-            bookCheckQueueRepo.saveAndFlush(new BookCheckQueue(newBook.getId(), event.getUser().getUsername()));
-            lock.release();
-        }
-    }
-
     private List<Book> getSameAuthorsBook(Book primaryBook) {
         return bookService.getSameAuthorsBook(primaryBook).stream().
                 filter(book -> !book.isDuplicate()).
                 sorted(Comparator.comparing(
-                        book -> StringUtils.getLevenshteinDistance(book.getTitle(), primaryBook.getTitle()))).
+                        book -> levenshteinDistance.apply(book.getTitle(), primaryBook.getTitle()))).
                 collect(Collectors.toList());
     }
 
-    private void checkForDuplicate(BookCheckQueue bookCheckQueue) {
+    public void checkForDuplicate(BookCheckQueue bookCheckQueue) {
         Book primary = bookService.getBook(bookCheckQueue.getBook()).get();
         User user = userService.getUser(bookCheckQueue.getUser());
         try {
             shingleSearch.findSimilar(primary).
-                    ifPresent(book -> {
-                        markDuplications(primary, book, user);
-                    });
-            bookCheckQueueRepo.deleteById(bookCheckQueue.getId());
-            log.trace("duplicate id=" + bookCheckQueue.getId());
+                    ifPresent(book -> markDuplications(primary, book, user));
         } catch (Exception e) {
             log.error("Duplication check exception book " +
                     " book.id= " + primary.getId() +
@@ -261,14 +160,11 @@ public class DuplicateHandler {
         }
 
         @Override
+        @SneakyThrows
         public InputStream load(Book book) {
             File cache = getCacheFile(book);
             if (cache.exists()) {
-                try {
-                    return new FileInputStream(cache);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
+                return new FileInputStream(cache);
             }
             return null;
         }
@@ -283,7 +179,7 @@ public class DuplicateHandler {
                 fos.write(bytes);
                 fos.flush();
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error(e.getMessage(), e);
             }
         }
     }
