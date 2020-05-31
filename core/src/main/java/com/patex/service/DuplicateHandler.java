@@ -5,6 +5,7 @@ import com.patex.messaging.MessengerService;
 import com.patex.model.BookCheckQueue;
 import com.patex.parser.ParserService;
 import com.patex.shingle.ShingleCacheStorage;
+import com.patex.shingle.ShingleMatcher;
 import com.patex.shingle.ShingleSearch;
 import com.patex.shingle.Shingleable;
 import com.patex.zombie.LibException;
@@ -31,9 +32,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
@@ -63,11 +67,20 @@ public class DuplicateHandler {
         this.messenger = messenger;
         this.fileStorage = fileStorage;
         this.parserService = parserService;
-        shingleSearch = new ShingleSearch<>(this::getSameAuthorsBook, ShingleableBook::new, Book::getId,
-                coef, cacheSize);
+        ShingleMatcher.Builder<Long, Book> shingleMatherBuilder =
+                ShingleMatcher.builder(ShingleableBook::new, Book::getId).
+                        byteArraySize(16).
+                        cache(cacheSize, 1, TimeUnit.HOURS).
+                        coef(coef).
+                        hashAlgorithm("MD5").
+                        shingleSize(10).
+                        similarity(0.7f);
         if (StringUtils.isNotEmpty(storageFolder)) {
-            shingleSearch.setStorage(new BookShingleCacheStorage(storageFolder));
+            shingleMatherBuilder = shingleMatherBuilder.storage(new BookShingleCacheStorage(storageFolder));
         }
+        ShingleMatcher<Book, Long> shingleMatcher = shingleMatherBuilder.build();
+        Function<Book, Collection<Book>> getSameAuthorsBook = this::getSameAuthorsBook;
+        shingleSearch = ShingleSearch.<Book, Long>builder().preSearch(getSameAuthorsBook).shingleMatcher(shingleMatcher).build();
     }
 
     private List<Book> getSameAuthorsBook(Book primaryBook) {
@@ -148,7 +161,7 @@ public class DuplicateHandler {
         }
     }
 
-    private static class BookShingleCacheStorage implements ShingleCacheStorage<Book> {
+    private static class BookShingleCacheStorage implements ShingleCacheStorage<Long> {
         private final String storageFolder;
 
         BookShingleCacheStorage(String storageFolder) {
@@ -161,21 +174,21 @@ public class DuplicateHandler {
 
         @Override
         @SneakyThrows
-        public InputStream load(Book book) {
-            File cache = getCacheFile(book);
+        public InputStream load(Long bookId) {
+            File cache = getCacheFile(bookId);
             if (cache.exists()) {
                 return new FileInputStream(cache);
             }
             return null;
         }
 
-        private File getCacheFile(Book book) {
-            return new File(storageFolder + "/" + book.getId());
+        private File getCacheFile(Long bookId) {
+            return new File(storageFolder + "/" + bookId);
         }
 
         @Override
-        public void save(byte[] bytes, Book book) {
-            try (FileOutputStream fos = new FileOutputStream(getCacheFile(book))) {
+        public void save(Long bookId, byte[] bytes) {
+            try (FileOutputStream fos = new FileOutputStream(getCacheFile(bookId))) {
                 fos.write(bytes);
                 fos.flush();
             } catch (IOException e) {
