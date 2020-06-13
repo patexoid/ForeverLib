@@ -26,4 +26,4 @@ EXPOSE 8100 8100
 COPY --from=builder  /app/build/exec/target/$APP_FILE $APP_HOME/
 WORKDIR $APP_HOME
 ENTRYPOINT ["sh", "-c"]
-CMD ["exec java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -jar $APP_FILE"]
+CMD ["exec java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=9010 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.rmi.port=9011 -Djava.rmi.server.hostname=192.168.0.40 -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.ssl=false -jar $APP_FILE"]

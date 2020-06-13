@@ -36,7 +36,7 @@ public class AuthorServiceImpl implements AuthorService {
 
     @Override
     public List<Author> findByName(String name) {
-        return authorRepository.findByNameStartingWithIgnoreCaseOrderByName(name).stream().map(mapper::toDto)
+        return authorRepository.findByNameStartingWithIgnoreCaseOrderByName(name).stream().map(mapper::toListDto)
                 .collect(Collectors.toList());
     }
 
@@ -48,7 +48,7 @@ public class AuthorServiceImpl implements AuthorService {
     @Override
     public Page<Author> getAuthor(Pageable pageable, String prefix) {
         prefix = prefix == null ? "" : prefix;
-        return authorRepository.getAuthorsByName(pageable, prefix).map(mapper::toDto);
+        return authorRepository.getAuthorsByName(pageable, prefix).map(mapper::toListDto);
     }
 
 }
