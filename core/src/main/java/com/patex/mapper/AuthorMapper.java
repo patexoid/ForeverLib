@@ -10,10 +10,12 @@ import org.springframework.transaction.annotation.Transactional;
 public interface AuthorMapper {
 
     @Transactional(readOnly = true)
+    @Mapping(target = "books", ignore = true)
     Author toDto(AuthorEntity entity);
 
 
     @Mapping(target = "booksNoSequence", ignore = true)
     @Mapping(target = "sequences", ignore = true)
+    @Mapping(target = "books", ignore = true)
     Author toListDto(AuthorEntity entity);
 }
