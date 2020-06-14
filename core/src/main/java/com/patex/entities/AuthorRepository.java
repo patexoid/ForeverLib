@@ -25,7 +25,7 @@ public interface AuthorRepository extends CrudRepository<AuthorEntity, Long> {
     @Query(value = "SELECT " +
             "  substring(a.name, 1, :prefixLength) AS id, " +
             "  count(*)                            AS result " +
-            "FROM Author a WHERE name LIKE :prefix% GROUP BY id ORDER BY id",nativeQuery = true)
+            "FROM Author a WHERE name LIKE :prefix% GROUP BY 1 ORDER BY 1",nativeQuery = true)
     List<AggrResult> getAuthorsCount(@Param("prefixLength")int length, @Param("prefix") String name);
 
     Page<AuthorEntity> findByNameStartingWithIgnoreCase(String name, Pageable pageable);
