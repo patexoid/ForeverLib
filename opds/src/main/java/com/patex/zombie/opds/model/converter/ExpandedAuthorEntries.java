@@ -10,7 +10,9 @@ import com.patex.zombie.opds.model.ODPSContentRes;
 import com.patex.zombie.opds.model.OPDSEntry;
 import com.patex.zombie.opds.model.OPDSEntryImpl;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -57,7 +59,7 @@ public class ExpandedAuthorEntries {
                 filter(Book::isPrimary).
                 map(Book::getCreated).
                 filter(Objects::nonNull).
-                max(Instant::compareTo).orElse(Instant.MIN);
+                max(Instant::compareTo).orElse(Instant.now().minus(Duration.ofDays(365*2000)));
         int booknoSequenceCount = (int) author.getBooksNoSequence().stream().
                 filter(Book::isPrimary).
                 count();
