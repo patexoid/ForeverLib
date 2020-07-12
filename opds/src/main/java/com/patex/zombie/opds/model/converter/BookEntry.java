@@ -2,6 +2,7 @@ package com.patex.zombie.opds.model.converter;
 
 import com.patex.zombie.LinkUtils;
 import com.patex.zombie.model.Book;
+import com.patex.zombie.model.FileResource;
 import com.patex.zombie.model.Res;
 import com.patex.zombie.opds.model.OPDSContent;
 import com.patex.zombie.opds.model.OPDSEntry;
@@ -9,7 +10,6 @@ import com.patex.zombie.opds.model.OPDSLink;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,19 +43,21 @@ public class BookEntry implements OPDSEntry {
         content = Collections.unmodifiableList(content0);
         OPDSLink downloadLink = new OPDSLink(LinkUtils.makeURL("/book/loadFile", book.getId()), OPDSLink.FB2_ZIP);
 
-        String imageUrl = LinkUtils.makeURL("/book/cover", book.getId());
-        OPDSLink imageLink1 =
-                new OPDSLink(imageUrl, "http://opds-spec.org/image", book.getFileResource().getType());
-        OPDSLink imageLink2 =
-                new OPDSLink(imageUrl, "x-stanza-cover-image", book.getFileResource().getType());
-        OPDSLink imageLink3 =
-                new OPDSLink(imageUrl, "http://opds-spec.org/thumbnail", book.getFileResource().getType());
-        OPDSLink imageLink4 =
-                new OPDSLink(imageUrl, "x-stanza-cover-image-thumbnail", book.getFileResource().getType());
+        links = new ArrayList<>();
+        links.add(downloadLink);
 
-        links = Arrays.asList(downloadLink, imageLink1, imageLink2, imageLink3, imageLink4);
-
-
+        FileResource cover = book.getCover();
+        if (cover != null) {
+            String imageUrl = LinkUtils.makeURL("/book/cover", book.getId());
+            links.add(
+                    new OPDSLink(imageUrl, "http://opds-spec.org/image", cover.getType()));
+            links.add(
+                    new OPDSLink(imageUrl, "x-stanza-cover-image", cover.getType()));
+            links.add(
+                    new OPDSLink(imageUrl, "http://opds-spec.org/thumbnail", cover.getType()));
+            links.add(
+                    new OPDSLink(imageUrl, "x-stanza-cover-image-thumbnail", cover.getType()));
+        }
     }
 
     @Override
