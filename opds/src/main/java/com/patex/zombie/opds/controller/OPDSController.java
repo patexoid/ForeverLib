@@ -7,18 +7,18 @@ import com.patex.zombie.model.Book;
 import com.patex.zombie.model.Res;
 import com.patex.zombie.model.Sequence;
 import com.patex.zombie.model.SequenceBook;
-import com.patex.zombie.opds.model.OPDSMetadata;
-import com.patex.zombie.opds.model.OpdsView;
 import com.patex.zombie.opds.controller.latest.LatestURIComponent;
 import com.patex.zombie.opds.controller.latest.SaveLatest;
-import com.patex.zombie.service.AuthorService;
-import com.patex.zombie.opds.model.converter.AuthorEntry;
-import com.patex.zombie.opds.model.converter.BookEntry;
-import com.patex.zombie.opds.model.converter.ExpandedAuthorEntries;
 import com.patex.zombie.opds.model.OPDSEntry;
 import com.patex.zombie.opds.model.OPDSEntryImpl;
 import com.patex.zombie.opds.model.OPDSLink;
+import com.patex.zombie.opds.model.OPDSMetadata;
+import com.patex.zombie.opds.model.OpdsView;
+import com.patex.zombie.opds.model.converter.AuthorEntry;
+import com.patex.zombie.opds.model.converter.BookEntry;
+import com.patex.zombie.opds.model.converter.ExpandedAuthorEntries;
 import com.patex.zombie.opds.model.converter.SequenceEntry;
+import com.patex.zombie.service.AuthorService;
 import com.patex.zombie.service.BookService;
 import com.patex.zombie.service.SequenceService;
 import org.slf4j.Logger;
@@ -46,6 +46,7 @@ import java.util.stream.Stream;
 @RequestMapping(OPDSController.PREFIX)
 public class OPDSController {
 
+    public static final String AUTHOR_NAME_PREFIX = "prefix";
     static final String PREFIX = "opds";
     static final String APPLICATION_ATOM_XML = "application/atom+xml;charset=UTF-8";
     private static final String AUTHORSINDEX = "authorsindex";
@@ -119,15 +120,11 @@ public class OPDSController {
         return createMav(new Res("opds.catalog"), rootEntries);
     }
 
-    @RequestMapping(value = AUTHORSINDEX, produces = APPLICATION_ATOM_XML)
-    public ModelAndView getAuthorsIndex() {
-        return getAuthorsIndex("");
-    }
-
     @SaveLatest
-    @RequestMapping(value = AUTHORSINDEX + "/{start}", produces = APPLICATION_ATOM_XML)
-    public ModelAndView getAuthorsIndex(@PathVariable(value = "start") String start) {
-        return createMav(new Res("opds.all.authors"), authorService.getAuthorsCount(start),
+    @RequestMapping(value = AUTHORSINDEX, produces = APPLICATION_ATOM_XML)
+    public ModelAndView getAuthorsIndex(
+            @RequestParam(required = false, defaultValue = "", name = AUTHOR_NAME_PREFIX) String prefix) {
+        return createMav(new Res("opds.all.authors"), authorService.getAuthorsCount(LinkUtils.decode(prefix)),
                 aggrResults -> aggrResults.stream().
                         flatMap(this::expandAggrResult).
                         sorted(Comparator.comparing(OPDSEntry::getTitle)).
@@ -137,7 +134,8 @@ public class OPDSController {
 
     private Stream<OPDSEntry> expandAggrResult(AggrResult aggr) {
         if (aggr.getResult() >= EXPAND_FOR_AUTHORS_COUNT) {
-            String link = LinkUtils.makeURL("opds", AUTHORSINDEX, LinkUtils.encode(aggr.getId()));
+            String link = LinkUtils.makeURL("opds", AUTHORSINDEX)
+                    + "?" + AUTHOR_NAME_PREFIX + "=" + LinkUtils.encode(aggr.getId());
             Res title = new Res("first.value", aggr.getId());
             return Stream.of(new OPDSEntryImpl(aggr.getId(), title, null, link));
         } else {

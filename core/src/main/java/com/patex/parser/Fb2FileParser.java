@@ -87,7 +87,7 @@ public class Fb2FileParser implements FileParser {
                 } else if ("binary".equals(event.asStartElement().getName().getLocalPart())) {
                     String id = event.asStartElement().getAttributeByName(QName.valueOf("id")).getValue();
                     String type = event.asStartElement().getAttributeByName(QName.valueOf("content-type")).getValue();
-                    if (bookInfo.getCoverpageImageHref().contains(id) && type.contains("image")) {
+                    if (bookInfo.getCoverage().contains(id) && type.contains("image")) {
                         String binary = getText(reader, "binary").replaceAll("\n", "");
                         byte[] imageBytes = Base64.getDecoder().decode(binary);
                         BookImage bookImage = new BookImage();

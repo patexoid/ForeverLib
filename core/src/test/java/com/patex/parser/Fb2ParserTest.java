@@ -140,7 +140,7 @@ public class Fb2ParserTest {
 
         Fb2FileParser parser = new Fb2FileParser();
         BookInfo bookInfo = parser.parseFile("fileName", fbook);
-        String coverpageImageHref = bookInfo.getCoverpageImageHref();
+        String coverpageImageHref = bookInfo.getCoverage();
         assertEquals(covePageHref, coverpageImageHref);
     }
 

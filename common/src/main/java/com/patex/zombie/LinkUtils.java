@@ -1,10 +1,8 @@
 package com.patex.zombie;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
@@ -12,7 +10,6 @@ import java.util.Arrays;
  */
 public class LinkUtils {
     private static final String SEPARATOR = "/";
-   private static final Logger log = LoggerFactory.getLogger(LinkUtils.class);
 
     public static String makeURL(Object... parts) {
         return Arrays.stream(parts).map(String::valueOf).
@@ -22,11 +19,11 @@ public class LinkUtils {
     }
 
     public static String encode(String text) {
-        try {
-            return URLEncoder.encode(text, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            log.warn("unsuported encoding error message {}", e.getMessage());
-            return text;
-        }
+        return URLEncoder.encode(text, StandardCharsets.UTF_8);
     }
+
+    public static String decode(String text) {
+        return URLDecoder.decode(text, StandardCharsets.UTF_8);
+    }
+
 }
