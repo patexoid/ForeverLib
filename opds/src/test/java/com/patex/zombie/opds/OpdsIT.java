@@ -3,11 +3,11 @@ package com.patex.zombie.opds;
 import com.patex.zombie.model.BookUploadInfo;
 import com.patex.zombie.model.User;
 import fb2Generator.Fb2Creator;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
-import org.springframework.test.context.event.annotation.BeforeTestClass;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.IOException;
@@ -30,7 +30,7 @@ public class OpdsIT {
 
     private HttpTestClient httpClient;
 
-    @BeforeTestClass
+    @BeforeEach
     public void setUp() throws IOException {
         httpClient = new HttpTestClient("http://localhost:8080");
         httpClient.setCreds("testUser","simplePassword");
