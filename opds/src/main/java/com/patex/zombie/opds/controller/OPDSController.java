@@ -134,7 +134,7 @@ public class OPDSController {
 
     private Stream<OPDSEntry> expandAggrResult(AggrResult aggr) {
         if (aggr.getResult() >= EXPAND_FOR_AUTHORS_COUNT) {
-            String link = LinkUtils.makeURL("opds", AUTHORSINDEX, LinkUtils.encode(aggr.getId()))
+            String link = LinkUtils.makeURL("opds", AUTHORSINDEX)
                     + "?" + AUTHOR_NAME_PREFIX + "=" + LinkUtils.encode(aggr.getId());
             Res title = new Res("first.value", aggr.getId());
             return Stream.of(new OPDSEntryImpl(aggr.getId(), title, null, link));
