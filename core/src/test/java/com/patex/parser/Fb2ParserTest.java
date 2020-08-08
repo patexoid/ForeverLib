@@ -35,6 +35,17 @@ public class Fb2ParserTest {
     }
 
     @Test
+    public void verifyOneAuthorFullNameWithSpaces() {
+        InputStream fbook = new Fb2Creator(TITLE).
+                addAuthor(" firstName ", " middleName ", " lastName ")
+                .getFbook();
+        Fb2FileParser parser = new Fb2FileParser();
+        BookInfo bookInfo = parser.parseFile("fileName", fbook);
+        BookEntity book = bookInfo.getBook();
+        assertEquals(1, book.getAuthorBooks().size());
+        assertEquals("lastName firstName middleName", book.getAuthorBooks().get(0).getAuthor().getName());
+    }
+    @Test
     public void verifyOneAuthorFirstName() {
         InputStream fbook = new Fb2Creator(TITLE).
                 addAuthor("firstName", null, null)

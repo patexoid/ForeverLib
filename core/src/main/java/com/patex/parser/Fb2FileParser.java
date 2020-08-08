@@ -170,11 +170,11 @@ public class Fb2FileParser implements FileParser {
                 StartElement element = event.asStartElement();
                 String localPart = element.getName().getLocalPart();
                 if ("first-name".equals(localPart)) {
-                    firstName = reader.getElementText();
+                    firstName = reader.getElementText().trim();
                 } else if ("middle-name".equals(localPart)) {
-                    middleName = reader.getElementText();
+                    middleName = reader.getElementText().trim();
                 } else if ("last-name".equals(localPart)) {
-                    lastName = reader.getElementText();
+                    lastName = reader.getElementText().trim();
                 }
             }
             if (event.isEndElement() && "author".equals(event.asEndElement().getName().getLocalPart())) {
