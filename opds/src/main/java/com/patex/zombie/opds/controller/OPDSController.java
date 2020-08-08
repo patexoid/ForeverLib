@@ -135,11 +135,11 @@ public class OPDSController {
     private Stream<OPDSEntry> expandAggrResult(AggrResult aggr) {
         if (aggr.getResult() >= EXPAND_FOR_AUTHORS_COUNT) {
             String link = LinkUtils.makeURL("opds", AUTHORSINDEX)
-                    + "?" + AUTHOR_NAME_PREFIX + "=" + LinkUtils.encode(aggr.getId());
-            Res title = new Res("first.value", aggr.getId());
-            return Stream.of(new OPDSEntryImpl(aggr.getId(), title, null, link));
+                    + "?" + AUTHOR_NAME_PREFIX + "=" + LinkUtils.encode(aggr.getPrefix());
+            Res title = new Res("first.value", aggr.getPrefix());
+            return Stream.of(new OPDSEntryImpl(aggr.getPrefix(), title, null, link));
         } else {
-            return authorService.findByName(aggr.getId()).stream().map(AuthorEntry::new);
+            return authorService.findByName(aggr.getPrefix()).stream().map(AuthorEntry::new);
         }
     }
 

@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AuthorServiceImpl implements AuthorService {
 
+    public static final int MIN_AGGR_RESULT = 3;
     private final AuthorRepository authorRepository;
     private final AuthorMapper mapper;
 
@@ -31,7 +33,16 @@ public class AuthorServiceImpl implements AuthorService {
 
     @Override
     public List<AggrResult> getAuthorsCount(String start) {
-        return authorRepository.getAuthorsCount(start.length() + 1, start);
+        int length = 0;
+        List<String> oldPrefixes;
+        List<String> newPrefixes = new ArrayList<>();
+        List<AggrResult> authorsCount;
+        do {
+            oldPrefixes = newPrefixes;
+            authorsCount = authorRepository.getAuthorsCount(start.length() + ++length, start);
+            newPrefixes = authorsCount.stream().map(AggrResult::getPrefix).collect(Collectors.toList());
+        } while (authorsCount.size() < MIN_AGGR_RESULT && !newPrefixes.equals(oldPrefixes));
+        return authorsCount;
     }
 
     @Override
