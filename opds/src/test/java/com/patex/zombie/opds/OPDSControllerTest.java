@@ -70,7 +70,7 @@ public class OPDSControllerTest {
     @Getter
     @RequiredArgsConstructor
     private static class AggrResultTestImpl implements AggrResult {
-        private final String id;
+        private final String prefix;
         private final long result;
 
     }

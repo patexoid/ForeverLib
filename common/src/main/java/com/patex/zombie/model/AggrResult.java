@@ -7,7 +7,7 @@ package com.patex.zombie.model;
 public interface AggrResult {
 
 
-    String getId();
+    String getPrefix();
 
     long getResult();
 }
