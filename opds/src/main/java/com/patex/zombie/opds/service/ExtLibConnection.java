@@ -44,6 +44,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 
 /**
  *
@@ -163,7 +164,13 @@ public class ExtLibConnection {
     }
 
     private ExtLibFeed getFeed(URLConnection connection) throws IOException, FeedException {
-        SyndFeed feed = new SyndFeedInput().build(new XmlReader(connection));
+        SyndFeed feed;
+        if("gzip".equalsIgnoreCase(connection.getContentEncoding())){
+            GZIPInputStream gzipIs = new GZIPInputStream(connection.getInputStream());
+            feed = new SyndFeedInput().build(new XmlReader(gzipIs));
+        } else {
+            feed = new SyndFeedInput().build(new XmlReader(connection));
+        }
         List<OPDSEntry> entries = feed.getEntries().stream().map(ExtLibOPDSEntry::new).
                 collect(Collectors.toList());
 
