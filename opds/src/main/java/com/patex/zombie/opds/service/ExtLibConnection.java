@@ -28,6 +28,7 @@ import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
@@ -165,12 +166,13 @@ public class ExtLibConnection {
 
     private ExtLibFeed getFeed(URLConnection connection) throws IOException, FeedException {
         SyndFeed feed;
-        if("gzip".equalsIgnoreCase(connection.getContentEncoding())){
-            GZIPInputStream gzipIs = new GZIPInputStream(connection.getInputStream());
-            feed = new SyndFeedInput().build(new XmlReader(gzipIs));
+        InputStream is;
+        if ("gzip".equalsIgnoreCase(connection.getContentEncoding())) {
+            is = new GZIPInputStream(connection.getInputStream());
         } else {
-            feed = new SyndFeedInput().build(new XmlReader(connection));
+            is = connection.getInputStream();
         }
+        feed = new SyndFeedInput().build(new XmlReader(is));
         List<OPDSEntry> entries = feed.getEntries().stream().map(ExtLibOPDSEntry::new).
                 collect(Collectors.toList());
 
