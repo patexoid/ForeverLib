@@ -6,13 +6,14 @@ import com.patex.zombie.model.Res;
 import com.patex.zombie.model.User;
 import com.patex.zombie.model.UserConfig;
 import com.patex.zombie.service.UserService;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,8 +21,8 @@ import java.util.Locale;
 
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
-@Ignore
+@ExtendWith(MockitoExtension.class)
+@Disabled
 public class MessengerServiceTest {
 
     private static final String LOCALIZED_MESSAGE = "localizedMessage";
@@ -45,7 +46,7 @@ public class MessengerServiceTest {
     private Locale locale = Locale.PRC;
     private UserConfig userConfig = mock(UserConfig.class);
 
-    @Before
+    @BeforeEach
     public void setUp() {
         messengerService.register(messenger);
         when(userConfig.getLocale()).thenReturn(locale);

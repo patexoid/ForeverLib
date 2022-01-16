@@ -3,6 +3,7 @@ package com.patex.entities;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.patex.zombie.StreamU;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.time.Instant;
@@ -30,6 +31,7 @@ public class AuthorEntity {
     private List<AuthorBookEntity> books = new ArrayList<>();
 
     @Lob
+    @Type(type = "org.hibernate.type.TextType")
     private String descr;
 
     private Instant updated;

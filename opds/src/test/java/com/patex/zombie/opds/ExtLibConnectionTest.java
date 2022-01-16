@@ -6,9 +6,9 @@ import com.patex.zombie.model.Book;
 import com.patex.zombie.model.User;
 import com.patex.zombie.opds.model.ExtLibFeed;
 import com.patex.zombie.opds.model.OPDSContent;
-import com.patex.zombie.opds.model.converter.OPDSAuthor;
 import com.patex.zombie.opds.model.OPDSEntry;
 import com.patex.zombie.opds.model.OPDSLink;
+import com.patex.zombie.opds.model.converter.OPDSAuthor;
 import com.patex.zombie.opds.service.ExtLibConnection;
 import com.patex.zombie.opds.service.ExtLibService;
 import com.patex.zombie.service.BookService;
@@ -27,9 +27,7 @@ import com.rometools.rome.feed.synd.SyndPersonImpl;
 import com.rometools.rome.io.SyndFeedOutput;
 import org.apache.commons.lang3.RandomUtils;
 import org.hamcrest.collection.IsCollectionWithSize;
-import org.junit.Assert;
-import org.junit.Test;
-import org.mockito.ArgumentMatchers;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.ByteArrayInputStream;
@@ -38,7 +36,9 @@ import java.net.URLConnection;
 import java.util.Collections;
 import java.util.Date;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -79,22 +79,24 @@ public class ExtLibConnectionTest {
         when(connectionService.getConnection(URL + URI)).thenReturn(urlConnection);
         Book actual = connectionService.downloadBook(URI, TYPE, user.getUsername());
 
-        Assert.assertEquals(book.getId(), actual.getId());
+        assertEquals(book.getId(), actual.getId());
     }
 
-    @Test(expected = LibException.class)
-    public void testDownloadBookLibException() throws Exception {
-        User user = new User();
+    @Test
+    public void testDownloadBookLibException() {
+        assertThrows(LibException.class, () -> {
+            User user = new User();
 
-        BookService bookService = mock(BookService.class);
-        when(bookService.uploadBook(any(), any(), eq(user))).thenThrow(new LibException());
-        URLConnection urlConnection = mock(URLConnection.class);
-        ExecutorCreator executorCreator = mock(ExecutorCreator.class);
-        when(executorCreator.createExecutor(any(), any())).thenReturn(MoreExecutors.newDirectExecutorService());
-        ExtLibConnection connectionService = Mockito.spy(new ExtLibConnection(URL, "", null, null, null, 0, null,
-                executorCreator, bookService,null, 300));
-        when(connectionService.getConnection(URL + URI)).thenReturn(urlConnection);
-        connectionService.downloadBook(URI, TYPE, user.getUsername());
+            BookService bookService = mock(BookService.class);
+            when(bookService.uploadBook(any(), any(), eq(user))).thenThrow(new LibException());
+            URLConnection urlConnection = mock(URLConnection.class);
+            ExecutorCreator executorCreator = mock(ExecutorCreator.class);
+            when(executorCreator.createExecutor(any(), any())).thenReturn(MoreExecutors.newDirectExecutorService());
+            ExtLibConnection connectionService = Mockito.spy(new ExtLibConnection(URL, "", null, null, null, 0, null,
+                    executorCreator, bookService, null, 300));
+            when(connectionService.getConnection(URL + URI)).thenReturn(urlConnection);
+            connectionService.downloadBook(URI, TYPE, user.getUsername());
+        });
     }
 
     @Test
@@ -132,32 +134,32 @@ public class ExtLibConnectionTest {
         ExecutorCreator executorCreator = mock(ExecutorCreator.class);
         when(executorCreator.createExecutor(any(), any())).thenReturn(MoreExecutors.newDirectExecutorService());
         ExtLibConnection connectionService = Mockito.spy(new ExtLibConnection(URL, "", null, null, null, 0, null,
-                executorCreator, mock(BookService.class),null, 300));
+                executorCreator, mock(BookService.class), null, 300));
         URLConnection urlConnection = mock(URLConnection.class);
         when(connectionService.getConnection(URL + URI)).thenReturn(urlConnection);
         when(urlConnection.getInputStream()).thenReturn(new ByteArrayInputStream(bytes));
 
         ExtLibFeed actualFeed = connectionService.getFeed(URI);
-        assertEquals("ExtLibFeed Title", TITLE, actualFeed.getTitle());
+        assertEquals(TITLE, actualFeed.getTitle());
 
-        Assert.assertThat(actualFeed.getEntries(), IsCollectionWithSize.hasSize(1));
+        assertThat(actualFeed.getEntries(), IsCollectionWithSize.hasSize(1));
         OPDSEntry actualEntry = actualFeed.getEntries().get(0);
-        assertEquals("Entry URI", ENTRY_URI, actualEntry.getId());
-        assertEquals("Entry Title", ENTRY_TITLE, actualEntry.getTitle().getObjs()[0]);
+        assertEquals(ENTRY_URI, actualEntry.getId());
+        assertEquals(ENTRY_TITLE, actualEntry.getTitle().getObjs()[0]);
 
-        Assert.assertThat(actualEntry.getLinks(), IsCollectionWithSize.hasSize(1));
+        assertThat(actualEntry.getLinks(), IsCollectionWithSize.hasSize(1));
         OPDSLink actualLink = actualEntry.getLinks().get(0);
-        assertEquals("Link href ", "?uri=" + LINK_HREF, actualLink.getHref());
+        assertEquals("?uri=" + LINK_HREF, actualLink.getHref());
 
-        Assert.assertThat(actualEntry.getContent(), IsCollectionWithSize.hasSize(1));
+        assertThat(actualEntry.getContent(), IsCollectionWithSize.hasSize(1));
         OPDSContent actualContent = actualEntry.getContent().get(0);
-        assertEquals("Link href ", CONTENT_VALUE, actualContent.getValue());
+        assertEquals(CONTENT_VALUE, actualContent.getValue());
 
         assertEquals(UPDATED_DATE.toInstant(), actualEntry.getUpdated());
 
-        Assert.assertThat(actualEntry.getAuthors(), IsCollectionWithSize.hasSize(1));
+        assertThat(actualEntry.getAuthors(), IsCollectionWithSize.hasSize(1));
         OPDSAuthor author = actualEntry.getAuthors().get(0);
-        assertEquals("author name", AUTHOR_NAME, author.getName());
+        assertEquals(AUTHOR_NAME, author.getName());
     }
 
 
@@ -181,17 +183,17 @@ public class ExtLibConnectionTest {
         ExecutorCreator executorCreator = mock(ExecutorCreator.class);
         when(executorCreator.createExecutor(any(), any())).thenReturn(MoreExecutors.newDirectExecutorService());
         ExtLibConnection connectionService = Mockito.spy(new ExtLibConnection(URL, "", null, null, null, 0, null,
-                executorCreator, mock(BookService.class),null, 300));
+                executorCreator, mock(BookService.class), null, 300));
         URLConnection urlConnection = mock(URLConnection.class);
         when(connectionService.getConnection(URL + URI)).thenReturn(urlConnection);
         when(urlConnection.getInputStream()).thenReturn(new ByteArrayInputStream(bytes));
 
         ExtLibFeed actualFeed = connectionService.getFeed(URI);
 
-        Assert.assertThat(actualFeed.getLinks(), IsCollectionWithSize.hasSize(1));
+        assertThat(actualFeed.getLinks(), IsCollectionWithSize.hasSize(1));
         OPDSLink opdsLink = actualFeed.getLinks().get(0);
-        assertEquals("Link href", "?uri=" + nextHref, opdsLink.getHref());
-        assertEquals("Link rel", ExtLibService.REL_NEXT, opdsLink.getRel());
-        assertEquals("Link type ", linkType, opdsLink.getType());
+        assertEquals( "?uri=" + nextHref, opdsLink.getHref());
+        assertEquals( ExtLibService.REL_NEXT, opdsLink.getRel());
+        assertEquals( linkType, opdsLink.getType());
     }
 }

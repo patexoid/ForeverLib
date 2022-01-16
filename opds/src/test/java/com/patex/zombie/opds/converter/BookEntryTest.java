@@ -3,7 +3,7 @@ package com.patex.zombie.opds.converter;
 import com.patex.zombie.model.Book;
 import com.patex.zombie.model.FileResource;
 import com.patex.zombie.opds.model.converter.BookEntry;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 

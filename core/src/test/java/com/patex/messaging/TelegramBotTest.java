@@ -1,10 +1,10 @@
 package com.patex.messaging;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -15,20 +15,20 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class TelegramBotTest {
 
 
+    public static final String RESPONSE_MESSAGE = "response message";
     private static final String MESSAGE = "message";
     private static final long CHAT_ID = 458;
-    public static final String RESPONSE_MESSAGE = "response message";
     private TelegramBot telegramBot;
 
     @Mock
     private BiFunction<String, Long, Optional<String>> responseF;
 
 
-    @Before
+    @BeforeEach
     public void setUp() {
         telegramBot = spy(new TelegramBot("42", "42", responseF));
     }
@@ -38,7 +38,7 @@ public class TelegramBotTest {
         Update update = mock(Update.class);
         when(update.hasMessage()).thenReturn(false);
         telegramBot.onUpdateReceived(update);
-        verifyZeroInteractions(responseF);
+        verifyNoInteractions(responseF);
     }
 
     @Test

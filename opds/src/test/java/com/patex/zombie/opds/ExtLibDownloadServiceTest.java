@@ -20,10 +20,9 @@ import com.patex.zombie.opds.service.ExtLibService;
 import com.patex.zombie.service.ExecutorCreator;
 import com.patex.zombie.service.TransactionService;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
@@ -33,11 +32,12 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 @SuppressWarnings("unchecked")
-@Ignore
+@Disabled
 public class ExtLibDownloadServiceTest {
     public static final String BOOK_TITLE = "bookTitle";
     private ExtLibConnection connection;
@@ -49,7 +49,7 @@ public class ExtLibDownloadServiceTest {
     private SavedBookRepository savedBookRepo;
 
 
-    @Before
+    @BeforeEach
     public void setUp() {
         connection = Mockito.mock(ExtLibConnection.class);
         ExtLibInScopeRunner scopeRunner = Mockito.mock(ExtLibInScopeRunner.class);
@@ -90,7 +90,7 @@ public class ExtLibDownloadServiceTest {
             Mockito.verify(savedBookRepo).save(ArgumentMatchers.refEq(savedBook, "id"));
             return;
         }
-        Assert.fail();
+        fail();
     }
 
     @Test
@@ -111,7 +111,7 @@ public class ExtLibDownloadServiceTest {
             Mockito.verify(savedBookRepo).save(ArgumentMatchers.refEq(savedBook, "id"));
             return;
         }
-        Assert.fail();
+        fail();
     }
 
     @Test
@@ -148,9 +148,9 @@ public class ExtLibDownloadServiceTest {
         Optional<DownloadAllResult> result =
                 downloadService.downloadAll(new ExtLibrary(), this.uri, user).get();
 
-        Assert.assertTrue(result.isPresent());
+        assertTrue(result.isPresent());
         DownloadAllResult books = result.get();
-        Assert.assertThat(books.getSuccess(), Matchers.hasSize(2));
+        assertThat(books.getSuccess(), Matchers.hasSize(2));
         assertEquals(book1, books.getSuccess().get(0));
         assertEquals(book2, books.getSuccess().get(1));
     }
@@ -168,9 +168,9 @@ public class ExtLibDownloadServiceTest {
         Optional<DownloadAllResult> resultO =
                 downloadService.downloadAll(new ExtLibrary(), this.uri, user).get();
 
-        Assert.assertTrue(resultO.isPresent());
+        assertTrue(resultO.isPresent());
         DownloadAllResult result = resultO.get();
-        Assert.assertThat(result.getAuthors(), Matchers.hasSize(1));
+        assertThat(result.getAuthors(), Matchers.hasSize(1));
         assertEquals(authorName, result.getAuthors().get(0));
     }
 
@@ -185,9 +185,9 @@ public class ExtLibDownloadServiceTest {
         Optional<DownloadAllResult> resultO =
                 downloadService.downloadAll(new ExtLibrary(), this.uri, user).get();
 
-        Assert.assertTrue(resultO.isPresent());
+        assertTrue(resultO.isPresent());
         DownloadAllResult result = resultO.get();
-        Assert.assertThat(result.getEmptyBooks(), Matchers.hasSize(1));
+        assertThat(result.getEmptyBooks(), Matchers.hasSize(1));
         assertEquals(title, result.getEmptyBooks().get(0));
     }
 
@@ -206,9 +206,9 @@ public class ExtLibDownloadServiceTest {
         Optional<DownloadAllResult> resultO =
                 downloadService.downloadAll(new ExtLibrary(), this.uri, user).get();
 
-        Assert.assertTrue(resultO.isPresent());
+        assertTrue(resultO.isPresent());
         DownloadAllResult result = resultO.get();
-        Assert.assertThat(result.getFailed(), Matchers.hasSize(1));
+        assertThat(result.getFailed(), Matchers.hasSize(1));
         assertEquals(title, result.getFailed().get(0));
     }
 
@@ -243,9 +243,9 @@ public class ExtLibDownloadServiceTest {
         Mockito.verify(connection).downloadBook(bookUri1, type, user);
         verifyNoMoreInteractions(connection);
 
-        Assert.assertTrue(result.isPresent());
+        assertTrue(result.isPresent());
         DownloadAllResult books = result.get();
-        Assert.assertThat(books.getSuccess(), Matchers.hasSize(1));
+        assertThat(books.getSuccess(), Matchers.hasSize(1));
         assertEquals(book1, books.getSuccess().get(0));
     }
 
@@ -269,9 +269,9 @@ public class ExtLibDownloadServiceTest {
         Optional<DownloadAllResult> result =
                 downloadService.downloadAll(library, this.uri, user).get();
 
-        Assert.assertTrue(result.isPresent());
+        assertTrue(result.isPresent());
         DownloadAllResult books = result.get();
-        Assert.assertThat(books.getSuccess(), Matchers.hasSize(1));
+        assertThat(books.getSuccess(), Matchers.hasSize(1));
         assertEquals(book, books.getSuccess().get(0));
     }
 
@@ -295,6 +295,6 @@ public class ExtLibDownloadServiceTest {
         Optional<DownloadAllResult> result =
                 downloadService.downloadAll(library, this.uri, user).get();
 
-        Assert.assertFalse(result.isPresent());
+        assertFalse(result.isPresent());
     }
 }

@@ -9,7 +9,9 @@ spring:
     driver-class-name: org.h2.Driver
     hikari:
       maximum-pool-size: 20
+
   jpa:
+    database-platform:  org.hibernate.dialect.PostgreSQL10Dialect
     hibernate:
       ddl-auto: validate
   liquibase:

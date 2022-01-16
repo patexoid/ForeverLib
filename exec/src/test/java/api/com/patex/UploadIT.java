@@ -13,6 +13,8 @@ import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.hamcrest.collection.IsCollectionWithSize;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.SpringApplicationExtensionsKt;
@@ -40,7 +42,8 @@ import java.util.Random;
 import java.util.stream.Stream;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @SuppressWarnings("ConstantConditions")
@@ -55,7 +58,7 @@ public class UploadIT {
 
     private HttpTestClient httpClient;
 
-    @BeforeTestClass
+    @BeforeEach
     public void setUp() throws IOException {
         httpClient = new HttpTestClient("http://localhost:" + port);
         httpClient.setCreds("testUser", "simplePassword");

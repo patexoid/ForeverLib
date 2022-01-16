@@ -4,14 +4,15 @@ import com.patex.entities.BookEntity;
 import com.patex.zombie.model.BookImage;
 import fb2Generator.Fb2Creator;
 import org.apache.commons.text.RandomStringGenerator;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.stream.Stream;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+
 
 public class Fb2ParserTest {
 

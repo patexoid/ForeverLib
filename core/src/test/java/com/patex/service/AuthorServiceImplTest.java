@@ -6,22 +6,23 @@ import com.patex.entities.AuthorRepository;
 import com.patex.messaging.TelegramMessenger;
 import com.patex.zombie.model.AggrResult;
 import com.patex.zombie.service.StorageService;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE,
         classes = Application.class)
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 public class AuthorServiceImplTest {
 
     @MockBean
@@ -37,7 +38,7 @@ public class AuthorServiceImplTest {
     @Autowired
     private AuthorRepository controller;
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         controller.deleteAll();
     }

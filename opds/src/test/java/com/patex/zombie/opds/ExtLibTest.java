@@ -28,10 +28,9 @@ import com.rometools.rome.io.SyndFeedOutput;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.text.RandomStringGenerator;
 import org.hamcrest.collection.IsCollectionWithSize;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
@@ -43,12 +42,13 @@ import java.net.URLConnection;
 import java.util.Arrays;
 import java.util.Collections;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Created by Alexey on 11.03.2017.
  */
-@Ignore
+@Disabled
 public class ExtLibTest {
 
     private final RandomStringGenerator rsg = new RandomStringGenerator.Builder()
@@ -67,7 +67,7 @@ public class ExtLibTest {
     private ExtLibrary extLibrary;
     private ExecutorCreator executorCreator;
 
-    @Before
+    @BeforeEach
     public void setUp() {
 
         url = "http://" + rsg.generate(10);
@@ -108,20 +108,20 @@ public class ExtLibTest {
     }
 
     @Test
-    @Ignore
+    @Disabled
     public void testGetDataSimpleFeed() {
         ExtLibFeed data = downloadService.getExtLibFeed(extLibrary, uri);
         assertEquals("ExtLibFeed Title", syndFeed.getTitle(), data.getTitle());
 
-        Assert.assertThat("ExtLibFeed entries size", data.getEntries(), IsCollectionWithSize.hasSize(1));
+        assertThat("ExtLibFeed entries size", data.getEntries(), IsCollectionWithSize.hasSize(1));
         OPDSEntry entry = data.getEntries().get(0);
         checkSyndEntry(syndEntry, entry);
 
-        Assert.assertThat("Entry other link size", entry.getLinks(), IsCollectionWithSize.hasSize(1));
+        assertThat("Entry other link size", entry.getLinks(), IsCollectionWithSize.hasSize(1));
         OPDSLink link = entry.getLinks().get(0);
         checkLync(syndLink, link);
 
-        Assert.assertThat("entry contents size", entry.getContent(), IsCollectionWithSize.hasSize(1));
+        assertThat("entry contents size", entry.getContent(), IsCollectionWithSize.hasSize(1));
         OPDSContent content = entry.getContent().get(0);
         checkContent(syndContent, content);
     }
@@ -137,16 +137,16 @@ public class ExtLibTest {
         ExtLibFeed data = downloadService.getExtLibFeed(extLibrary, uri);
         assertEquals("ExtLibFeed Title", syndFeed.getTitle(), data.getTitle());
 
-        Assert.assertThat("ExtLibFeed entries size", data.getEntries(), IsCollectionWithSize.hasSize(3));
+        assertThat("ExtLibFeed entries size", data.getEntries(), IsCollectionWithSize.hasSize(3));
         OPDSEntry entry = data.getEntries().get(2);
         checkSyndEntry(syndEntry, entry);
 
-        Assert.assertThat("Entry other link size", entry.getLinks(), IsCollectionWithSize.hasSize(1));
+        assertThat("Entry other link size", entry.getLinks(), IsCollectionWithSize.hasSize(1));
         OPDSLink link = entry.getLinks().get(0);
         assertEquals("Link Href", LinkMapper.mapToUri("action/download?type=fb2&", syndLink.getHref()), link.getHref());
         assertEquals("Link Rel", syndLink.getRel(), link.getRel());
 
-        Assert.assertThat("entry contents size", entry.getContent(), IsCollectionWithSize.hasSize(1));
+        assertThat("entry contents size", entry.getContent(), IsCollectionWithSize.hasSize(1));
         checkContent(syndContent, entry.getContent().get(0));
     }
 
@@ -162,15 +162,15 @@ public class ExtLibTest {
         ExtLibFeed data = downloadService.getExtLibFeed(extLibrary, uri);
         assertEquals("ExtLibFeed Title", syndFeed.getTitle(), data.getTitle());
 
-        Assert.assertThat("ExtLibFeed entries size", data.getEntries(), IsCollectionWithSize.hasSize(2));
+        assertThat("ExtLibFeed entries size", data.getEntries(), IsCollectionWithSize.hasSize(2));
         OPDSEntry entry = data.getEntries().get(0);
         checkSyndEntry(syndEntry, entry);
 
-        Assert.assertThat("Entry other link size", entry.getLinks(), IsCollectionWithSize.hasSize(1));
+        assertThat("Entry other link size", entry.getLinks(), IsCollectionWithSize.hasSize(1));
         OPDSLink link = entry.getLinks().get(0);
         checkLync(syndLink, link);
 
-        Assert.assertThat("entry contents size", entry.getContent(), IsCollectionWithSize.hasSize(1));
+        assertThat("entry contents size", entry.getContent(), IsCollectionWithSize.hasSize(1));
         checkContent(syndContent, entry.getContent().get(0));
 
         OPDSEntry nextEntry = data.getEntries().get(1);
@@ -302,7 +302,7 @@ public class ExtLibTest {
     }
 
     private void checkSyndEntry(SyndEntryImpl syndEntry, OPDSEntry entry) {
-        assertEquals("Entry Title", syndEntry.getTitle(), entry.getTitle().getObjs()[0]);
-        assertEquals("Entry Id", syndEntry.getUri(), entry.getId());
+        assertEquals( syndEntry.getTitle(), entry.getTitle().getObjs()[0]);
+        assertEquals(syndEntry.getUri(), entry.getId());
     }
 }

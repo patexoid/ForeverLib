@@ -1,6 +1,8 @@
 package com.patex.parser;
 
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -40,8 +42,7 @@ public class ZipFileParserTest {
         zos.putNextEntry(new ZipEntry("blah"));
         zos.write(data);
         CloseableIterator zipIterator = parser.getContentIterator(FILENAME_ZIP, new ByteArrayInputStream(data));
-
-        verifyZeroInteractions(filenameIterator);
+        verifyNoInteractions(filenameIterator);
         zipIterator.next();
         verify(filenameIterator).next();
         verifyNoMoreInteractions(filenameIterator);
