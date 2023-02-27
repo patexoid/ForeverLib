@@ -68,4 +68,5 @@ web/app/*.js
 /web/dev/
 /web/node/
 /core/telegram.config
-*/target/
+*/build/
+/.gradle/

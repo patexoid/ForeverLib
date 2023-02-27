@@ -8,6 +8,7 @@ import com.patex.entities.BookRepository;
 import com.patex.entities.BookSequenceEntity;
 import com.patex.entities.SequenceEntity;
 import com.patex.entities.SequenceRepository;
+import com.patex.mapper.BookMapper;
 import com.patex.mapper.BookMapperImpl;
 import com.patex.parser.BookInfo;
 import com.patex.parser.ParserService;
@@ -82,7 +83,7 @@ public class BooksServiceTest {
     private User user;
     private BookInfo bookInfo;
     private BookEntity book;
-    private final BookMapperImpl bookMapper = new BookMapperImpl();
+    private final BookMapper bookMapper = new BookMapperImpl();
 
     private BookService bookService;
 
