@@ -5,5 +5,5 @@ build:
 
 
 push:
-	echo "$(HUB)" |docker login --username patexoid --password-stdin
+	echo "$(HUB)" | docker login --username patexoid --password-stdin
 	docker push patexoid/zombielib2:$(VERSION)
