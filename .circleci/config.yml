@@ -46,7 +46,9 @@ jobs:
           name: Push application Docker image
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              docker login --username ${USERNAME} --password ${HUB}
               make push
+              docker logout
             fi
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
