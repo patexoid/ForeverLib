@@ -45,7 +45,7 @@ jobs:
       - deploy:
           name: Push application Docker image
           command: |
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+            if [ "-z "${CIRCLE_TAG}"" == "master" ]; then
               docker login --username ${USERNAME} --password ${HUB}
               make push
               docker logout
