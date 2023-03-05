@@ -13,7 +13,8 @@ jobs:
     # A list of available CircleCI Docker Convenience Images are available here: https://circleci.com/developer/images/image/cimg/openjdk
     working_directory: /app
     docker:
-      - image: docker:17.05.0-ce-git
+      - image: img/deploy:2023.02
+        user: root
         auth:
           username: patexoid
           password: $HUB
