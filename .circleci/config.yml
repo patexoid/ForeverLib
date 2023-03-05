@@ -29,7 +29,11 @@ jobs:
       # Checkout the code as the first step.
       - checkout
       - setup_remote_docker:
-          docker_layer_caching: true
+          docker_layer_caching: false
+      - run:
+          name: docker login
+          command: |
+            echo "$HUB" | docker login --username $USERNAME --password-stdin
       - run:
           name: Install dependencies
           command: |  
