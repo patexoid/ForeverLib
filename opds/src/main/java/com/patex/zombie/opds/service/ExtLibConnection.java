@@ -155,7 +155,7 @@ public class ExtLibConnection {
                 log.warn("Unable to find fileName in Content-Disposition: {}", contentDisposition);
             }
         } else {
-            fileName = UUID.randomUUID().toString() + "." + type;
+            fileName = UUID.randomUUID().toString() + "." + type+".zip";
         }
         return bookService.uploadBook(fileName, conn.getInputStream(), userService.getUser(user));
     }

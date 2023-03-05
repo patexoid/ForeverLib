@@ -10,25 +10,25 @@ import com.patex.zombie.opds.service.ExtLibDownloadService;
 import com.patex.zombie.opds.service.ExtLibSubscriptionService;
 import com.patex.zombie.service.ExecutorCreator;
 import com.patex.zombie.service.UserService;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 
-@RunWith(MockitoJUnitRunner.class)
-@Ignore
+@ExtendWith(MockitoExtension.class)
+@Disabled
 public class ExtLibSubscriptionServiceTest {
 
     @Mock
@@ -47,7 +47,7 @@ public class ExtLibSubscriptionServiceTest {
     private User user;
     private String url;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         user = new User();
         Mockito.when(userService.getCurrentUser()).thenReturn(user);
@@ -61,7 +61,7 @@ public class ExtLibSubscriptionServiceTest {
     }
 
     @Test
-    @Ignore
+    @Disabled
     public void shouldAddAndCheckSubscription() {
 
         ExtLibrary library = new ExtLibrary();
@@ -81,7 +81,7 @@ public class ExtLibSubscriptionServiceTest {
         Mockito.when(subscriptionRepo.findFirstByExtLibraryAndLink(library, url)).thenReturn(Optional.of(new SubscriptionEntity()));
         subscriptionService.addSubscription(library, url);
         Mockito.verify(subscriptionRepo, Mockito.never()).save(ArgumentMatchers.any());
-        verifyZeroInteractions(downloadService);
+        verifyNoInteractions(downloadService);
     }
 
     @Test

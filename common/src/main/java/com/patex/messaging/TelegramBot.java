@@ -1,14 +1,16 @@
 package com.patex.messaging;
 
+import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.meta.generics.BotSession;
+import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -21,24 +23,20 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private static final Logger log = LoggerFactory.getLogger(TelegramBot.class);
 
-    static {
-        ApiContextInitializer.init(); //strange magic
-    }
-
     private final String botName;
     private final String botToken;
     private BiFunction<String, Long, Optional<String>> responseF;
 
-    TelegramBot(String botToken, String botName,
-                BiFunction<String, Long, Optional<String>> response) {
+    TelegramBot(String botToken, String botName, BiFunction<String, Long, Optional<String>> response) {
         this.botToken = botToken;
         this.botName = botName;
         this.responseF = response;
     }
 
+    @SneakyThrows
     public void start() {
         if (botToken != null && !botToken.isEmpty()) {
-            TelegramBotsApi botsApi = new TelegramBotsApi();
+            TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
             try {
                 botsApi.registerBot(this);
             } catch (TelegramApiException e) {
@@ -64,7 +62,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     public void sendMessageToChat(String message, Long chatId) {
         try {
-            SendMessage sendMessage = new SendMessage(chatId, message);
+            SendMessage sendMessage = new SendMessage(""+chatId, message);
             sendMessage.setParseMode("HTML");
             execute(sendMessage);
         } catch (TelegramApiException e) {

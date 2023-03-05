@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.patex.utils.BooleanJson;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.time.Instant;
@@ -74,6 +75,7 @@ public class BookEntity {
 
     @Lob
     @JsonProperty(DESCR)
+    @Type(type = "org.hibernate.type.TextType")
     private String descr;
 
     public BookEntity() {

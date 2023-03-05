@@ -6,14 +6,14 @@ import com.patex.zombie.opds.model.OPDSEntry;
 import com.patex.zombie.opds.model.OPDSEntryBuilder;
 import com.patex.zombie.opds.model.OPDSLink;
 import org.hamcrest.collection.IsCollectionWithSize;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ExtLibFeedTest {
 

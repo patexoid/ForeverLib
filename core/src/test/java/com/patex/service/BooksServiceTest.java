@@ -8,6 +8,7 @@ import com.patex.entities.BookRepository;
 import com.patex.entities.BookSequenceEntity;
 import com.patex.entities.SequenceEntity;
 import com.patex.entities.SequenceRepository;
+import com.patex.mapper.BookMapper;
 import com.patex.mapper.BookMapperImpl;
 import com.patex.parser.BookInfo;
 import com.patex.parser.ParserService;
@@ -17,34 +18,37 @@ import com.patex.zombie.model.BookImage;
 import com.patex.zombie.model.BookSequence;
 import com.patex.zombie.model.User;
 import com.patex.zombie.service.BookService;
+import com.patex.zombie.service.SequenceService;
 import com.patex.zombie.service.StorageService;
 import com.patex.zombie.service.TransactionService;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.text.RandomStringGenerator;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
 import javax.persistence.EntityManager;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
 
-import static org.apache.commons.text.CharacterPredicates.*;
-import static org.junit.Assert.*;
+import static org.apache.commons.text.CharacterPredicates.DIGITS;
+import static org.apache.commons.text.CharacterPredicates.LETTERS;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.AdditionalMatchers.aryEq;
 import static org.mockito.Mockito.*;
 
 /**
  * Created by Alexey on 15.07.2017.
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class BooksServiceTest {
     private static final String FILE_NAME = "fileName";
     private static final String FIRST_AUTHOR = "first author";
@@ -55,28 +59,37 @@ public class BooksServiceTest {
             .withinRange('0', 'z')
             .filteredBy(LETTERS, DIGITS)
             .build();
+
+    @Mock
     private BookRepository bookRepo;
-    private SequenceServiceImpl sequenceService;
+
+    @Mock
+    private SequenceService sequenceService;
+
+    @Mock
     private AuthorRepository authorRepo;
+
+    @Mock
     private ParserService parserService;
-    private StorageService fileStorage;
-    private TransactionService transactionService;
+
+    @Mock
     private ApplicationEventPublisher eventPublisher;
-    private BookService bookService;
-    private ByteArrayInputStream bookIS;
+
+    @Mock
+    private StorageService fileStorage;
+
+    private final TransactionService transactionService = new TransactionService();
+    private final ByteArrayInputStream bookIS = new ByteArrayInputStream(new byte[0]);
     private User user;
     private BookInfo bookInfo;
     private BookEntity book;
-    private BookMapperImpl bookMapper;
+    private final BookMapper bookMapper = new BookMapperImpl();
 
-    @Before
+    private BookService bookService;
+
+    @BeforeEach
     public void setUp() {
-        parserService = mock(ParserService.class);
-        bookRepo = mock(BookRepository.class);
-        sequenceService = mock(SequenceServiceImpl.class);
-        authorRepo = mock(AuthorRepository.class);
 
-        bookIS = new ByteArrayInputStream(new byte[0]);
         user = new User();
         bookInfo = new BookInfo();
         book = new BookEntity();
@@ -84,9 +97,9 @@ public class BooksServiceTest {
         book.setSequences(Collections.singletonList(new BookSequenceEntity(1, new SequenceEntity(FIRST_SEQUENCE))));
         bookInfo.setBook(book);
 
-        when(parserService.getBookInfo(eq(FILE_NAME), any())).thenReturn(bookInfo);
+        lenient().when(parserService.getBookInfo(eq(FILE_NAME), any())).thenReturn(bookInfo);
         when(bookRepo.findFirstByTitleAndChecksum(any(), any())).thenReturn(Optional.empty());
-        when(bookRepo.save(any(BookEntity.class))).thenAnswer(i -> i.getArguments()[0]);
+        lenient().when(bookRepo.save(any(BookEntity.class))).thenAnswer(i -> i.getArguments()[0]);
 //        when(sequenceService.mergeSequences(any())).thenAnswer(i -> {
 //            Collection sequences = (Collection) i.getArguments()[0];
 //            if (sequences == null) {
@@ -95,12 +108,8 @@ public class BooksServiceTest {
 //                return sequences.iterator().next();
 //            }
 //        });
-        when(authorRepo.findFirstByNameIgnoreCase(any())).thenReturn(Optional.empty());
+        lenient().when(authorRepo.findFirstByNameIgnoreCase(any())).thenReturn(Optional.empty());
 
-        fileStorage = mock(StorageService.class);
-        transactionService = new TransactionService();
-        eventPublisher = mock(ApplicationEventPublisher.class);
-        bookMapper = new BookMapperImpl();
         bookService = new BookServiceImpl(bookRepo, mock(SequenceRepository.class), authorRepo, parserService,
                 fileStorage, transactionService, eventPublisher, bookMapper, mock(EntityManager.class));
     }
@@ -127,7 +136,7 @@ public class BooksServiceTest {
 
 
     @Test
-    @Ignore
+    @Disabled
     public void verifyUploadBookWithSavedAuthorAndSequence() {
         long authorID = 42;
         long seqeunceId = 54;
@@ -148,7 +157,7 @@ public class BooksServiceTest {
 
 
     @Test
-    @Ignore
+    @Disabled
     public void verifyMergeSequenceDuringBookUpload() {
 
         long firstSavedSequenceId = 1L;
@@ -211,11 +220,11 @@ public class BooksServiceTest {
         when(bookRepo.findFirstByTitleAndChecksum(eq(uploadedTitle), any())).thenReturn(Optional.of(savedBook));
 
         Book book = bookService.uploadBook(fileName, bais, user);
-        assertEquals("should be saved book", existedTitle, book.getTitle());
+        assertEquals(existedTitle, book.getTitle());
     }
 
     @Test
-    @Ignore
+    @Disabled
     public void testSavedAuthorReplace() {
         String newAuthorName = rsg.generate(10);
         String existedAuthorName = rsg.generate(10);
@@ -244,7 +253,7 @@ public class BooksServiceTest {
     }
 
     @Test
-    @Ignore
+    @Disabled
     public void testSequenceReplace() {
 
         String sequenceName = rsg.generate(10);

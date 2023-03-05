@@ -49,7 +49,7 @@ public class OPDSControllerTest {
     @Test
     public void shouldEncodeSpace() throws IOException {
         when(authorService.getAuthorsCount("testAuthor")).
-                thenReturn(singletonList(new AggrResultTestImpl("testAuthor", 10)));
+                thenReturn(singletonList(new AggrResultTestImpl("testAuthor ", 10)));
 
         String s = httpClient.get("/opds/authorsindex?prefix=testAuthor", String.class);
 

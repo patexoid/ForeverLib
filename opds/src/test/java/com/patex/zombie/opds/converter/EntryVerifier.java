@@ -7,7 +7,6 @@ import com.patex.zombie.opds.model.OPDSLink;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.hamcrest.collection.IsCollectionWithSize;
-import org.junit.Assert;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -15,19 +14,20 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EntryVerifier {
 
     static void verifyId(String id, OPDSEntry entry) {
-        Assert.assertTrue(entry.getId().contains(id));
+        assertTrue(entry.getId().contains(id));
         entry.getLinks().stream().map(OPDSLink::getHref).forEach(
                 s -> MatcherAssert.assertThat(s, Matchers.containsString(id))
         );
     }
 
     static void verifyName(String name, OPDSEntry entry) {
-        Assert.assertTrue(Arrays.asList(entry.getTitle().getObjs()).contains(name));
+        assertTrue(Arrays.asList(entry.getTitle().getObjs()).contains(name));
         assertEquals(name, entry.getTitle().getObjs()[0]);
     }
 
@@ -48,6 +48,6 @@ public class EntryVerifier {
                 map(c -> (ODPSContentRes) c).
                 flatMap(c -> Stream.of(c.getObjs())).
                 anyMatch(number::equals);
-        Assert.assertTrue(number + "is not in content", containsINContent);
+        assertTrue(containsINContent, number + "is not in content");
     }
 }

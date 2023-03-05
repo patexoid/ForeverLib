@@ -1,11 +1,11 @@
 package com.patex.parser;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.util.Iterator;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 public class ParserServiceTest {
@@ -23,7 +23,7 @@ public class ParserServiceTest {
         when(fileParser.parseFile(FILE_NAME, is)).thenReturn(bookInfo);
         ParserService parserService = new ParserService(fileParser);
         BookInfo result = parserService.getBookInfo(FILE_NAME, is);
-        Assert.assertEquals(result, bookInfo);
+        assertEquals(result, bookInfo);
     }
 
     @Test
@@ -40,8 +40,8 @@ public class ParserServiceTest {
         ParserService parserService = new ParserService(fileParser);
         BookInfo result = parserService.getBookInfo(FILE_NAME, is);
 
-        Assert.assertEquals(bookInfo, result);
-        verifyZeroInteractions(otherParser);
+        assertEquals(bookInfo, result);
+        verifyNoInteractions(otherParser);
     }
 
     @Test
@@ -53,6 +53,6 @@ public class ParserServiceTest {
         when(fileParser.getContentIterator(FILE_NAME, is)).thenReturn(iterator);
         ParserService parserService = new ParserService(fileParser);
         Iterator<String> result= parserService.getContentIterator(FILE_NAME, is);
-        Assert.assertEquals(result, iterator);
+        assertEquals(result, iterator);
     }
 }

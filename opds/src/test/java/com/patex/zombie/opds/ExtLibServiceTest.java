@@ -7,8 +7,8 @@ import com.patex.zombie.opds.entity.ExtLibrary;
 import com.patex.zombie.opds.entity.ExtLibraryRepository;
 import com.patex.zombie.opds.entity.SubscriptionEntity;
 import com.patex.zombie.opds.model.ExtLibFeed;
-import com.patex.zombie.opds.model.OPDSEntryBuilder;
 import com.patex.zombie.opds.model.OPDSEntry;
+import com.patex.zombie.opds.model.OPDSEntryBuilder;
 import com.patex.zombie.opds.model.OPDSLink;
 import com.patex.zombie.opds.service.ExtLibDownloadService;
 import com.patex.zombie.opds.service.ExtLibService;
@@ -16,14 +16,13 @@ import com.patex.zombie.opds.service.ExtLibSubscriptionService;
 import com.patex.zombie.service.ExecutorCreator;
 import com.patex.zombie.service.UserService;
 import org.hamcrest.collection.IsCollectionWithSize;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -32,11 +31,14 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.patex.zombie.opds.service.ExtLibService.*;
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
 
 
-@RunWith(MockitoJUnitRunner.class
-)
+@ExtendWith(MockitoExtension.class)
 public class ExtLibServiceTest {
 
     private static final Long SUBSCRIBE_ID = 654L;
@@ -70,7 +72,7 @@ public class ExtLibServiceTest {
     private User user = new User();
     private String entryUrl = "entryUrl";
 
-    @Before
+    @BeforeEach
     public void setUp() {
         library = new ExtLibrary();
         library.setId(ID);
@@ -78,11 +80,11 @@ public class ExtLibServiceTest {
         Book book = new Book();
         book.setId(BOOK_ID);
 
-        Mockito.when(repository.findAll()).thenReturn(Collections.singleton(library));
-        Mockito.when(repository.findById(ID)).thenReturn(Optional.of(library));
+        lenient().when(repository.findAll()).thenReturn(Collections.singleton(library));
+        lenient().when(repository.findById(ID)).thenReturn(Optional.of(library));
 
-        Mockito.when(userService.getCurrentUser()).thenReturn(user);
-        Mockito.when(downloadService.downloadBook(library, URI, TYPE, user.getUsername())).thenReturn(book);
+        lenient().when(userService.getCurrentUser()).thenReturn(user);
+        lenient().when(downloadService.downloadBook(library, URI, TYPE, user.getUsername())).thenReturn(book);
 
 
         final Object[] objects = new Object[]{};
@@ -92,7 +94,7 @@ public class ExtLibServiceTest {
                 .build();
         ExtLibFeed rawFeed = new ExtLibFeed("title",
                 Collections.singletonList(entry), Collections.emptyList());
-        Mockito.when(downloadService.getExtLibFeed(library, entryUrl)).thenReturn(rawFeed);
+        lenient().when(downloadService.getExtLibFeed(library, entryUrl)).thenReturn(rawFeed);
 
     }
 
@@ -102,14 +104,14 @@ public class ExtLibServiceTest {
 
         List<OPDSEntry> roots = extLibService.getRoot(PREFIX);
 
-        Assert.assertThat(roots, IsCollectionWithSize.hasSize(1));
+        assertThat(roots, IsCollectionWithSize.hasSize(1));
         OPDSEntry root = roots.get(0);
         assertEquals(LIBRARY_NAME, root.getTitle().getObjs()[0]);
 
-        Assert.assertTrue("Should contain prefix", root.getLinks().stream().map(OPDSLink::getHref).
-                anyMatch(href -> href.contains(PREFIX)));
-        Assert.assertTrue("Should contain id", root.getLinks().stream().map(OPDSLink::getHref).
-                anyMatch(href -> href.contains("" + ID)));
+        assertTrue(root.getLinks().stream().map(OPDSLink::getHref).
+                        anyMatch(href -> href.contains(PREFIX)), "Should contain prefix");
+        assertTrue(root.getLinks().stream().map(OPDSLink::getHref).
+                        anyMatch(href -> href.contains("" + ID)), "Should contain id");
     }
 
     @Test
@@ -117,7 +119,7 @@ public class ExtLibServiceTest {
 
         String bookId = extLibService.downloadBook(ID, URI, TYPE);
 
-        Assert.assertTrue(bookId.contains("" + BOOK_ID));
+        assertTrue(bookId.contains("" + BOOK_ID));
     }
 
     @Test
@@ -163,11 +165,11 @@ public class ExtLibServiceTest {
         OPDSEntry entry = new OPDSEntryBuilder("dd", Instant.now(), entryTitle).build();
         ExtLibFeed rawFeed = new ExtLibFeed("title",
                 Collections.singletonList(entry), Collections.emptyList());
-        Mockito.when(downloadService.getExtLibFeed(library, entryUrl)).thenReturn(rawFeed);
+        when(downloadService.getExtLibFeed(library, entryUrl)).thenReturn(rawFeed);
 
         ExtLibFeed feed = extLibService.getDataForLibrary(ID, params);
 
-        Assert.assertThat(feed.getEntries(), IsCollectionWithSize.hasSize(1));
+        assertThat(feed.getEntries(), IsCollectionWithSize.hasSize(1));
     }
 
     @Test
@@ -181,7 +183,7 @@ public class ExtLibServiceTest {
         Optional<OPDSEntry> entryO = feed.getEntries().stream()
                 .filter(e -> e.getId().startsWith(DOWNLOAD_ID_PREFIX)).findFirst();
 
-        Assert.assertTrue(entryO.isPresent());
+        assertTrue(entryO.isPresent());
     }
 
     @Test
@@ -194,7 +196,7 @@ public class ExtLibServiceTest {
         Optional<OPDSEntry> entryO = feed.getEntries().stream()
                 .filter(e -> e.getId().startsWith(SUBSCRIBE_ID_PREFIX)).findFirst();
 
-        Assert.assertTrue(entryO.isPresent());
+        assertTrue(entryO.isPresent());
     }
 
 
@@ -204,14 +206,14 @@ public class ExtLibServiceTest {
         params.put(REQUEST_P_NAME, entryUrl);
         SubscriptionEntity subscription = new SubscriptionEntity();
         subscription.setId(92L);
-        Mockito.when(subscriptionService.find(library, entryUrl)).thenReturn(Optional.of(subscription));
+        when(subscriptionService.find(library, entryUrl)).thenReturn(Optional.of(subscription));
 
         ExtLibFeed feed = extLibService.getDataForLibrary(ID, params);
 
 
         Optional<OPDSEntry> entryO = feed.getEntries().stream()
                 .filter(e -> e.getId().startsWith(UNSUBSCRIBE_ID_PREFIX)).findFirst();
-        Assert.assertTrue(entryO.isPresent());
+        assertTrue(entryO.isPresent());
     }
 
 
@@ -221,12 +223,12 @@ public class ExtLibServiceTest {
         params.put(REQUEST_P_NAME, entryUrl);
         ExtLibFeed rawFeed = new ExtLibFeed("title",
                 Collections.emptyList(), Collections.singletonList(new OPDSLink("dd", REL_NEXT, "type")));
-        Mockito.when(downloadService.getExtLibFeed(library, entryUrl)).thenReturn(rawFeed);
+        when(downloadService.getExtLibFeed(library, entryUrl)).thenReturn(rawFeed);
 
         ExtLibFeed feed = extLibService.getDataForLibrary(ID, params);
 
         Optional<OPDSEntry> entryO = feed.getEntries().stream()
                 .filter(e -> e.getId().startsWith(NEXT_ID_PREFIX)).findFirst();
-        Assert.assertTrue(entryO.isPresent());
+        assertTrue(entryO.isPresent());
     }
 }

@@ -2,7 +2,7 @@ package com.patex.zombie.opds.converter;
 
 import com.patex.zombie.model.Author;
 import com.patex.zombie.opds.model.converter.AuthorEntry;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 

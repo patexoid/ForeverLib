@@ -66,7 +66,18 @@ public class Application {
             String[] jpa = bf.getBeanNamesForType(EntityManagerFactory.class);
             Stream.concat(Stream.of(liqbase), Stream.of(jpa))
                     .map(bf::getBeanDefinition)
-                    .forEach(bd -> bd.setDependsOn("databaseStartupValidator"));
+                    .forEach(bd -> {
+                        String[] dependsOn = bd.getDependsOn();
+                        if (dependsOn != null && dependsOn.length > 0) {
+                            String[] nwDependsOn = new String[dependsOn.length + 1];
+                            System.arraycopy(dependsOn,0, nwDependsOn,0, dependsOn.length);
+                            nwDependsOn[dependsOn.length]= "databaseStartupValidator";
+                            dependsOn=nwDependsOn;
+                        } else {
+                            dependsOn=new String[]{"databaseStartupValidator"};
+                        }
+                        bd.setDependsOn(dependsOn);
+                    });
         };
     }
 }

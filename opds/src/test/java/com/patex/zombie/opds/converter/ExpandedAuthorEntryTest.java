@@ -7,8 +7,7 @@ import com.patex.zombie.model.SequenceBook;
 import com.patex.zombie.opds.model.OPDSEntry;
 import com.patex.zombie.opds.model.converter.ExpandedAuthorEntries;
 import org.hamcrest.collection.IsCollectionWithSize;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -17,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.patex.zombie.opds.converter.EntryVerifier.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class ExpandedAuthorEntryTest {
 
@@ -31,7 +31,7 @@ public class ExpandedAuthorEntryTest {
         author.setDescr(descr);
         author.setUpdated(Instant.now());
         List<OPDSEntry> entries = new ExpandedAuthorEntries(author).getEntries();
-        Assert.assertThat(entries, IsCollectionWithSize.hasSize(4));
+        assertThat(entries, IsCollectionWithSize.hasSize(4));
         entries.forEach(entry -> verifyId("" + id, entry));
         entries.forEach(entry -> verifyName(name, entry));
         verifyContent(entries.get(0), descr);

@@ -2,21 +2,21 @@ package com.patex.messaging;
 
 import com.patex.zombie.model.User;
 import com.patex.zombie.model.UserConfig;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class TelegramMessengerTest {
 
     public static final long TELEGRAM_CHAT_ID = 424224242L;
@@ -34,7 +34,7 @@ public class TelegramMessengerTest {
 
     private TelegramMessenger telegramMessenger;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         telegramMessenger = new TelegramMessenger(messagingComponent, telegramBot, BASE_URL, spliterator);
     }
@@ -79,15 +79,15 @@ public class TelegramMessengerTest {
     @Test
     public void shouldSendResponse() {
         Optional<String> response = telegramMessenger.response("/subscribe", TELEGRAM_CHAT_ID);
-        Assert.assertTrue(response.isPresent());
+        assertTrue(response.isPresent());
         String expectedMessage = "Please open <a href=\"baseUrl/user/updateConfig?telegramChatId=424224242\">Link</a>" +
                 " to register chat";
-        Assert.assertEquals(expectedMessage, response.get());
+        assertEquals(expectedMessage, response.get());
     }
 
     @Test
     public void shouldNotSendResponse() {
         Optional<String> response = telegramMessenger.response("blah blah", TELEGRAM_CHAT_ID);
-        Assert.assertFalse(response.isPresent());
+        assertFalse(response.isPresent());
     }
 }
