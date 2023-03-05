@@ -5,5 +5,4 @@ build:
 
 
 push:
-	printenv "HUB" |docker login --username patexoid --password-stdin
 	docker push patexoid/zombielib2:$(VERSION)
