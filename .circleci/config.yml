@@ -33,7 +33,7 @@ jobs:
       - run:
           name: docker login
           command: |
-            echo "$HUB" | docker login --username $USERNAME --password-stdin
+            docker login --username ${USERNAME} --password ${HUB}
       - run:
           name: Install dependencies
           command: |  
