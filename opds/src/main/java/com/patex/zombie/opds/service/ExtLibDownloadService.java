@@ -171,6 +171,7 @@ public class ExtLibDownloadService {
                 if (type.contains("/")) {
                     type = type.substring(type.lastIndexOf("/") + 1);
                 }
+                type = type.replace("+",".");
                 Book book = downloadBook(library, uri, type, user);
                 return DownloadAllResult.success(authors, book);
             } catch (LibException e) {

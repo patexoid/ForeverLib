@@ -151,11 +151,11 @@ public class ExtLibConnection {
             if (matcher.matches()) {
                 fileName = matcher.group(1);
             } else {
-                fileName = UUID.randomUUID().toString() + "." + type;
+                fileName = UUID.randomUUID() + "." + type;
                 log.warn("Unable to find fileName in Content-Disposition: {}", contentDisposition);
             }
         } else {
-            fileName = UUID.randomUUID().toString() + "." + type+".zip";
+            fileName = UUID.randomUUID() + "." + type;
         }
         return bookService.uploadBook(fileName, conn.getInputStream(), userService.getUser(user));
     }
