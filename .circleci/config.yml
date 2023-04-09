@@ -56,7 +56,9 @@ workflows:
   version: 2
   just-build:
     jobs:
-      - build
+      - build:
+          branches:
+            ignore: /master/
   build-and-push-master:
     jobs:
       - build:
