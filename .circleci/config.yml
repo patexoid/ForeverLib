@@ -65,6 +65,6 @@ workflows:
       - build:
           filters:
             branches:
-              only: master
+              only: circleci_config
             tags:
               only: /^\d+\.\d+\.\d+$/
