@@ -65,6 +65,14 @@ workflows:
       - build:
           filters:
             branches:
-              only: circleci_config
+              only: master
             tags:
               only: /^\d+\.\d+\.\d+$/
+  build-and-push-others:
+    jobs:
+      - build:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /test.^\d+\.\d+\.\d+-.+$/
