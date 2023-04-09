@@ -69,7 +69,5 @@ workflows:
     jobs:
       - build:
           filters:
-            branches:
-              ignore: /master/
             tags:
               only: /test.^\d+\.\d+\.\d+-.+$/
