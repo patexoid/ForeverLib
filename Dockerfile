@@ -1,4 +1,4 @@
-FROM maven:3.8.4-openjdk-17-slim as builder
+FROM openjdk:17-slim as builder
 WORKDIR /app/build
 ARG USERNAME
 ARG TOKEN

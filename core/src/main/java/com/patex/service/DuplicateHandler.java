@@ -183,12 +183,18 @@ public class DuplicateHandler {
         }
 
         private File getCacheFile(Long bookId) {
-            return new File(storageFolder + "/" + bookId);
+            return new File(storageFolder + File.separator + String.valueOf(bookId).chars().
+                    boxed().map(String::valueOf).collect(Collectors.joining(File.separator)));
         }
 
         @Override
         public void save(Long bookId, byte[] bytes) {
-            try (FileOutputStream fos = new FileOutputStream(getCacheFile(bookId))) {
+            File cacheFile = getCacheFile(bookId);
+            File parentFile = cacheFile.getParentFile();
+            if (!parentFile.exists()) {
+                parentFile.mkdirs();
+            }
+            try (FileOutputStream fos = new FileOutputStream(cacheFile)) {
                 fos.write(bytes);
                 fos.flush();
             } catch (IOException e) {
