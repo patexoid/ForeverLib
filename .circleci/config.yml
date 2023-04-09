@@ -45,7 +45,8 @@ jobs:
       - deploy:
           name: Push application Docker image
           command: |
-            if [ -n "${CIRCLE_TAG}" ]; then
+            if [[ $(expr match "$(git describe --tags --dirty)" '^[0-9]+\.[0-9]+\.[0-9]+$') != 0 ]]
+            then
               docker login --username ${USERNAME} --password ${HUB}
               make push
               docker logout
