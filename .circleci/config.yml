@@ -53,6 +53,7 @@ jobs:
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
+  version: 2
   just-build:
     jobs:
       - build
@@ -60,11 +61,15 @@ workflows:
     jobs:
       - build:
           filters:
+            branches:
+              only: master
             tags:
               only: /^\d+\.\d+\.\d+$/
   build-and-push-others:
     jobs:
       - build:
           filters:
+            branches:
+              ignore: /master/
             tags:
               only: /^\d+\.\d+\.\d+-.+$/
