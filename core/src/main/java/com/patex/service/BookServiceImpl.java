@@ -1,5 +1,6 @@
 package com.patex.service;
 
+import com.ibm.icu.text.Transliterator;
 import com.patex.entities.AuthorBookEntity;
 import com.patex.entities.AuthorEntity;
 import com.patex.entities.AuthorRepository;
@@ -39,7 +40,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -67,7 +67,7 @@ public class BookServiceImpl implements BookService {
     @Override
     public synchronized Book uploadBook(String fileName, InputStream is, User user) throws LibException {//TODO fix transactions
 
-        Book result =  transactionService.transactionRequired(() -> {
+        Book result = transactionService.transactionRequired(() -> {
             byte[] byteArray = loadFromStream(is);
             byte[] checksum = getChecksum(byteArray);
             BookInfo bookInfo = parserService.getBookInfo(fileName, new ByteArrayInputStream(byteArray));
@@ -80,7 +80,7 @@ public class BookServiceImpl implements BookService {
             List<AuthorEntity> authors = book.getAuthorBooks().stream().
                     map(AuthorBookEntity::getAuthor).
                     map(author -> authorRepository.findFirstByNameIgnoreCase(author.getName()).orElse(author)).
-                    collect(Collectors.toList());
+                    toList();
             List<AuthorBookEntity> authorsBooks = authors.stream().
                     map(author -> new AuthorBookEntity(author, book)).collect(Collectors.toList());
             book.setAuthorBooks(authorsBooks);
@@ -88,7 +88,7 @@ public class BookServiceImpl implements BookService {
             Map<String, List<SequenceEntity>> sequenceMapList = authors.stream().
                     flatMap(AuthorEntity::getSequencesStream).
                     filter(sequence -> sequence.getId() != null). //already saved
-                    filter(StreamU.distinctByKey(SequenceEntity::getId)).
+                            filter(StreamU.distinctByKey(SequenceEntity::getId)).
                     collect(Collectors.groupingBy(SequenceEntity::getName, Collectors.toList()));
             // some magic if 2 authors wrote the same sequence but different books
             Map<String, SequenceEntity> sequencesMap = sequenceMapList.entrySet().stream().
@@ -101,8 +101,8 @@ public class BookServiceImpl implements BookService {
                                 sequencesMap.getOrDefault(sequence.getName(), sequence), book);
                     }).collect(Collectors.toList());
             book.setSequences(sequences);
-
-            String fileId = fileStorage.save(byteArray, fileName);
+            String[] filePath = getFilePath(book, fileName);
+            String fileId = fileStorage.save(byteArray, filePath);
             book.setFileResource(new FileResourceEntity(fileId, "application/fb2+zip", byteArray.length));//TODO improve me
             BookImage bookImage = bookInfo.getBookImage();
             if (bookImage != null) {
@@ -118,6 +118,25 @@ public class BookServiceImpl implements BookService {
         });
         publisher.publishEvent(new BookCreationEvent(result, user));
         return result;
+    }
+
+    private String[] getFilePath(BookEntity book, String fileName) {
+        String[] path = new String[3];
+        Transliterator transliterator = Transliterator.getInstance("Any-Latin");
+        path[0] = book.getAuthorBooks().stream().
+                findFirst().
+                map(AuthorBookEntity::getAuthor)
+                .map(AuthorEntity::getName)
+                .map(transliterator::transliterate)
+                .orElse("No Author");
+        path[1] = book.getSequences().stream().
+                findFirst().
+                map(BookSequenceEntity::getSequence)
+                .map(SequenceEntity::getName)
+                .map(transliterator::transliterate)
+                .orElse("No Sequence");
+        path[2] = fileName;
+        return path;
     }
 
     private SequenceEntity mergeSequences(List<SequenceEntity> sequences) {

@@ -4,6 +4,7 @@ import com.patex.zombie.service.BookService;
 import com.patex.zombie.service.ExecutorCreator;
 import com.patex.zombie.model.User;
 import com.patex.zombie.service.UserService;
+import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,8 +15,11 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,12 +30,17 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.zip.Deflater;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 @Component
 @ConditionalOnExpression("!'${localStorage.bulk-upload.folder}'.isEmpty()")
 @Profile("!docker")
 public class DirWatcherService {
     private static final Logger log = LoggerFactory.getLogger(DirWatcherService.class);
+    public static final String FAILED_DIRECTORY = "failed";
 
     protected final Path directoryPath;
     private final BookService bookService;
@@ -118,12 +127,43 @@ public class DirWatcherService {
         return zUserService.getByRole(UserService.ADMIN_AUTHORITY).stream().findFirst();
     }
 
+    @SneakyThrows
     protected void processFile(File file, User adminUser) {
-        try (FileInputStream fis = new FileInputStream(file)) {
-            bookService.uploadBook(file.getName(), fis, adminUser);
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-            return;
+        if (file.getName().toLowerCase().endsWith(".zip")) {
+            try (ZipInputStream zip = new ZipInputStream(new FileInputStream(file))) {
+                ZipEntry entry;
+                while ((entry = zip.getNextEntry()) != null) {
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    ZipOutputStream zop = new ZipOutputStream(baos);
+                    zop.setLevel(Deflater.BEST_COMPRESSION);
+                    zop.putNextEntry(new ZipEntry(entry));
+                    zip.transferTo(zop);
+                    zop.flush();
+                    zop.close();
+                    String fileName = entry.getName() + ".zip";
+                    byte[] newFileContent = baos.toByteArray();
+                    try {
+                        bookService.uploadBook(fileName, new ByteArrayInputStream(newFileContent), adminUser);
+                    } catch (Exception e) {
+                        log.error(e.getMessage(), e);
+                        File parent = file.getParentFile();
+                        File failedDir = new File(parent, FAILED_DIRECTORY);
+                        if (!failedDir.exists()) {
+                            failedDir.mkdir();
+                        }
+                        try (FileOutputStream fos= new FileOutputStream(new File(failedDir, fileName))) {
+                            fos.write(newFileContent);
+                        }
+                    }
+                }
+            }
+        } else {
+            try (FileInputStream fis = new FileInputStream(file)) {
+                bookService.uploadBook(file.getName(), fis, adminUser);
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
+                return;
+            }
         }
         //noinspection ResultOfMethodCallIgnored
         file.delete();

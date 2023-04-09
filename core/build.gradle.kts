@@ -35,6 +35,9 @@ dependencies {
     api("com.google.guava:guava:31.0.1-jre")
     api("com.patex:plural-resource-bundle:0.0.2")
     api("com.patex:fuzzySearch:0.2.1")
+    api("com.ibm.icu:icu4j:72.1")
+    api("com.ibm.icu:icu4j-charset:72.1")
+
     implementation("org.mapstruct:mapstruct:1.4.2.Final")
     annotationProcessor("org.mapstruct:mapstruct-processor:1.4.2.Final")
     api(project(":common"))
@@ -49,6 +52,7 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:1.18.24")
     testCompileOnly("org.projectlombok:lombok:1.18.24")
     testAnnotationProcessor("org.projectlombok:lombok:1.18.24")
+
 }
 
 group = "com.patex.zombielib2"
