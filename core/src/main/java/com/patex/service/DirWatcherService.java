@@ -20,6 +20,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -146,8 +147,7 @@ public class DirWatcherService {
                         bookService.uploadBook(fileName, new ByteArrayInputStream(newFileContent), adminUser);
                     } catch (Exception e) {
                         log.error(e.getMessage(), e);
-                        File parent = file.getParentFile();
-                        File failedDir = new File(parent, FAILED_DIRECTORY);
+                        File failedDir = directoryPath.resolve(FAILED_DIRECTORY).toFile();
                         if (!failedDir.exists()) {
                             failedDir.mkdir();
                         }
@@ -156,6 +156,8 @@ public class DirWatcherService {
                         }
                     }
                 }
+            } catch (IOException e){
+                Files.move(file.toPath(), file.toPath().getParent().resolve(FAILED_DIRECTORY));
             }
         } else {
             try (FileInputStream fis = new FileInputStream(file)) {

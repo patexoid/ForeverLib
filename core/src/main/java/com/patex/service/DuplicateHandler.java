@@ -183,8 +183,9 @@ public class DuplicateHandler {
         }
 
         private File getCacheFile(Long bookId) {
-            return new File(storageFolder + File.separator + String.valueOf(bookId).chars().
-                    boxed().map(String::valueOf).collect(Collectors.joining(File.separator)));
+            String pathname = storageFolder + File.separator + String.valueOf(bookId).chars().
+                    boxed().map(String::valueOf).collect(Collectors.joining(File.separator))+".dh";
+            return new File(pathname);
         }
 
         @Override
