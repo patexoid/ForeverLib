@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.io.BufferedInputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
@@ -184,7 +185,7 @@ public class DuplicateHandler {
 
         private File getCacheFile(Long bookId) {
             String pathname = storageFolder + File.separator + String.valueOf(bookId).chars().
-                    boxed().map(String::valueOf).collect(Collectors.joining(File.separator))+".dh";
+                    boxed().map(String::valueOf).collect(Collectors.joining(File.separator)) + ".dh";
             return new File(pathname);
         }
 
@@ -212,7 +213,8 @@ public class DuplicateHandler {
         ShingleableBook(Book book) {
             this.book = book;
             is = fileStorage.load(book.getFileResource().getFilePath());
-            this.contentIterator = parserService.getContentIterator(book.getFileName(), is);
+            this.contentIterator = parserService.getContentIterator(book.getFileName(),
+                    new BufferedInputStream(is, 1024 * 1024));
         }
 
         @Override
