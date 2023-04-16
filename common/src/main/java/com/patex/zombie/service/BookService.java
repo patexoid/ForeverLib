@@ -17,6 +17,8 @@ import java.util.stream.Stream;
 public interface BookService {
     Book uploadBook(String fileName, InputStream is, User user) throws LibException;
 
+    Book uploadBook(String fileName, byte[] bytes, User user) throws LibException;
+
     Optional<Book> getBook(long id);
 
     InputStream getBookInputStream(Book book) throws LibException;
@@ -26,8 +28,6 @@ public interface BookService {
     Page<Book> getBooks(Pageable pageable);
 
     Book updateBook(Book book) throws LibException;
-
-    String saveCover(String fileName, BookImage bookImage);
 
     Book save(Book entity);
 

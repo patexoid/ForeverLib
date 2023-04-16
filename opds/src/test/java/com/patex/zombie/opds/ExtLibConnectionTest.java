@@ -88,7 +88,7 @@ public class ExtLibConnectionTest {
             User user = new User();
 
             BookService bookService = mock(BookService.class);
-            when(bookService.uploadBook(any(), any(), eq(user))).thenThrow(new LibException());
+            when(bookService.uploadBook(any(), isA(InputStream.class), eq(user))).thenThrow(new LibException());
             URLConnection urlConnection = mock(URLConnection.class);
             ExecutorCreator executorCreator = mock(ExecutorCreator.class);
             when(executorCreator.createExecutor(any(), any())).thenReturn(MoreExecutors.newDirectExecutorService());

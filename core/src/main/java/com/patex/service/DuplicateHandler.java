@@ -2,7 +2,7 @@ package com.patex.service;
 
 
 import com.patex.messaging.MessengerService;
-import com.patex.model.BookCheckQueue;
+import com.patex.model.CheckDuplicateMessage;
 import com.patex.parser.ParserService;
 import com.patex.shingle.ShingleCacheStorage;
 import com.patex.shingle.ShingleMatcher;
@@ -91,9 +91,9 @@ public class DuplicateHandler {
                 collect(Collectors.toList());
     }
 
-    public void checkForDuplicate(BookCheckQueue bookCheckQueue) {
-        Book primary = bookService.getBook(bookCheckQueue.getBook()).get();
-        User user = userService.getUser(bookCheckQueue.getUser());
+    public void checkForDuplicate(CheckDuplicateMessage bookCheckQueue) {
+        Book primary = bookService.getBook(bookCheckQueue.book()).get();
+        User user = userService.getUser(bookCheckQueue.user());
         try {
             shingleSearch.findSimilar(primary).
                     ifPresent(book -> markDuplications(primary, book, user));
@@ -111,6 +111,12 @@ public class DuplicateHandler {
         try {
             Book primary, secondary;
             if (first.getContentSize() > second.getContentSize()) {
+                primary = first;
+                secondary = second;
+            } else if (first.getContentSize() < second.getContentSize()) {
+                primary = second;
+                secondary = first;
+            } else if(first.getCreated().isBefore(second.getCreated())){
                 primary = first;
                 secondary = second;
             } else {
