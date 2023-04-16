@@ -5,16 +5,15 @@ import com.patex.entities.AuthorEntity;
 import com.patex.entities.AuthorRepository;
 import com.patex.entities.BookEntity;
 import com.patex.mapper.BookMapper;
+import com.patex.model.CheckDuplicateMessage;
 import com.patex.zombie.model.BookImage;
 import com.patex.parser.BookInfo;
 import com.patex.parser.ParserService;
 import com.patex.zombie.model.Book;
-import com.patex.zombie.model.FileResource;
 import com.patex.zombie.model.User;
 import com.patex.zombie.service.BookService;
 import com.patex.zombie.service.TransactionService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
@@ -30,15 +29,15 @@ public class AdminService {
     private final AuthorRepository authorService;
     private final TransactionService transactionService;
     private final ParserService parserService;
-    private final ApplicationEventPublisher publisher;
-    private final BookMapper bookMapper;
+
+    private final RabbitService rabbitService;
 
 
     public void updateCovers() {
         bookService.findAll().
                 filter(book -> book.getCover() == null).forEach(
-                book -> transactionService.newTransaction(() -> updateCover(book))
-        );
+                        book -> transactionService.newTransaction(() -> updateCover(book))
+                );
 
     }
 
@@ -48,8 +47,7 @@ public class AdminService {
         BookInfo bookInfo = parserService.getBookInfo(fileName, bookIs);
         BookImage bookImage = bookInfo.getBookImage();
         if (bookImage != null) {
-            String cover = bookService.saveCover(fileName, bookImage);
-            book.setCover(new FileResource(cover, bookImage.getType(), bookImage.getImage().length));
+            rabbitService.updateBookCover(bookImage, book.getId());
         }
         bookService.save(book);
     }
@@ -57,20 +55,20 @@ public class AdminService {
     public void publisEventForExistingBooks(User user) {
         bookService.findAll().
                 filter(book -> !book.isDuplicate()).
-                map(book -> new BookCreationEvent(book, user)).
-                forEach(publisher::publishEvent);
+                map(book -> new CheckDuplicateMessage(book.getId(), user.getUsername())).
+                forEach(rabbitService::checkDuplicate);
     }
 
     public void checkDuplicatesForAuthor(User user, Long authorId) {
         transactionService.transactionRequired(
-                () -> {
-                    List<BookEntity> books = authorService.findById(authorId).stream().map(AuthorEntity::getBooks).
-                            flatMap(Collection::stream).
-                            map(AuthorBookEntity::getBook).collect(Collectors.toList());
-                    books.forEach(book -> book.setDuplicate(false));
-                    books.stream().map(book -> new BookCreationEvent(bookMapper.toDto(book), user)).
-                            forEach(publisher::publishEvent);
-                }
-        );
+                        () -> {
+                            List<BookEntity> books = authorService.findById(authorId).stream().map(AuthorEntity::getBooks).
+                                    flatMap(Collection::stream).
+                                    map(AuthorBookEntity::getBook).toList();
+                            books.forEach(book -> book.setDuplicate(false));
+                            return books;
+                        }
+                ).stream().map(book -> new CheckDuplicateMessage(book.getId(), user.getUsername())).
+                forEach(rabbitService::checkDuplicate);
     }
 }

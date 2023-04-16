@@ -8,6 +8,8 @@ import com.patex.entities.BookEntity;
 import com.patex.entities.BookRepository;
 import com.patex.entities.BookSequenceEntity;
 import com.patex.entities.FileResourceEntity;
+import com.patex.entities.GenreEntity;
+import com.patex.entities.GenreRepository;
 import com.patex.entities.SequenceEntity;
 import com.patex.entities.SequenceRepository;
 import com.patex.mapper.BookMapper;
@@ -17,7 +19,6 @@ import com.patex.zombie.service.StorageService;
 import com.patex.zombie.LibException;
 import com.patex.zombie.StreamU;
 import com.patex.zombie.model.Book;
-import com.patex.zombie.model.BookImage;
 import com.patex.zombie.model.User;
 import com.patex.zombie.service.BookService;
 import com.patex.zombie.service.TransactionService;
@@ -54,6 +55,9 @@ import java.util.stream.Stream;
 public class BookServiceImpl implements BookService {
     private static final Logger log = LoggerFactory.getLogger(BookService.class);
     private final BookRepository bookRepository;
+
+    private final GenreRepository genreRepository;
+
     private final SequenceRepository sequenceRepository;
     private final AuthorRepository authorRepository;
     private final ParserService parserService;
@@ -65,18 +69,26 @@ public class BookServiceImpl implements BookService {
 
 
     @Override
-    public synchronized Book uploadBook(String fileName, InputStream is, User user) throws LibException {//TODO fix transactions
+    public  Book uploadBook(String fileName, InputStream is, User user) throws LibException {//TODO fix transactions
+        return uploadBook(fileName, loadFromStream(is),user);
+    }
 
+    public Book uploadBook(String fileName, byte[] bytes,User user) {
+        final BookInfo bookInfo = parserService.getBookInfo(fileName, new ByteArrayInputStream(bytes));
+        byte[] checksum = getChecksum(bytes);
+        String[] filePath = getFilePath(bookInfo.getBook(), fileName);
+        String fileId = fileStorage.save(bytes, filePath);
+        return saveBook(fileName, user, checksum, bookInfo, fileId, bytes.length);
+    }
+
+    private synchronized Book saveBook(String fileName, User user, byte[] checksum, BookInfo bookInfo, String fileId, int bookSize) {
         Book result = transactionService.transactionRequired(() -> {
-            byte[] byteArray = loadFromStream(is);
-            byte[] checksum = getChecksum(byteArray);
-            BookInfo bookInfo = parserService.getBookInfo(fileName, new ByteArrayInputStream(byteArray));
-            BookEntity book = bookInfo.getBook();
+            BookEntity book=bookInfo.getBook();
             Optional<BookEntity> sameBook = bookRepository.findFirstByTitleAndChecksum(book.getTitle(), checksum);
             if (sameBook.isPresent()) {
                 return bookMapper.toDto(sameBook.get());
             }
-            log.trace("new book:{}", book.getFileName());
+            log.trace("new book:{}", book.getTitle());
             List<AuthorEntity> authors = book.getAuthorBooks().stream().
                     map(AuthorBookEntity::getAuthor).
                     map(author -> authorRepository.findFirstByNameIgnoreCase(author.getName()).orElse(author)).
@@ -94,6 +106,12 @@ public class BookServiceImpl implements BookService {
             Map<String, SequenceEntity> sequencesMap = sequenceMapList.entrySet().stream().
                     collect(Collectors.toMap(Map.Entry::getKey, e -> mergeSequences(e.getValue())));
 
+
+            book.getGenres().forEach(bg->{
+                Optional<GenreEntity> dbGenre = genreRepository.findByName(bg.getGenre().getName());
+                dbGenre.ifPresent(bg::setGenre);
+            });
+
             List<BookSequenceEntity> sequences = book.getSequences().stream().
                     map(bs -> {
                         SequenceEntity sequence = bs.getSequence();
@@ -101,14 +119,7 @@ public class BookServiceImpl implements BookService {
                                 sequencesMap.getOrDefault(sequence.getName(), sequence), book);
                     }).collect(Collectors.toList());
             book.setSequences(sequences);
-            String[] filePath = getFilePath(book, fileName);
-            String fileId = fileStorage.save(byteArray, filePath);
-            book.setFileResource(new FileResourceEntity(fileId, "application/fb2+zip", byteArray.length));//TODO improve me
-            BookImage bookImage = bookInfo.getBookImage();
-            if (bookImage != null) {
-                String cover = saveCover(fileName, bookImage);
-                book.setCover(new FileResourceEntity(cover, bookImage.getType(), bookImage.getImage().length));
-            }
+            book.setFileResource(new FileResourceEntity(fileId, "application/fb2+zip", bookSize));//TODO improve me
             book.setFileName(fileName);
             book.setChecksum(checksum);
             book.setCreated(Instant.now());
@@ -116,7 +127,7 @@ public class BookServiceImpl implements BookService {
             someMagic(book);
             return bookMapper.toDto(save);
         });
-        publisher.publishEvent(new BookCreationEvent(result, user));
+        publisher.publishEvent(new BookCreationEvent(result, bookInfo, user));
         return result;
     }
 
@@ -128,12 +139,14 @@ public class BookServiceImpl implements BookService {
                 map(AuthorBookEntity::getAuthor)
                 .map(AuthorEntity::getName)
                 .map(transliterator::transliterate)
+                .map(s -> s.length() > 100 ? s.substring(0, 100) : s)
                 .orElse("No Author");
         path[1] = book.getSequences().stream().
                 findFirst().
                 map(BookSequenceEntity::getSequence)
                 .map(SequenceEntity::getName)
                 .map(transliterator::transliterate)
+                .map(s -> s.length() > 100 ? s.substring(0, 100) : s)
                 .orElse("No Sequence");
         path[2] = fileName;
         return path;
@@ -227,17 +240,6 @@ public class BookServiceImpl implements BookService {
         }
         digest.update(bookByteArray);
         return digest.digest();
-    }
-
-
-    @Override
-    public String saveCover(String fileName, BookImage bookImage) {
-        String coverName = fileName;
-        String[] type = bookImage.getType().split("/");
-        if (type.length > 1) {
-            coverName = fileName + "." + type[1];
-        }
-        return fileStorage.save(bookImage.getImage(), "image", coverName);
     }
 
     @Override

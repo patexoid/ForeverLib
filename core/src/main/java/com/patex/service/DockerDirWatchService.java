@@ -54,9 +54,8 @@ public class DockerDirWatchService extends DirWatcherService {
             log.error("No admin User");
             return;
         }
-        Path failedDir = directoryPath.resolve(FAILED_DIRECTORY);
         try (Stream<Path> walk = Files.walk(directoryPath)) {
-            walk.filter(Predicate.not(failedDir::startsWith))
+            walk.filter(Predicate.not(path -> path.startsWith(failedDir)))
                     .forEach(p -> processPath(p, adminUser));
         }
 
@@ -65,13 +64,14 @@ public class DockerDirWatchService extends DirWatcherService {
     @SneakyThrows
     private void processPath(Path p, Optional<User> adminUser) {
         assert adminUser.isPresent();
-        processFile(p.toFile(), adminUser.get());
         if (Files.isDirectory(p)) { //I'm to lazy to process and delete all dirs on the same step
             try(Stream<Path> children=Files.list(p)) {
                 if(children.findFirst().isEmpty()){
                     Files.delete(p);
                 }
             }
+        } else {
+            processFile(p.toFile(), adminUser.get());
         }
     }
 }

@@ -1,6 +1,8 @@
 package com.patex.zombie.model;
 
-public class BookImage {
+import java.io.Serializable;
+
+public class BookImage implements Serializable {
 
     private byte[] image;
 

@@ -6,6 +6,7 @@ import com.patex.entities.AuthorRepository;
 import com.patex.entities.BookEntity;
 import com.patex.entities.BookRepository;
 import com.patex.entities.BookSequenceEntity;
+import com.patex.entities.GenreRepository;
 import com.patex.entities.SequenceEntity;
 import com.patex.entities.SequenceRepository;
 import com.patex.mapper.BookMapper;
@@ -71,6 +72,8 @@ public class BooksServiceTest {
 
     @Mock
     private ParserService parserService;
+    @Mock
+    private GenreRepository genreRepository;
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
@@ -99,6 +102,7 @@ public class BooksServiceTest {
 
         lenient().when(parserService.getBookInfo(eq(FILE_NAME), any())).thenReturn(bookInfo);
         when(bookRepo.findFirstByTitleAndChecksum(any(), any())).thenReturn(Optional.empty());
+        when(genreRepository.findByName(any())).thenReturn(Optional.empty());
         lenient().when(bookRepo.save(any(BookEntity.class))).thenAnswer(i -> i.getArguments()[0]);
 //        when(sequenceService.mergeSequences(any())).thenAnswer(i -> {
 //            Collection sequences = (Collection) i.getArguments()[0];
@@ -110,7 +114,7 @@ public class BooksServiceTest {
 //        });
         lenient().when(authorRepo.findFirstByNameIgnoreCase(any())).thenReturn(Optional.empty());
 
-        bookService = new BookServiceImpl(bookRepo, mock(SequenceRepository.class), authorRepo, parserService,
+        bookService = new BookServiceImpl(bookRepo, genreRepository, mock(SequenceRepository.class), authorRepo, parserService,
                 fileStorage, transactionService, eventPublisher, bookMapper, mock(EntityManager.class));
     }
 

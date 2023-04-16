@@ -181,10 +181,6 @@ public class BookEntity {
     }
 
 
-    public Boolean isPrimary() {
-        return !duplicate;
-    }
-
     public void setDuplicate(Boolean duplicate) {
         this.duplicate = duplicate;
     }
