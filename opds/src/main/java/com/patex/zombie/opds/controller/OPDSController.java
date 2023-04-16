@@ -126,20 +126,20 @@ public class OPDSController {
             @RequestParam(required = false, defaultValue = "", name = AUTHOR_NAME_PREFIX) String prefix) {
         return createMav(new Res("opds.all.authors"), authorService.getAuthorsCount(LinkUtils.decode(prefix)),
                 aggrResults -> aggrResults.stream().
-                        flatMap(this::expandAggrResult).
+                        flatMap(ar -> expandAggrResult(ar, aggrResults.size())).
                         sorted(Comparator.comparing(OPDSEntry::getTitle)).
                         collect(Collectors.toList()));
     }
 
 
-    private Stream<OPDSEntry> expandAggrResult(AggrResult aggr) {
-        if (aggr.getResult() >= EXPAND_FOR_AUTHORS_COUNT) {
+    private Stream<OPDSEntry> expandAggrResult(AggrResult aggr, int resultSize) {
+        if (aggr.getResult() < EXPAND_FOR_AUTHORS_COUNT && resultSize <= 10) {
+            return authorService.findByName(aggr.getPrefix()).stream().map(AuthorEntry::new);
+        } else {
             String link = LinkUtils.makeURL("opds", AUTHORSINDEX)
                     + "?" + AUTHOR_NAME_PREFIX + "=" + LinkUtils.encode(aggr.getPrefix());
             Res title = new Res("first.value", aggr.getPrefix());
             return Stream.of(new OPDSEntryImpl(aggr.getPrefix(), title, null, link));
-        } else {
-            return authorService.findByName(aggr.getPrefix()).stream().map(AuthorEntry::new);
         }
     }
 
