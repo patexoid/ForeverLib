@@ -1,9 +1,11 @@
 package com.patex.service;
 
+import com.patex.controllers.BookController;
 import com.patex.entities.AuthorBookEntity;
 import com.patex.entities.AuthorEntity;
 import com.patex.entities.AuthorRepository;
 import com.patex.entities.BookEntity;
+import com.patex.entities.BookRepository;
 import com.patex.mapper.BookMapper;
 import com.patex.model.CheckDuplicateMessage;
 import com.patex.zombie.model.BookImage;
@@ -26,6 +28,10 @@ import java.util.stream.Collectors;
 public class AdminService {
 
     private final BookService bookService;
+
+    private final BookRepository bookRepository;
+
+    private final BookMapper bookMapper;
     private final AuthorRepository authorService;
     private final TransactionService transactionService;
     private final ParserService parserService;
@@ -34,8 +40,8 @@ public class AdminService {
 
 
     public void updateCovers() {
-        bookService.findAll().
-                filter(book -> book.getCover() == null).forEach(
+        bookRepository.findAll().
+                filter(book -> book.getCover() == null).map(bookMapper::toDto).forEach(
                         book -> transactionService.newTransaction(() -> updateCover(book))
                 );
 
@@ -53,7 +59,7 @@ public class AdminService {
     }
 
     public void publisEventForExistingBooks(User user) {
-        bookService.findAll().
+        bookRepository.findAll().
                 filter(book -> !book.isDuplicate()).
                 map(book -> new CheckDuplicateMessage(book.getId(), user.getUsername())).
                 forEach(rabbitService::checkDuplicate);
