@@ -9,7 +9,12 @@ spring:
     driver-class-name: org.h2.Driver
     hikari:
       maximum-pool-size: 20
-
+  rabbitmq:
+    listener:
+      direct:
+        prefetch: 10
+      simple:
+        prefetch: 10
   jpa:
     database-platform:  org.hibernate.dialect.PostgreSQL10Dialect
     hibernate:

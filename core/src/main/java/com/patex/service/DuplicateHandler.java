@@ -184,7 +184,7 @@ public class DuplicateHandler {
         public InputStream load(Long bookId) {
             File cache = getCacheFile(bookId);
             if (cache.exists()) {
-                return new FileInputStream(cache);
+                return new BufferedInputStream(new FileInputStream(cache),1024*1024);
             }
             return null;
         }

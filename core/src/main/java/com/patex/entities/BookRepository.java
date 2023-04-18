@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -36,4 +37,16 @@ public interface BookRepository extends org.springframework.data.repository.Repo
             " and ab.author=primaryAB.author" +
             " and primaryAB.book.id=:bookId")
     Stream<BookEntity> findSameAuthorBook(@Param("bookId") long bookId);
+
+
+    @Query("""
+            SELECT b.id
+            from
+              BookEntity b inner join AuthorBookEntity ab on ab.book=b
+            where
+              b.duplicate=false
+            order by
+               ab.author.id
+            """)
+    List<Long> booksForDuplicateCheck();
 }
