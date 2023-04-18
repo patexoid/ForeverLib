@@ -1,6 +1,5 @@
 package com.patex.service;
 
-import com.patex.controllers.BookController;
 import com.patex.entities.AuthorBookEntity;
 import com.patex.entities.AuthorEntity;
 import com.patex.entities.AuthorRepository;
@@ -21,7 +20,6 @@ import org.springframework.stereotype.Service;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -58,10 +56,9 @@ public class AdminService {
         bookService.save(book);
     }
 
-    public void publisEventForExistingBooks(User user) {
-        bookRepository.findAll().
-                filter(book -> !book.isDuplicate()).
-                map(book -> new CheckDuplicateMessage(book.getId(), user.getUsername())).
+    public void updateDuplicateInfoForAll(User user) {
+        bookRepository.booksForDuplicateCheck().stream().
+                map(id -> new CheckDuplicateMessage(id, user.getUsername())).
                 forEach(rabbitService::checkDuplicate);
     }
 

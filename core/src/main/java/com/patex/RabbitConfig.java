@@ -1,8 +1,5 @@
 package com.patex;
 
-import com.patex.service.CoverService;
-import com.patex.service.RabbitDuplicateHandler;
-import com.patex.service.RabbitService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;

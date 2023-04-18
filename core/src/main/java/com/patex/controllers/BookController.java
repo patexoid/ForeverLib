@@ -132,7 +132,7 @@ public class BookController {
     @Secured(ADMIN_AUTHORITY)
     public @ResponseBody
     String duplicateCheckForExisted() {
-        adminService.publisEventForExistingBooks(userService.getCurrentUser());
+        adminService.updateDuplicateInfoForAll(userService.getCurrentUser());
         duplicateHandler.waitForFinish();
         return "success";
     }
