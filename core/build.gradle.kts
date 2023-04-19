@@ -34,7 +34,7 @@ dependencies {
     api("org.apache.commons:commons-text:1.9")
     api("com.google.guava:guava:31.0.1-jre")
     api("com.patex:plural-resource-bundle:0.0.2")
-    api("com.patex:fuzzySearch:0.2.2")
+    api("com.patex:fuzzysearch:0.2.3")
     api("com.ibm.icu:icu4j:72.1")
     api("com.ibm.icu:icu4j-charset:72.1")
 
