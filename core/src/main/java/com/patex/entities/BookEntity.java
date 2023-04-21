@@ -65,11 +65,11 @@ public class BookEntity {
     @JsonIgnore
     private byte[] checksum;
 
-    @OneToOne(cascade = {CascadeType.PERSIST}, fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToOne(cascade = {CascadeType.PERSIST}, fetch = FetchType.EAGER, orphanRemoval = true)
     @JsonIgnore
     private FileResourceEntity fileResource;
 
-    @OneToOne(cascade = {CascadeType.PERSIST}, fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToOne(cascade = {CascadeType.PERSIST}, fetch = FetchType.EAGER, orphanRemoval = true)
     @JsonIgnore
     private FileResourceEntity cover;
 

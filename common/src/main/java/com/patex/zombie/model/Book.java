@@ -1,15 +1,15 @@
 package com.patex.zombie.model;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class Book {
+@EqualsAndHashCode(callSuper = true)
 
-    private Long id;
+public class Book extends SimpleBook {
 
     private List<BookAuthor> authors = new ArrayList<>();
 
@@ -17,26 +17,9 @@ public class Book {
 
     private List<Genre> genres = new ArrayList<>();
 
-    private boolean duplicate = false;
-
-    private String title;
-
-    private String fileName;
-
-    private Integer contentSize = 0;
-
-    private Instant created;
-
-    private byte[] checksum;
-
-    private FileResource fileResource;
 
     private FileResource cover;
 
-    private String descr;
-
-    public Boolean isPrimary() {
-        return !duplicate;
-    }
 }
+
 
