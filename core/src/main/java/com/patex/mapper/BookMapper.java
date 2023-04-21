@@ -10,6 +10,7 @@ import com.patex.zombie.model.BookAuthor;
 import com.patex.zombie.model.BookSequence;
 import com.patex.zombie.model.FileResource;
 import com.patex.zombie.model.Genre;
+import com.patex.zombie.model.SimpleBook;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -21,6 +22,8 @@ public interface BookMapper {
 
     @Transactional(readOnly = true)
     Book toDto(BookEntity bookEntity);
+
+    SimpleBook toSimpleDto(BookEntity bookEntity);
 
     BookEntity toEntity(Book bookEntity);
 

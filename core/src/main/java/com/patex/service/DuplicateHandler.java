@@ -13,6 +13,7 @@ import com.patex.zombie.model.Book;
 import com.patex.zombie.model.BookAuthor;
 import com.patex.zombie.model.BookSequence;
 import com.patex.zombie.model.Res;
+import com.patex.zombie.model.SimpleBook;
 import com.patex.zombie.model.User;
 import com.patex.zombie.service.BookService;
 import com.patex.zombie.service.StorageService;
@@ -49,7 +50,7 @@ public class DuplicateHandler {
     private final MessengerService messenger;
     private final StorageService fileStorage;
     private final ParserService parserService;
-    private final ShingleSearch<Book, Long> shingleSearch;
+    private final ShingleSearch<SimpleBook, Long> shingleSearch;
     private final UserService userService;
 
     private final LevenshteinDistance levenshteinDistance = new LevenshteinDistance();
@@ -68,8 +69,8 @@ public class DuplicateHandler {
         this.messenger = messenger;
         this.fileStorage = fileStorage;
         this.parserService = parserService;
-        ShingleMatcher.Builder<Long, Book> shingleMatherBuilder =
-                ShingleMatcher.builder(ShingleableBook::new, Book::getId).
+        ShingleMatcher.Builder<Long, SimpleBook> shingleMatherBuilder =
+                ShingleMatcher.builder(ShingleableBook::new, SimpleBook::getId).
                         byteArraySize(16).
                         cache(cacheSize, 1, TimeUnit.HOURS).
                         coef(coef).
@@ -79,21 +80,20 @@ public class DuplicateHandler {
         if (StringUtils.isNotEmpty(storageFolder)) {
             shingleMatherBuilder = shingleMatherBuilder.storage(new BookShingleCacheStorage(storageFolder));
         }
-        ShingleMatcher<Book, Long> shingleMatcher = shingleMatherBuilder.build();
-        Function<Book, Collection<Book>> getSameAuthorsBook = this::getSameAuthorsBook;
-        shingleSearch = ShingleSearch.<Book, Long>builder().preSearch(getSameAuthorsBook).shingleMatcher(shingleMatcher).build();
+        ShingleMatcher<SimpleBook, Long> shingleMatcher = shingleMatherBuilder.build();
+        Function<SimpleBook, Collection<SimpleBook>> getSameAuthorsBook = this::getSameAuthorsBook;
+        shingleSearch = ShingleSearch.<SimpleBook, Long>builder().preSearch(getSameAuthorsBook).shingleMatcher(shingleMatcher).build();
     }
 
-    private List<Book> getSameAuthorsBook(Book primaryBook) {
+    private List<SimpleBook> getSameAuthorsBook(SimpleBook primaryBook) {
         return bookService.getSameAuthorsBook(primaryBook).stream().
-                filter(Book::isPrimary).
                 sorted(Comparator.comparing(
                         book -> levenshteinDistance.apply(book.getTitle(), primaryBook.getTitle()))).
                 collect(Collectors.toList());
     }
 
     public void checkForDuplicate(CheckDuplicateMessage bookCheckQueue) {
-        Book primary = bookService.getBook(bookCheckQueue.book()).get();
+        SimpleBook primary = bookService.getSimpleBook(bookCheckQueue.book()).get();
         User user = userService.getUser(bookCheckQueue.user());
         try {
             shingleSearch.findSimilar(primary).
@@ -108,28 +108,32 @@ public class DuplicateHandler {
         }
     }
 
-    private void markDuplications(Book first, Book second, User user) {
+    private void markDuplications(SimpleBook first, SimpleBook second, User user) {
         try {
-            Book primary, secondary;
+
+            Long primaryId, secondaryId;
             if (first.getContentSize() > second.getContentSize()) {
-                primary = first;
-                secondary = second;
+                primaryId = first.getId();
+                secondaryId = second.getId();
             } else if (first.getContentSize() < second.getContentSize()) {
-                primary = second;
-                secondary = first;
+                primaryId = second.getId();
+                secondaryId = first.getId();
             } else if(first.getCreated().isBefore(second.getCreated())){
-                primary = first;
-                secondary = second;
+                primaryId = first.getId();
+                secondaryId = second.getId();
             } else {
-                primary = second;
-                secondary = first;
+                primaryId = second.getId();
+                secondaryId = first.getId();
             }
+            Book primary=bookService.getBook(primaryId).get();
+            Book secondary = bookService.getBook(secondaryId).get();
 
             List<Long> sequences = primary.getSequences().stream().
                     map(BookSequence::getId).
-                    collect(Collectors.toList());
-            List<Long> authors = primary.getAuthors().stream().map(BookAuthor::getId).
-                    collect(Collectors.toList());
+                    toList();
+            List<Long> authors = primary.getAuthors().stream().
+                    map(BookAuthor::getId).
+                    toList();
 
             secondary.setDuplicate(true);
             this.bookService.updateBook(secondary);
@@ -212,11 +216,11 @@ public class DuplicateHandler {
     }
 
     private class ShingleableBook implements Shingleable {
-        private final Book book;
+        private final SimpleBook book;
         private Iterator<String> contentIterator;
         private InputStream is;
 
-        ShingleableBook(Book book) {
+        ShingleableBook(SimpleBook book) {
             this.book = book;
             is = fileStorage.load(book.getFileResource().getFilePath());
             this.contentIterator = parserService.getContentIterator(book.getFileName(),

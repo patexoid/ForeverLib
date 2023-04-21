@@ -1,5 +1,6 @@
 package com.patex.parser;
 
+import com.patex.entities.AuthorBookEntity;
 import com.patex.zombie.LibException;
 import com.patex.entities.AuthorEntity;
 import com.patex.entities.BookEntity;
@@ -122,7 +123,10 @@ public class Fb2FileParser implements FileParser {
                 String localPart = element.getName().getLocalPart();
                 if ("author".equals(localPart)) {
                     AuthorEntity author = parseAuthor(reader);
-                    book.addAuthor(author);
+                    if (author != null &&
+                            book.getAuthorBooks().stream().map(AuthorBookEntity::getAuthor).map(AuthorEntity::getName).noneMatch(s -> StringUtils.equals(s, author.getName()))) {
+                        book.addAuthor(author);
+                    }
                 } else if ("coverpage".equals(localPart)) {
                     bookInfo.setCoverage(getImageCoverage(reader));
                 } else if ("book-title".equals(localPart)) {
@@ -130,7 +134,11 @@ public class Fb2FileParser implements FileParser {
                 } else if ("annotation".equals(localPart)) {
                     book.setDescr(getText(reader, "annotation"));
                 } else if ("genre".equals(localPart)) {
-                    book.getGenres().add(new BookGenreEntity(book, new GenreEntity(reader.getElementText())));
+                    String genreName = reader.getElementText();
+                    if (genreName != null &&
+                            book.getGenres().stream().map(BookGenreEntity::getGenre).map(GenreEntity::getName).noneMatch(s -> StringUtils.equals(s, genreName))) {
+                        book.getGenres().add(new BookGenreEntity(book, new GenreEntity(genreName)));
+                    }
                 } else if ("sequence".equals(localPart)) {
                     String sequenceName = element.getAttributeByName(new QName("", "name")).getValue();
                     int order;

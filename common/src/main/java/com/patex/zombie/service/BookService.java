@@ -2,7 +2,7 @@ package com.patex.zombie.service;
 
 import com.patex.zombie.LibException;
 import com.patex.zombie.model.Book;
-import com.patex.zombie.model.BookImage;
+import com.patex.zombie.model.SimpleBook;
 import com.patex.zombie.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +21,8 @@ public interface BookService {
 
     Optional<Book> getBook(long id);
 
+    Optional<SimpleBook> getSimpleBook(long id);
+
     InputStream getBookInputStream(Book book) throws LibException;
 
     InputStream getBookCoverInputStream(Book book) throws LibException;
@@ -31,9 +33,8 @@ public interface BookService {
 
     Book save(Book entity);
 
-    Stream<Book> findAll();
 
     Page<Book> getNewBooks(PageRequest pageRequest);
 
-    List<Book> getSameAuthorsBook(Book primaryBook);
+    List<SimpleBook> getSameAuthorsBook(SimpleBook primaryBook);
 }

@@ -15,6 +15,7 @@ import com.patex.entities.SequenceRepository;
 import com.patex.mapper.BookMapper;
 import com.patex.parser.BookInfo;
 import com.patex.parser.ParserService;
+import com.patex.zombie.model.SimpleBook;
 import com.patex.zombie.service.StorageService;
 import com.patex.zombie.LibException;
 import com.patex.zombie.StreamU;
@@ -207,6 +208,11 @@ public class BookServiceImpl implements BookService {
         return bookRepository.findById(id).map(bookMapper::toDto);
     }
 
+    public Optional<SimpleBook> getSimpleBook(long id) {
+        return bookRepository.findById(id).map(bookMapper::toSimpleDto);
+    }
+
+
     @Override
     public InputStream getBookInputStream(Book book) throws LibException {
         return fileStorage.load(book.getFileResource().getFilePath());
@@ -248,10 +254,6 @@ public class BookServiceImpl implements BookService {
         return bookMapper.toDto(bookRepository.save(entity));
     }
 
-    @Override
-    public Stream<Book> findAll() {
-        return bookRepository.findAll().map(bookMapper::toDto);
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -260,10 +262,10 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public List<Book> getSameAuthorsBook(Book primaryBook) {
+    public List<SimpleBook> getSameAuthorsBook(SimpleBook primaryBook) {
         return bookRepository.findSameAuthorBook(primaryBook.getId()).
                 filter(book -> !book.getId().equals(primaryBook.getId())).
-                map(bookMapper::toDto).
+                map(bookMapper::toSimpleDto).
                 collect(Collectors.toList());
     }
 }

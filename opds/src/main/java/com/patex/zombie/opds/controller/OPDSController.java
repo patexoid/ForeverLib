@@ -193,7 +193,7 @@ public class OPDSController {
     public ModelAndView getAuthorSequences(@PathVariable(value = "id") long id) {
         Author author = authorService.getAuthor(id);
         return createMav(new Res("opds.author.sequence", author.getName()), author,
-                a -> a.getSequences().stream().map(SequenceEntry::new).
+                a -> a.getSequences().stream().sorted(Comparator.comparing(Sequence::getName)).map(SequenceEntry::new).
                         collect(Collectors.toList()));
     }
 

@@ -29,13 +29,16 @@ public interface BookRepository extends org.springframework.data.repository.Repo
 
     Optional<BookEntity> findById(long id);
 
-    @Query("SELECT b from " +
-            " BookEntity b, " +
-            " AuthorBookEntity ab," +
-            " AuthorBookEntity primaryAB " +
-            "where ab.book=b" +
-            " and ab.author=primaryAB.author" +
-            " and primaryAB.book.id=:bookId")
+    @Query("""
+            SELECT b from
+             BookEntity b,
+             AuthorBookEntity ab,
+             AuthorBookEntity primaryAB
+            where ab.book=b
+             and ab.author=primaryAB.author
+             and primaryAB.book.id=:bookId
+             and b.duplicate = false
+            """)
     Stream<BookEntity> findSameAuthorBook(@Param("bookId") long bookId);
 
 
