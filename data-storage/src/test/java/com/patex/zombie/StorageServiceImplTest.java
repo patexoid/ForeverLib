@@ -23,37 +23,57 @@ public class StorageServiceImplTest {
     public void testFileUnique() {
         String unique = "unique.txt";
 
-        when(fileStorage.exists(unique)).thenReturn(Boolean.FALSE);
+        String[] path = {"u", "n", "i", "unique.txt"};
+        when(fileStorage.exists(path)).thenReturn(Boolean.FALSE);
 
         byte[] content = {};
-        storageService.save(content, unique);
-        verify(fileStorage, Mockito.times(1)).save(content, unique);
+        storageService.save(content, true, unique);
+        verify(fileStorage, Mockito.times(1)).save(content, path);
+    }
+    @Test
+    public void testFileShort() {
+        String[] shortName = {"a","filename.txt"};
+
+        String[] path = {"a", "_", "_","a", "filename.txt"};
+        when(fileStorage.exists(path)).thenReturn(Boolean.FALSE);
+
+        byte[] content = {};
+        storageService.save(content, true, shortName);
+        verify(fileStorage, Mockito.times(1)).save(content, path);
     }
 
     @Test
     public void testFileExists() {
         String exists = "exist.txt";
-        String exists1 = "exist_1_.txt";
+        String[] existsPath = {"e", "x", "i", "exist.txt"};
+        String[] existsPath1 = {"e", "x", "i", "exist_1_.txt"};
 
-        when(fileStorage.exists(exists)).thenReturn(Boolean.TRUE);
+        when(fileStorage.exists(existsPath)).thenReturn(Boolean.TRUE);
 
         byte[] content = {};
-        storageService.save(content, exists);
-        verify(fileStorage, Mockito.times(1)).save(content, exists1);
+        storageService.save(content, true, exists);
+        verify(fileStorage, Mockito.times(1)).save(content, existsPath1);
     }
 
     @Test
     public void testFileExistsTwice() {
         String exists = "exist.txt";
-        String exists1 = "exist_1_.txt";
-        String exists2 = "exist_2_.txt";
+        String[] existsPath = {"e", "x", "i", "exist.txt"};
+        String[] existsPath1 = {"e", "x", "i", "exist_1_.txt"};
+        String[] existsPath2 = {"e", "x", "i", "exist_2_.txt"};
 
-        when(fileStorage.exists(exists)).thenReturn(Boolean.TRUE);
-        when(fileStorage.exists(exists1)).thenReturn(Boolean.TRUE);
+        when(fileStorage.exists(existsPath)).thenReturn(Boolean.TRUE);
+        when(fileStorage.exists(existsPath1)).thenReturn(Boolean.TRUE);
 
         byte[] content = {};
-        storageService.save(content, exists);
-        verify(fileStorage, Mockito.times(1)).save(content, exists2);
+        storageService.save(content, true, exists);
+        verify(fileStorage, Mockito.times(1)).save(content, existsPath2);
+    }
+
+
+    @Test
+    public void testFilePathLvel() {
+        byte[] content = {};
     }
 
 }

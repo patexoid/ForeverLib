@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -52,4 +53,6 @@ public interface BookRepository extends org.springframework.data.repository.Repo
                ab.author.id
             """)
     List<Long> booksForDuplicateCheck();
+
+    Stream<BookEntity> findByIdIn(Collection<Long> ids);
 }

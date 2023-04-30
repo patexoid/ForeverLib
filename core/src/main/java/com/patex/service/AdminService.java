@@ -1,18 +1,21 @@
 package com.patex.service;
 
+import com.google.common.collect.Lists;
 import com.patex.entities.AuthorBookEntity;
 import com.patex.entities.AuthorEntity;
 import com.patex.entities.AuthorRepository;
 import com.patex.entities.BookEntity;
 import com.patex.entities.BookRepository;
+import com.patex.entities.FileResourceEntity;
 import com.patex.mapper.BookMapper;
 import com.patex.model.CheckDuplicateMessage;
-import com.patex.zombie.model.BookImage;
 import com.patex.parser.BookInfo;
 import com.patex.parser.ParserService;
 import com.patex.zombie.model.Book;
+import com.patex.zombie.model.BookImage;
 import com.patex.zombie.model.User;
 import com.patex.zombie.service.BookService;
+import com.patex.zombie.service.StorageService;
 import com.patex.zombie.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -53,7 +56,6 @@ public class AdminService {
         if (bookImage != null) {
             rabbitService.updateBookCover(bookImage, book.getId());
         }
-        bookService.save(book);
     }
 
     public void updateDuplicateInfoForAll(User user) {
@@ -73,5 +75,29 @@ public class AdminService {
                         }
                 ).stream().map(book -> new CheckDuplicateMessage(book.getId(), user.getUsername())).
                 forEach(rabbitService::checkDuplicate);
+    }
+
+    private final StorageService storageService;
+
+    public void updateBookLocation() {
+        List<Long> ids = bookRepository.booksForDuplicateCheck();
+        List<List<Long>> partitions = Lists.partition(ids, 1000);
+        partitions.forEach(partIds -> {
+            transactionService.transactionRequired(() -> {
+                bookRepository.findByIdIn(partIds).forEach(be -> {
+                    String[] filePath = BookServiceImpl.getFilePath(be, be.getFileName());
+                    String moved = storageService.move(be.getFileResource().getFilePath(), filePath, true);
+                    be.getFileResource().setFilePath(moved);
+
+                    FileResourceEntity cover = be.getCover();
+                    if (cover != null) {
+                        String[] newpath = CoverService.getCoverPath(moved, cover.getType());
+                        String newCoverPath = storageService.move(cover.getFilePath(), newpath, false);
+                        cover.setFilePath(newCoverPath);
+                    }
+                });
+            });
+        });
+
     }
 }

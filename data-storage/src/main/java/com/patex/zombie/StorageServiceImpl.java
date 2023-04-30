@@ -1,6 +1,5 @@
 package com.patex.zombie;
 
-import com.patex.zombie.LibException;
 import com.patex.zombie.service.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,15 +19,22 @@ public class StorageServiceImpl implements StorageService {
 
     private final FileStorage fileStorage;
 
+    private static final int LEVEL = 3;
+
     @Autowired
     public StorageServiceImpl(FileStorage fileStorage) {
         this.fileStorage = fileStorage;
     }
 
     @Override
-    public String save(byte[] file, String... filepath) throws LibException {
-
-        if (fileStorage.exists(filepath)) {
+    public String save(byte[] file, boolean updatePath, String... filepath) throws LibException {
+        String[] updatedPath;
+        if (updatePath) {
+            updatedPath = updateWithLevel(filepath);
+        } else {
+            updatedPath = filepath;
+        }
+        if (fileStorage.exists(updatedPath)) {
             Matcher matcher = DUPLICATE_FILENAME_PATTERN.matcher(filepath[filepath.length - 1]);
             if (matcher.matches()) {
                 String prefix = matcher.group(1);
@@ -40,13 +46,26 @@ public class StorageServiceImpl implements StorageService {
                 } else {
                     newFilepath[newFilepath.length - 1] = prefix + "_1_." + extension;
                 }
-                return save(file, newFilepath);
+                return save(file, updatePath, newFilepath);
             } else {
                 throw new LibException("Can't match file name " + Arrays.toString(filepath)
                         + " pattern " + DUPLICATE_FILENAME_PATTERN.pattern());
             }
         }
-        return fileStorage.save(file, filepath);
+        return fileStorage.save(file, updatedPath);
+    }
+
+    private String[] updateWithLevel(String[] filepath) {
+        String[] newFilePath = new String[filepath.length + LEVEL];
+        for (int i = 0; i < LEVEL; i++) {
+            if (filepath[0].length() <= i) {
+                newFilePath[i] = "_";
+            } else {
+                newFilePath[i] = filepath[0].substring(i, i + 1);
+            }
+        }
+        System.arraycopy(filepath, 0, newFilePath, LEVEL, filepath.length);
+        return newFilePath;
     }
 
     @Override
@@ -54,4 +73,13 @@ public class StorageServiceImpl implements StorageService {
         return fileStorage.load(fileId);
     }
 
+    public String move(String oldPath, String[] newPath, boolean updatePath) throws LibException {
+        String[] updatedNewPath;
+        if(updatePath){
+            updatedNewPath = updateWithLevel(newPath);
+        } else {
+            updatedNewPath=newPath;
+        }
+        return fileStorage.move(oldPath, updatedNewPath);
+    }
 }
