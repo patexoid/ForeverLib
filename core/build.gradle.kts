@@ -43,7 +43,7 @@ dependencies {
     api(project(":common"))
     testImplementation("org.springframework.amqp:spring-rabbit-test:2.4.1")
     testImplementation("org.springframework.boot:spring-boot-starter-test:2.6.2")
-    testImplementation("org.mockito:mockito-core:4.0.0")
+    testImplementation("org.mockito:mockito-core:5.3.1")
     testImplementation("com.sun.xml.bind:jaxb-impl:3.0.1")
     testImplementation("com.sun.xml.bind:jaxb-core:3.0.1")
     testImplementation("javax.activation:activation:1.1.1")
@@ -72,4 +72,7 @@ tasks.withType<JavaCompile>() {
 
 tasks.withType<Javadoc>() {
     options.encoding = "UTF-8"
+}
+tasks.withType<Test>() {
+    useJUnitPlatform()
 }

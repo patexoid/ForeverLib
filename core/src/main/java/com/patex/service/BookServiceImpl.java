@@ -46,7 +46,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
+import static java.util.function.Predicate.not;
 
 /**
  *
@@ -78,7 +79,7 @@ public class BookServiceImpl implements BookService {
         final BookInfo bookInfo = parserService.getBookInfo(fileName, new ByteArrayInputStream(bytes));
         byte[] checksum = getChecksum(bytes);
         String[] filePath = getFilePath(bookInfo.getBook(), fileName);
-        String fileId = fileStorage.save(bytes, filePath);
+        String fileId = fileStorage.save(bytes, true,filePath);
         return saveBook(fileName, user, checksum, bookInfo, fileId, bytes.length);
     }
 
@@ -132,20 +133,22 @@ public class BookServiceImpl implements BookService {
         return result;
     }
 
-    private String[] getFilePath(BookEntity book, String fileName) {
+    static String[] getFilePath(BookEntity book, String fileName) {
         String[] path = new String[3];
         Transliterator transliterator = Transliterator.getInstance("Any-Latin");
-        path[0] = book.getAuthorBooks().stream().
-                findFirst().
-                map(AuthorBookEntity::getAuthor)
+        path[0] = book.getAuthorBooks().stream()
+                .map(AuthorBookEntity::getAuthor)
                 .map(AuthorEntity::getName)
+                .filter(not(String::isBlank))
+                .findFirst()
                 .map(transliterator::transliterate)
                 .map(s -> s.length() > 100 ? s.substring(0, 100) : s)
                 .orElse("No Author");
-        path[1] = book.getSequences().stream().
-                findFirst().
-                map(BookSequenceEntity::getSequence)
+        path[1] = book.getSequences().stream()
+                .map(BookSequenceEntity::getSequence)
                 .map(SequenceEntity::getName)
+                .filter(not(String::isBlank))
+                .findFirst()
                 .map(transliterator::transliterate)
                 .map(s -> s.length() > 100 ? s.substring(0, 100) : s)
                 .orElse("No Sequence");

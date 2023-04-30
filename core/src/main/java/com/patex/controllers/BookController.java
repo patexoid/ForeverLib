@@ -155,4 +155,13 @@ public class BookController {
         return "success";
     }
 
+
+    @RequestMapping(value = "/updateLocation", method = RequestMethod.GET)
+    @Secured(ADMIN_AUTHORITY)
+    public @ResponseBody
+    String updateBookLocation() {
+        adminService.updateBookLocation();
+        return "success";
+    }
+
 }

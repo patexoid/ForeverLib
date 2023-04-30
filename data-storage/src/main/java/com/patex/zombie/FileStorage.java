@@ -2,6 +2,7 @@ package com.patex.zombie;
 
 import com.patex.zombie.LibException;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -15,4 +16,6 @@ public interface FileStorage {
     InputStream load(String fileId) throws LibException;
 
     boolean exists(String... filePath);
+
+    String move(String oldPath, String[] newPath) throws LibException;
 }

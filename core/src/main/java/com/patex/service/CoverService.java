@@ -6,13 +6,10 @@ import com.patex.zombie.model.BookImage;
 import com.patex.zombie.model.FileResource;
 import com.patex.zombie.service.BookService;
 import com.patex.zombie.service.StorageService;
-import com.patex.zombie.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -45,12 +42,17 @@ public class CoverService {
     }
 
     public String saveCover(String filePath, BookImage bookImage) {
+        String[] coverPath = getCoverPath(filePath, bookImage.getType());
+        return storageService.save(bookImage.getImage(), false, coverPath);
+    }
+
+    static String[] getCoverPath(String filePath, String type) {
         String coverPath = filePath;
-        String[] type = bookImage.getType().split("/");
-        if (type.length > 1) {
-            coverPath = filePath + "." + type[1];
+        String[] typeA = type.split("/");
+        if (typeA.length > 1) {
+            coverPath = filePath + "." + typeA[1];
         }
-        return storageService.save(bookImage.getImage(), "image", coverPath);
+        return new String[]{"image", coverPath};
     }
 
 
