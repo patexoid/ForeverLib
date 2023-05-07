@@ -78,9 +78,16 @@ public class BookServiceImpl implements BookService {
     public Book uploadBook(String fileName, byte[] bytes,User user) {
         final BookInfo bookInfo = parserService.getBookInfo(fileName, new ByteArrayInputStream(bytes));
         byte[] checksum = getChecksum(bytes);
-        String[] filePath = getFilePath(bookInfo.getBook(), fileName);
-        String fileId = fileStorage.save(bytes, true,filePath);
-        return saveBook(fileName, user, checksum, bookInfo, fileId, bytes.length);
+        if (bookRepository.existsByTitleAndChecksum(bookInfo.getBook().getTitle(), checksum)) {
+            return transactionService.transactionRequired(() ->
+                    bookRepository.findFirstByTitleAndChecksum(bookInfo.getBook().getTitle(), checksum)
+                            .map(bookMapper::toDto).get()
+            );
+        } else {
+            String[] filePath = getFilePath(bookInfo.getBook(), fileName);
+            String fileId = fileStorage.save(bytes, true, filePath);
+            return saveBook(fileName, user, checksum, bookInfo, fileId, bytes.length);
+        }
     }
 
     private synchronized Book saveBook(String fileName, User user, byte[] checksum, BookInfo bookInfo, String fileId, int bookSize) {

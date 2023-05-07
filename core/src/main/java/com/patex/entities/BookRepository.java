@@ -22,6 +22,8 @@ public interface BookRepository extends org.springframework.data.repository.Repo
 
     Optional<BookEntity> findFirstByTitleAndChecksum(String title, byte[] checksum);
 
+    boolean existsByTitleAndChecksum(String title, byte[] checksum);
+
     Page<BookEntity> findAllByOrderByCreatedDesc(Pageable pageable);
 
     BookEntity save(BookEntity entity);
