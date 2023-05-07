@@ -3,10 +3,6 @@ spring:
     serialization:
       write_dates_as_timestamps: false
   datasource:
-    url: jdbc:h2:file:./bin/h2/db;AUTO_SERVER=TRUE
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
     hikari:
       maximum-pool-size: 20
   rabbitmq:

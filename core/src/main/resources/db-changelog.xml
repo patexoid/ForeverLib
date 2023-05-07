@@ -45,4 +45,39 @@
             AND ab.BOOK_ID = b.ID);
         </sql>
     </changeSet>
+
+    <changeSet id="5" author="patex" failOnError="false">
+        <sql>
+            CREATE INDEX if not exists "author_book_book_id"
+                ON "author_book" ("book_id");
+
+            CREATE INDEX if not exists "author_book_author_id"
+                ON "author_book" ("author_id");
+
+            CREATE INDEX if not exists "book_sequence_book_id"
+                ON "book_sequence" ("book_id");
+
+            CREATE INDEX if not exists "book_sequence_sequence_id"
+                ON "book_sequence" ("sequence_id");
+
+            CREATE INDEX if not exists "book_genre_genre_id"
+                ON "book_genre" ("genre_id");
+
+            CREATE INDEX if not exists "BOOK_GENRE_BOOK_ID"
+                ON "BOOK_GENRE" ("BOOK_ID");
+        </sql>
+    </changeSet>
+    <changeSet id="6" author="patex" failOnError="false" >
+        <comment>
+            not working on h2 db that used in test //TODO fix it
+        </comment>
+        <sql>
+            create index if not exists UPPER_CASE_AUTHOR_NAME
+                on AUTHOR (upper("NAME"::text));
+
+            CREATE INDEX if not exists "AUTHOR_NAME_PREFIX"
+                ON "AUTHOR" ("NAME" varchar_pattern_ops);
+
+        </sql>
+    </changeSet>
 </databaseChangeLog>
