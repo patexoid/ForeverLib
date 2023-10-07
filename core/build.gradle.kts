@@ -17,14 +17,17 @@ repositories {
 
 }
 
+
+val springBootVersion: String by rootProject.extra
+
 dependencies {
-    api("org.springframework.boot:spring-boot-starter-web:2.6.2")
-    api("org.springframework.boot:spring-boot-starter-security:2.6.2")
+    api("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
+    api("org.springframework.boot:spring-boot-starter-security:$springBootVersion")
     api("org.springframework.security:spring-security-aspects:5.6.1")
-    api("org.liquibase:liquibase-core:4.5.0")
-    api("org.springframework.boot:spring-boot-starter-data-jpa:2.6.2")
-    api("org.springframework.boot:spring-boot-starter-amqp:2.6.2")
-    api("com.h2database:h2:1.4.200")
+    api("org.liquibase:liquibase-core:4.8.0")
+    api("org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion")
+    api("org.springframework.boot:spring-boot-starter-amqp:$springBootVersion")
+    api("com.h2database:h2:2.1.214")
     api("ch.qos.logback:logback-classic:1.2.9")
     api("org.slf4j:jcl-over-slf4j:1.7.32")
     api("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.1")
@@ -42,7 +45,7 @@ dependencies {
     annotationProcessor("org.mapstruct:mapstruct-processor:1.4.2.Final")
     api(project(":common"))
     testImplementation("org.springframework.amqp:spring-rabbit-test:2.4.1")
-    testImplementation("org.springframework.boot:spring-boot-starter-test:2.6.2")
+    testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
     testImplementation("org.mockito:mockito-core:5.3.1")
     testImplementation("com.sun.xml.bind:jaxb-impl:3.0.1")
     testImplementation("com.sun.xml.bind:jaxb-core:3.0.1")

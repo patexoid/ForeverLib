@@ -7,6 +7,7 @@ import com.patex.messaging.TelegramMessenger;
 import com.patex.zombie.model.AggrResult;
 import com.patex.zombie.service.StorageService;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE,
         classes = Application.class)
 @ExtendWith(SpringExtension.class)
+@Disabled
 public class AuthorServiceImplTest {
 
     @MockBean

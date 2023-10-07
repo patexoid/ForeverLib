@@ -1,5 +1,6 @@
-
-subprojects  {
+val springBootVersion by extra { "2.7.16" }
+val springVersion by extra { "5.3.30" }
+subprojects {
 
     repositories {
         mavenCentral()

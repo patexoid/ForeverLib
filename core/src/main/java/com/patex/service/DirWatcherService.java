@@ -130,13 +130,13 @@ public class DirWatcherService {
     @SneakyThrows
     protected void processFile(File file, User adminUser) {
         if (file.getName().toLowerCase().endsWith(".zip")) {
-            try (ZipInputStream zip = new ZipInputStream(new BufferedInputStream(new FileInputStream(file),1024*1024*10))) {
+            try (ZipInputStream zip = new ZipInputStream(new BufferedInputStream(new FileInputStream(file), 1024 * 1024 * 10))) {
                 ZipEntry entry;
                 while ((entry = zip.getNextEntry()) != null) {
                     ByteArrayOutputStream originalBaos = new ByteArrayOutputStream();
                     zip.transferTo(originalBaos);
                     semaphore.acquire();
-                    ZipEntry newEntry=entry;
+                    ZipEntry newEntry = entry;
                     executorService.submit(() -> {
                         try {
                             ByteArrayOutputStream newBaos = new ByteArrayOutputStream();
@@ -147,7 +147,7 @@ public class DirWatcherService {
                             zop.flush();
                             zop.close();
                             String fileName = newEntry.getName() + ".zip";
-                            byte[] newFileContent  = newBaos.toByteArray();
+                            byte[] newFileContent = newBaos.toByteArray();
                             uploadBook(adminUser, fileName, newFileContent);
                         } catch (IOException e) {
                             throw new RuntimeException(e);

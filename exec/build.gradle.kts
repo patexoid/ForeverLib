@@ -26,6 +26,7 @@ tasks.getByName<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar
     this.archiveFileName.set("zombieCore.jar")
 }
 
+val springBootVersion: String by rootProject.extra
 dependencies {
     api(project(":core"))
     api(project(":opds"))
@@ -34,7 +35,7 @@ dependencies {
     api("org.postgresql:postgresql:42.3.1")
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
-    testImplementation("org.springframework.boot:spring-boot-starter-test:2.6.2")
+    testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
     testImplementation("com.patex:fb2-java:0.2")
 }
 
