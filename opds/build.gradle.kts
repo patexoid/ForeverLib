@@ -33,7 +33,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
     testImplementation("com.patex:fb2-java:1.0")
     testImplementation("org.apache.commons:commons-lang3:3.12.0")
-    testImplementation("org.apache.commons:commons-text:1.9")
+    testImplementation("org.apache.commons:commons-text:1.10.0")
     compileOnly("org.projectlombok:lombok:1.18.24")
     annotationProcessor("org.projectlombok:lombok:1.18.24")
     testCompileOnly("org.projectlombok:lombok:1.18.24")

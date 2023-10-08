@@ -33,7 +33,7 @@ dependencies {
     api(project(":opds"))
     api(project(":data-storage"))
     api("org.glassfish.jaxb:jaxb-runtime:3.0.1")
-    api("org.postgresql:postgresql:42.3.1")
+    api("org.postgresql:postgresql:42.6.0")
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
     testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
