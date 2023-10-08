@@ -12,6 +12,7 @@ import java.util.Collection;
 @Repository
 public interface ZUserRepository extends CrudRepository<ZUser, String> {
 
-    @Query("select u from ZUser u, ZUserAuthority a where u.username=a.user AND a.authority=?1")
+    @Query("select a.user from ZUserAuthority a where a.authority=?1")
     Collection<ZUser> findAllByAuthoritiesIs(String authority);
+
 }

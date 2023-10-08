@@ -21,15 +21,17 @@ val springBootVersion: String by rootProject.extra
 dependencies {
     api(project(":common"))
     api("com.rometools:rome:1.17.0")
+
+    compileOnly("jakarta.servlet:jakarta.servlet-api:6.0.0")
+
     api("org.springframework:spring-aspects:$springVersion")
     api("org.springframework:spring-context:$springVersion")
     api("org.springframework:spring-webmvc:$springVersion")
-    api("org.springframework.security:spring-security-core:5.6.1")
-    api("org.springframework.data:spring-data-commons:2.6.0")
+    api("org.springframework.security:spring-security-core:$springVersion")
+    api("org.springframework.data:spring-data-commons:3.1.4")
     api("org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion")
-    api("org.apache.tomcat.embed:tomcat-embed-core:9.0.56")
     testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
-    testImplementation("com.patex:fb2-java:0.2")
+    testImplementation("com.patex:fb2-java:1.0")
     testImplementation("org.apache.commons:commons-lang3:3.12.0")
     testImplementation("org.apache.commons:commons-text:1.9")
     compileOnly("org.projectlombok:lombok:1.18.24")

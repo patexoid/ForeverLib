@@ -1,5 +1,6 @@
-val springBootVersion by extra { "2.7.16" }
-val springVersion by extra { "5.3.30" }
+val springBootVersion by extra { "3.1.4" }
+val springVersion by extra { "6.0.12" }
+val springSecurityVersion by extra { "6.1.4" }
 subprojects {
 
     repositories {
@@ -17,5 +18,7 @@ subprojects {
     tasks.withType<JavaCompile> {
         options.encoding = "UTF-8"
     }
+
+
 
 }
