@@ -3,7 +3,7 @@ package com.patex.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * Created by Alexey on 02.04.2017.

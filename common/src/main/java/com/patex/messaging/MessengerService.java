@@ -6,7 +6,7 @@ import com.patex.zombie.service.Resources;
 import com.patex.zombie.service.UserService;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,7 +34,7 @@ public class MessengerService {
         toRole(new Res("lib.started"), UserService.ADMIN_AUTHORITY, Collections.singletonList(messenger));
     }
 
-    @PreDestroy()
+    @PreDestroy
     public void stopEvent() {
         toRole(new Res("lib.stopped"), UserService.ADMIN_AUTHORITY);
     }

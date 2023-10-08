@@ -8,21 +8,25 @@ plugins {
     `java-library`
     `maven-publish`
 }
-
+val springBootVersion: String by rootProject.extra
+val springVersion: String by rootProject.extra
+val springSecurityVersion: String by rootProject.extra
 dependencies {
-    api("org.springframework.data:spring-data-commons:2.6.0")
-    api("com.fasterxml.jackson.core:jackson-annotations:2.13.1")
-    api("org.springframework:spring-context:5.3.14")
+    api("org.springframework.data:spring-data-commons:$springBootVersion")
+    api("com.fasterxml.jackson.core:jackson-annotations:2.15.2")
+    api("org.springframework:spring-context:$springVersion")
     api("com.patex:plural-resource-bundle:0.0.2")
-    api("jakarta.annotation:jakarta.annotation-api:1.3.5")
-    api("org.springframework.boot:spring-boot-autoconfigure:2.6.2")
-    api("org.telegram:telegrambots:5.6.0")
-    api("org.springframework:spring-tx:5.3.14")
-    api("org.springframework.security:spring-security-core:5.6.1")
+    api("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
+    api("org.telegram:telegrambots:6.8.0")
+    api("org.springframework:spring-tx:$springVersion")
+    api("org.springframework.security:spring-security-core:$springSecurityVersion")
     compileOnly("org.projectlombok:lombok:1.18.24")
+    implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
+    api("com.google.guava:guava:31.0.1-jre")
+
     annotationProcessor("org.projectlombok:lombok:1.18.24")
     testCompileOnly("org.projectlombok:lombok:1.18.24")
-    testAnnotationProcessor("org.projectlombok:lombok:1.18.24")
+
 }
 
 group = "com.patex.zombielib2"

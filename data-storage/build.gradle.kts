@@ -19,6 +19,7 @@ repositories {
 dependencies {
     api(project(":common"))
     annotationProcessor("org.projectlombok:lombok:1.18.24")
+    implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
     testCompileOnly("org.projectlombok:lombok:1.18.24")
     testAnnotationProcessor("org.projectlombok:lombok:1.18.24")
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")

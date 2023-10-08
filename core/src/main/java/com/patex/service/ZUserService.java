@@ -100,6 +100,7 @@ public class ZUserService implements UserService, UserDetailsService {
         if (user.getUserConfig().getLang() == null) {
             user.getUserConfig().setLang("en");
         }
+        user.getUserConfig().setUser(user);
         user.setEnabled(true);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         ZUser created = userRepo.save(user);

@@ -1,6 +1,6 @@
 package com.patex.zombie.opds.entity;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * Created by Alexey on 07.05.2017.

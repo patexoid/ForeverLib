@@ -7,7 +7,7 @@
 plugins {
     `java-library`
     `maven-publish`
-    id("org.springframework.boot") version "2.0.1.RELEASE"
+    id("org.springframework.boot") version "3.1.4"
 }
 
 repositories {
@@ -20,22 +20,24 @@ repositories {
 
 springBoot{
 
-    mainClassName="com.patex.Application"
+    //mainClassName="com.patex.Application"
 }
 tasks.getByName<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
+    mainClass.set("com.patex.Application")
     this.archiveFileName.set("zombieCore.jar")
 }
 
+val springBootVersion: String by rootProject.extra
 dependencies {
     api(project(":core"))
     api(project(":opds"))
     api(project(":data-storage"))
     api("org.glassfish.jaxb:jaxb-runtime:3.0.1")
-    api("org.postgresql:postgresql:42.3.1")
+    api("org.postgresql:postgresql:42.6.0")
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
-    testImplementation("org.springframework.boot:spring-boot-starter-test:2.6.2")
-    testImplementation("com.patex:fb2-java:0.2")
+    testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
+    testImplementation("com.patex:fb2-java:1.0")
 }
 
 group = "com.patex.zombielib2"
