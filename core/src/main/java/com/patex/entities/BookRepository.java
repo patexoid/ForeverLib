@@ -20,6 +20,12 @@ public interface BookRepository extends org.springframework.data.repository.Repo
 
     Page<BookEntity> findAll(Pageable pageable);
 
+    @Query("""
+            select b.id from BookEntity b where b.lang is null 
+                        """)
+    Page<Long> findAllByLangIsNull(Pageable pageable);
+
+
     Optional<BookEntity> findFirstByTitleAndChecksum(String title, byte[] checksum);
 
     boolean existsByTitleAndChecksum(String title, byte[] checksum);

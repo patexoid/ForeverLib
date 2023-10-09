@@ -48,7 +48,7 @@ public class AuthorServiceImplTest {
     @Test
     public void shouldReturnLatestAuthorsCount1() {
         controller.save(new AuthorEntity("abcd1"));
-        List<AggrResult> authorsCount = authorService.getAuthorsCount("");
+        List<AggrResult> authorsCount = authorService.getAuthorsCount("","ua");
         assertEquals("abcd1",authorsCount.get(0).getPrefix());
         assertEquals(1,authorsCount.get(0).getResult());
     }
@@ -60,7 +60,7 @@ public class AuthorServiceImplTest {
         controller.save(new AuthorEntity("abcdd4"));
         controller.save(new AuthorEntity("abcdd6"));
         controller.save(new AuthorEntity("abcdd7"));
-        List<AggrResult> authorsCount = authorService.getAuthorsCount("");
+        List<AggrResult> authorsCount = authorService.getAuthorsCount("","ua");
         authorsCount.forEach(aggrResult -> System.out.println(aggrResult.getPrefix() + " " + aggrResult.getResult()));
         assertEquals("abcd1",authorsCount.get(0).getPrefix());
         assertEquals(1,authorsCount.get(0).getResult());

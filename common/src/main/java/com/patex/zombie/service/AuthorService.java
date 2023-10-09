@@ -11,7 +11,9 @@ import java.util.Optional;
 public interface AuthorService {
     Author getAuthor(long id);
 
-    List<AggrResult> getAuthorsCount(String start);
+    List<String> getLanguages();
+
+    List<AggrResult> getAuthorsCount(String start, String lang);
 
     List<Author> findByName(String name);
 

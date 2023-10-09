@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import jakarta.servlet.http.HttpServletResponse;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -47,9 +48,11 @@ import java.util.stream.Stream;
 public class OPDSController {
 
     public static final String AUTHOR_NAME_PREFIX = "prefix";
+    public static final String AUTHOR_LANG = "lang";
     static final String PREFIX = "opds";
     static final String APPLICATION_ATOM_XML = "application/atom+xml;charset=UTF-8";
-    private static final String AUTHORSINDEX = "authorsindex";
+    private static final String AUTHORS_INDEX = "authorsindex";
+    private static final String AUTHOR_LANGS = "authorlangs";
     private static final int EXPAND_FOR_AUTHORS_COUNT = 3;
     private static final Logger log = LoggerFactory.getLogger(OPDSController.class);
     private final List<RootProvider> rootEntriesProvider = new ArrayList<>();
@@ -113,7 +116,7 @@ public class OPDSController {
                 new OPDSLink(LinkUtils.makeURL(PREFIX, "newBooks"), OPDSLink.OPDS_CATALOG)));
 
         rootEntries.add(new OPDSEntryImpl("root:authors", new Res("opds.all.authors"),
-                new OPDSLink(LinkUtils.makeURL(PREFIX, AUTHORSINDEX), OPDSLink.OPDS_CATALOG)));
+                new OPDSLink(LinkUtils.makeURL(PREFIX, AUTHOR_LANGS), OPDSLink.OPDS_CATALOG)));
         for (RootProvider rootProvider : rootEntriesProvider) {
             rootEntries.addAll(rootProvider.getRoot());
         }
@@ -121,23 +124,41 @@ public class OPDSController {
     }
 
     @SaveLatest
-    @RequestMapping(value = AUTHORSINDEX, produces = APPLICATION_ATOM_XML)
+    @RequestMapping(value = AUTHOR_LANGS, produces = APPLICATION_ATOM_XML)
+    public ModelAndView getAuthorsLanguages() {
+        return createMav(new Res("opds.all.authors"), authorService.getLanguages().stream().
+                sorted().
+                map(lang -> {
+                    String link = LinkUtils.makeURL("opds", AUTHORS_INDEX)
+                            + "?" + AUTHOR_LANG + "=" + LinkUtils.encode(lang);
+                    Res title = new Res("first.value", lang);
+                    return new OPDSEntryImpl(lang, title, null, link);
+                }).
+                collect(Collectors.toList()));
+    }
+
+    @SaveLatest
+    @RequestMapping(value = AUTHORS_INDEX, produces = APPLICATION_ATOM_XML)
     public ModelAndView getAuthorsIndex(
-            @RequestParam(required = false, defaultValue = "", name = AUTHOR_NAME_PREFIX) String prefix) {
-        return createMav(new Res("opds.all.authors"), authorService.getAuthorsCount(LinkUtils.decode(prefix)),
+            @RequestParam(required = false, defaultValue = "", name = AUTHOR_NAME_PREFIX) String prefix,
+            @RequestParam(name = AUTHOR_LANG) String lang
+    ) {
+        return createMav(new Res("opds.all.authors"), authorService.getAuthorsCount(LinkUtils.decode(prefix), lang),
                 aggrResults -> aggrResults.stream().
-                        flatMap(ar -> expandAggrResult(ar, aggrResults.size())).
+                        flatMap(ar -> expandAggrResult(ar, lang, aggrResults.size())).
                         sorted(Comparator.comparing(OPDSEntry::getTitle)).
                         collect(Collectors.toList()));
     }
 
 
-    private Stream<OPDSEntry> expandAggrResult(AggrResult aggr, int resultSize) {
+    private Stream<OPDSEntry> expandAggrResult(AggrResult aggr, String lang, int resultSize) {
         if (aggr.getResult() < EXPAND_FOR_AUTHORS_COUNT && resultSize <= 10) {
             return authorService.findByName(aggr.getPrefix()).stream().map(AuthorEntry::new);
         } else {
-            String link = LinkUtils.makeURL("opds", AUTHORSINDEX)
-                    + "?" + AUTHOR_NAME_PREFIX + "=" + LinkUtils.encode(aggr.getPrefix());
+            String link = LinkUtils.makeURL("opds", AUTHORS_INDEX)
+                    + "?" + AUTHOR_NAME_PREFIX + "=" + LinkUtils.encode(aggr.getPrefix())
+                    + "&"
+                    + AUTHOR_LANG + "=" + LinkUtils.encode(lang);
             Res title = new Res("first.value", aggr.getPrefix());
             return Stream.of(new OPDSEntryImpl(aggr.getPrefix(), title, null, link));
         }

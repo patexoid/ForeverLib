@@ -20,7 +20,7 @@ val springVersion: String by rootProject.extra
 val springBootVersion: String by rootProject.extra
 dependencies {
     api(project(":common"))
-    api("com.rometools:rome:1.17.0")
+    api("com.rometools:rome:2.1.0")
 
     compileOnly("jakarta.servlet:jakarta.servlet-api:6.0.0")
 

@@ -12,7 +12,7 @@ public interface FileParser {
 
     String getExtension();
 
-    BookInfo parseFile(String fileName, InputStream is) throws LibException;
+    BookInfo parseFile(String fileName, InputStream is, boolean parseBody);
 
     Iterator<String> getContentIterator(String fileName, InputStream is) throws LibException;
 }

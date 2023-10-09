@@ -20,9 +20,9 @@ public class ParserServiceTest {
         when(fileParser.getExtension()).thenReturn(EXT);
         InputStream is = mock(InputStream.class);
         BookInfo bookInfo = new BookInfo();
-        when(fileParser.parseFile(FILE_NAME, is)).thenReturn(bookInfo);
+        when(fileParser.parseFile(FILE_NAME, is, true)).thenReturn(bookInfo);
         ParserService parserService = new ParserService(fileParser);
-        BookInfo result = parserService.getBookInfo(FILE_NAME, is);
+        BookInfo result = parserService.getBookInfo(FILE_NAME, is, true);
         assertEquals(result, bookInfo);
     }
 
@@ -32,13 +32,13 @@ public class ParserServiceTest {
         when(fileParser.getExtension()).thenReturn(EXT);
         InputStream is = mock(InputStream.class);
         BookInfo bookInfo = new BookInfo();
-        when(fileParser.parseFile(FILE_NAME, is)).thenReturn(bookInfo);
+        when(fileParser.parseFile(FILE_NAME, is, true)).thenReturn(bookInfo);
 
         FileParser otherParser = mock(FileParser.class);
         when(otherParser.getExtension()).thenReturn("other");
 
         ParserService parserService = new ParserService(fileParser);
-        BookInfo result = parserService.getBookInfo(FILE_NAME, is);
+        BookInfo result = parserService.getBookInfo(FILE_NAME, is, true);
 
         assertEquals(bookInfo, result);
         verifyNoInteractions(otherParser);

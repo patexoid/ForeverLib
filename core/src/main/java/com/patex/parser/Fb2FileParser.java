@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Base64;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Spliterators;
 import java.util.stream.StreamSupport;
 
@@ -44,14 +45,15 @@ public class Fb2FileParser implements FileParser {
         return "fb2";
     }
 
+
     @Override
-    public BookInfo parseFile(String fileName, InputStream is) throws LibException {
+    public BookInfo parseFile(String fileName, InputStream is, boolean parseBody) throws LibException {
         try {
             XMLEventReader reader = factory.createXMLEventReader(is);
             while (reader.hasNext()) {
                 XMLEvent event = reader.nextEvent();
                 if (event.isStartElement() && "title-info".equals(event.asStartElement().getName().getLocalPart())) {
-                    return parseTitleInfo(reader, fileName);
+                    return parseTitleInfo(reader, fileName, parseBody);
                 }
             }
         } catch (XMLStreamException e) {
@@ -60,7 +62,7 @@ public class Fb2FileParser implements FileParser {
         throw new LibException("unable to parse fb2 file");
     }
 
-    private BookInfo parseTitleInfo(XMLEventReader reader, String fileName) {
+    private BookInfo parseTitleInfo(XMLEventReader reader, String fileName, boolean parseBody) {
         BookInfo bookInfo = new BookInfo();
         bookInfo.setBook(new BookEntity());
         try {
@@ -68,10 +70,12 @@ public class Fb2FileParser implements FileParser {
         } catch (XMLStreamException e) {
             log.error("Can't parse title for:" + fileName + " errorMessage:" + e.getMessage());
         }
-        try {
-            parseBodyAndBinary(reader, bookInfo);
-        } catch (Exception e) {
-            log.error("Can't parse body for:" + fileName + " errorMessage:" + e.getMessage());
+        if(parseBody){
+            try {
+                parseBodyAndBinary(reader, bookInfo);
+            } catch (Exception e) {
+                log.error("Can't parse body for:" + fileName + " errorMessage:" + e.getMessage());
+            }
         }
         return bookInfo;
     }
@@ -131,6 +135,12 @@ public class Fb2FileParser implements FileParser {
                     bookInfo.setCoverage(getImageCoverage(reader));
                 } else if ("book-title".equals(localPart)) {
                     book.setTitle(reader.getElementText());
+                } else if ("lang".equals(localPart)) {
+                    String value = reader.getElementText();
+                    book.setLang(value == null ? null : value.toLowerCase(Locale.ROOT));
+                } else if ("src-lang".equals(localPart)) {
+                    String value = reader.getElementText();
+                    book.setSrcLang(value == null ? null : value.toLowerCase(Locale.ROOT));
                 } else if ("annotation".equals(localPart)) {
                     book.setDescr(getText(reader, "annotation"));
                 } else if ("genre".equals(localPart)) {

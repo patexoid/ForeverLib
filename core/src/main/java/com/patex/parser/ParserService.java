@@ -25,9 +25,9 @@ public class ParserService {
         }
     }
 
-    public BookInfo getBookInfo(String fileName, InputStream stream) throws LibException {
+    public BookInfo getBookInfo(String fileName, InputStream stream, boolean parseBody) throws LibException {
         FileParser parser = getParser(fileName);
-        return parser.parseFile(fileName, stream);
+        return parser.parseFile(fileName, stream, parseBody);
     }
 
     private FileParser getParser(String fileName) {
