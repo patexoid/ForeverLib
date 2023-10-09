@@ -37,19 +37,19 @@ public class OPDSControllerTest {
     @Test
     public void shouldHaveSpace() throws IOException {
         httpClient.get("/opds/authorsindex?prefix=testAuthor+", String.class);
-        verify(authorService).getAuthorsCount("testAuthor ");
+        verify(authorService).getAuthorsCount("testAuthor ","ua");
     }
 
     @Test
     public void shouldHavePlus() throws IOException {
         httpClient.get("/opds/authorsindex?prefix=testAuthor%2B", String.class);
-        verify(authorService).getAuthorsCount("testAuthor+");
+        verify(authorService).getAuthorsCount("testAuthor+","ua");
     }
 
 
     @Test
     public void shouldEncodeSpace() throws IOException {
-        when(authorService.getAuthorsCount("testAuthor")).
+        when(authorService.getAuthorsCount("testAuthor","ua")).
                 thenReturn(singletonList(new AggrResultTestImpl("testAuthor ", 10)));
 
         String s = httpClient.get("/opds/authorsindex?prefix=testAuthor", String.class);
@@ -60,7 +60,7 @@ public class OPDSControllerTest {
 
     @Test
     public void shouldEncodePlus() throws IOException {
-        when(authorService.getAuthorsCount("testAuthor")).
+        when(authorService.getAuthorsCount("testAuthor","ua")).
                 thenReturn(singletonList(new AggrResultTestImpl("testAuthor+", 10)));
 
         String s = httpClient.get("/opds/authorsindex?prefix=testAuthor", String.class);

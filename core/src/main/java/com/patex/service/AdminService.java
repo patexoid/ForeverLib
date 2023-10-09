@@ -18,11 +18,14 @@ import com.patex.zombie.service.BookService;
 import com.patex.zombie.service.StorageService;
 import com.patex.zombie.service.TransactionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +42,7 @@ public class AdminService {
 
     private final RabbitService rabbitService;
 
+    private final UpdateAuthorLanguagesService updateAuthorLanguagesService;
 
     public void updateCovers() {
         bookRepository.findAll().
@@ -51,7 +55,7 @@ public class AdminService {
     private void updateCover(Book book) {
         InputStream bookIs = bookService.getBookInputStream(book);
         String fileName = book.getFileName();
-        BookInfo bookInfo = parserService.getBookInfo(fileName, bookIs);
+        BookInfo bookInfo = parserService.getBookInfo(fileName, bookIs, true);
         BookImage bookImage = bookInfo.getBookImage();
         if (bookImage != null) {
             rabbitService.updateBookCover(bookImage, book.getId());
@@ -98,6 +102,26 @@ public class AdminService {
                 });
             });
         });
+    }
 
+    public void updateLangAndSrcLang() {
+        Page<Long> page = bookRepository.findAllByLangIsNull(Pageable.ofSize(5000));
+        while (page.hasNext()) {
+            transactionService.transactionRequired(() -> updateLangAndSrcLang(page.getContent()));
+        }
+        transactionService.transactionRequired(() -> updateLangAndSrcLang(page.getContent()));
+    }
+
+    private void updateLangAndSrcLang(List<Long> books) {
+        bookRepository.findByIdIn(books).forEach(book -> {
+            InputStream bookIs = bookService.getBookInputStream(bookMapper.toDto(book));
+            String fileName = book.getFileName();
+            BookInfo bookInfo = parserService.getBookInfo(fileName, bookIs, false);
+            book.setLang(bookInfo.getBook().getLang());
+            book.setSrcLang(bookInfo.getBook().getSrcLang());
+            updateAuthorLanguagesService.updateLanguages(book.getAuthorBooks().stream().
+                    map(AuthorBookEntity::getAuthor).
+                    map(AuthorEntity::getId).toList());
+        });
     }
 }

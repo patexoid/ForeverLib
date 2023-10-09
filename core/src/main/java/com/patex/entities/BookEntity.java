@@ -81,6 +81,14 @@ public class BookEntity {
     @JdbcTypeCode(Types.LONGVARCHAR)
     private String descr;
 
+    @Column
+    private String lang;
+
+
+    @Column
+    private String srcLang;
+
+
     public BookEntity() {
     }
 
@@ -210,6 +218,22 @@ public class BookEntity {
 
     public void setCover(FileResourceEntity cover) {
         this.cover = cover;
+    }
+
+    public String getLang() {
+        return lang;
+    }
+
+    public void setLang(String lang) {
+        this.lang = lang;
+    }
+
+    public String getSrcLang() {
+        return srcLang;
+    }
+
+    public void setSrcLang(String srcLang) {
+        this.srcLang = srcLang;
     }
 
     @PostUpdate

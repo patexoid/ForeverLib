@@ -164,4 +164,12 @@ public class BookController {
         return "success";
     }
 
+
+    @RequestMapping(value = "/updateBookLang", method = RequestMethod.GET)
+    @Secured(ADMIN_AUTHORITY)
+    public @ResponseBody
+    String updateLangAndSrcLang() {
+        adminService.updateLangAndSrcLang();
+        return "success";
+    }
 }

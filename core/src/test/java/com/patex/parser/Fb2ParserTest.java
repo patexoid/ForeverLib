@@ -2,7 +2,6 @@ package com.patex.parser;
 
 import com.patex.entities.BookEntity;
 import com.patex.zombie.model.BookImage;
-import fb2Generator.Fb2Creator;
 import org.apache.commons.text.RandomStringGenerator;
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +28,7 @@ public class Fb2ParserTest {
                 addAuthor("firstName", "middleName", "lastName")
                 .getFbook();
         Fb2FileParser parser = new Fb2FileParser();
-        BookInfo bookInfo = parser.parseFile("fileName", fbook);
+        BookInfo bookInfo = parser.parseFile("fileName", fbook, true);
         BookEntity book = bookInfo.getBook();
         assertEquals(1, book.getAuthorBooks().size());
         assertEquals("lastName firstName middleName", book.getAuthorBooks().get(0).getAuthor().getName());
@@ -41,7 +40,7 @@ public class Fb2ParserTest {
                 addAuthor(" firstName ", " middleName ", " lastName ")
                 .getFbook();
         Fb2FileParser parser = new Fb2FileParser();
-        BookInfo bookInfo = parser.parseFile("fileName", fbook);
+        BookInfo bookInfo = parser.parseFile("fileName", fbook, true);
         BookEntity book = bookInfo.getBook();
         assertEquals(1, book.getAuthorBooks().size());
         assertEquals("lastName firstName middleName", book.getAuthorBooks().get(0).getAuthor().getName());
@@ -52,7 +51,7 @@ public class Fb2ParserTest {
                 addAuthor("firstName", null, null)
                 .getFbook();
         Fb2FileParser parser = new Fb2FileParser();
-        BookInfo bookInfo = parser.parseFile("fileName", fbook);
+        BookInfo bookInfo = parser.parseFile("fileName", fbook, true);
         BookEntity book = bookInfo.getBook();
         assertEquals(1, book.getAuthorBooks().size());
         assertEquals("firstName", book.getAuthorBooks().get(0).getAuthor().getName());
@@ -64,7 +63,7 @@ public class Fb2ParserTest {
                 addAuthor(null, "middleName", null)
                 .getFbook();
         Fb2FileParser parser = new Fb2FileParser();
-        BookInfo bookInfo = parser.parseFile("fileName", fbook);
+        BookInfo bookInfo = parser.parseFile("fileName", fbook, true);
         BookEntity book = bookInfo.getBook();
         assertEquals(1, book.getAuthorBooks().size());
         assertEquals("middleName", book.getAuthorBooks().get(0).getAuthor().getName());
@@ -75,7 +74,7 @@ public class Fb2ParserTest {
         InputStream fbook = new Fb2Creator(TITLE).
                 getFbook();
         Fb2FileParser parser = new Fb2FileParser();
-        BookInfo bookInfo = parser.parseFile("fileName", fbook);
+        BookInfo bookInfo = parser.parseFile("fileName", fbook, true);
         BookEntity book = bookInfo.getBook();
         assertEquals(TITLE, book.getTitle());
     }
@@ -86,7 +85,7 @@ public class Fb2ParserTest {
                 addAuthor(null, null, "lastName")
                 .getFbook();
         Fb2FileParser parser = new Fb2FileParser();
-        BookInfo bookInfo = parser.parseFile("fileName", fbook);
+        BookInfo bookInfo = parser.parseFile("fileName", fbook, true);
         BookEntity book = bookInfo.getBook();
         assertEquals(1, book.getAuthorBooks().size());
         assertEquals("lastName", book.getAuthorBooks().get(0).getAuthor().getName());
@@ -98,7 +97,7 @@ public class Fb2ParserTest {
                 addAuthor("firstName", null, "lastName")
                 .getFbook();
         Fb2FileParser parser = new Fb2FileParser();
-        BookInfo bookInfo = parser.parseFile("fileName", fbook);
+        BookInfo bookInfo = parser.parseFile("fileName", fbook, true);
         BookEntity book = bookInfo.getBook();
         assertEquals(1, book.getAuthorBooks().size());
         assertEquals("lastName firstName", book.getAuthorBooks().get(0).getAuthor().getName());
@@ -110,7 +109,7 @@ public class Fb2ParserTest {
                 addAuthor("firstName", "middleName", null)
                 .getFbook();
         Fb2FileParser parser = new Fb2FileParser();
-        BookInfo bookInfo = parser.parseFile("fileName", fbook);
+        BookInfo bookInfo = parser.parseFile("fileName", fbook, true);
         BookEntity book = bookInfo.getBook();
         assertEquals(1, book.getAuthorBooks().size());
         assertEquals("firstName middleName", book.getAuthorBooks().get(0).getAuthor().getName());
@@ -122,7 +121,7 @@ public class Fb2ParserTest {
                 addAuthor(null, "middleName", "lastName")
                 .getFbook();
         Fb2FileParser parser = new Fb2FileParser();
-        BookInfo bookInfo = parser.parseFile("fileName", fbook);
+        BookInfo bookInfo = parser.parseFile("fileName", fbook, true);
         BookEntity book = bookInfo.getBook();
         assertEquals(1, book.getAuthorBooks().size());
         assertEquals("lastName middleName", book.getAuthorBooks().get(0).getAuthor().getName());
@@ -136,7 +135,7 @@ public class Fb2ParserTest {
                 getFbook();
 
         Fb2FileParser parser = new Fb2FileParser();
-        BookInfo bookInfo = parser.parseFile("fileName", fbook);
+        BookInfo bookInfo = parser.parseFile("fileName", fbook, true);
         BookEntity book = bookInfo.getBook();
         assertEquals(2, book.getAuthorBooks().size());
         assertEquals("lastName1 firstName1 middleName1", book.getAuthorBooks().get(0).getAuthor().getName());
@@ -151,7 +150,7 @@ public class Fb2ParserTest {
                 getFbook();
 
         Fb2FileParser parser = new Fb2FileParser();
-        BookInfo bookInfo = parser.parseFile("fileName", fbook);
+        BookInfo bookInfo = parser.parseFile("fileName", fbook, true);
         String coverpageImageHref = bookInfo.getCoverage();
         assertEquals(covePageHref, coverpageImageHref);
     }
@@ -164,7 +163,7 @@ public class Fb2ParserTest {
                 getFbook();
 
         Fb2FileParser parser = new Fb2FileParser();
-        BookInfo bookInfo = parser.parseFile("fileName", fbook);
+        BookInfo bookInfo = parser.parseFile("fileName", fbook, true);
         String descr = bookInfo.getBook().getDescr();
         assertEquals(annotation, descr);
     }
@@ -179,7 +178,7 @@ public class Fb2ParserTest {
                 getFbook();
 
         Fb2FileParser parser = new Fb2FileParser();
-        BookInfo bookInfo = parser.parseFile("fileName", fbook);
+        BookInfo bookInfo = parser.parseFile("fileName", fbook, true);
         String descr = bookInfo.getBook().getDescr();
         assertEquals(annotation1 + "\n" + annotation2, descr);
     }
@@ -193,7 +192,7 @@ public class Fb2ParserTest {
                 getFbook();
 
         Fb2FileParser parser = new Fb2FileParser();
-        BookInfo bookInfo = parser.parseFile("fileName", fbook);
+        BookInfo bookInfo = parser.parseFile("fileName", fbook, true);
         BookEntity book = bookInfo.getBook();
         assertEquals(1, book.getGenres().size());
 
@@ -209,7 +208,7 @@ public class Fb2ParserTest {
                 getFbook();
 
         Fb2FileParser parser = new Fb2FileParser();
-        BookInfo bookInfo = parser.parseFile("fileName", fbook);
+        BookInfo bookInfo = parser.parseFile("fileName", fbook, true);
         BookEntity book = bookInfo.getBook();
 
         assertEquals(1, book.getSequences().size());
@@ -225,7 +224,7 @@ public class Fb2ParserTest {
                 getFbook();
 
         Fb2FileParser parser = new Fb2FileParser();
-        BookInfo bookInfo = parser.parseFile("fileName", fbook);
+        BookInfo bookInfo = parser.parseFile("fileName", fbook, true);
         BookEntity book = bookInfo.getBook();
 
         assertEquals(1, book.getSequences().size());
@@ -246,7 +245,7 @@ public class Fb2ParserTest {
                 getFbook();
 
         Fb2FileParser parser = new Fb2FileParser();
-        BookInfo bookInfo = parser.parseFile("fileName", fbook);
+        BookInfo bookInfo = parser.parseFile("fileName", fbook, true);
         BookEntity book = bookInfo.getBook();
 
         assertEquals(2, book.getSequences().size());
@@ -267,7 +266,7 @@ public class Fb2ParserTest {
                 getFbook();
 
         Fb2FileParser parser = new Fb2FileParser();
-        BookInfo bookInfo = parser.parseFile("fileName", fbook);
+        BookInfo bookInfo = parser.parseFile("fileName", fbook, true);
         BookEntity book = bookInfo.getBook();
         assertEquals(2, book.getGenres().size());
 
@@ -283,9 +282,23 @@ public class Fb2ParserTest {
                 getFbook();
 
         Fb2FileParser parser = new Fb2FileParser();
-        BookInfo bookInfo = parser.parseFile("fileName", fbook);
+        BookInfo bookInfo = parser.parseFile("fileName", fbook, true);
         BookEntity book = bookInfo.getBook();
         assertEquals(18, book.getContentSize().intValue());
+    }
+
+    @Test
+    public void verifyLang() {
+        InputStream fbook = new Fb2Creator(TITLE).
+                setLang("ua").
+                setSrcLang("en").
+                getFbook();
+
+        Fb2FileParser parser = new Fb2FileParser();
+        BookInfo bookInfo = parser.parseFile("fileName", fbook, true);
+        BookEntity book = bookInfo.getBook();
+        assertEquals("ua", book.getLang());
+        assertEquals("en", book.getSrcLang());
     }
 
     @Test
@@ -318,12 +331,11 @@ public class Fb2ParserTest {
                 getFbook();
 
         Fb2FileParser parser = new Fb2FileParser();
-        BookInfo bookInfo = parser.parseFile("fileName", fbook);
+        BookInfo bookInfo = parser.parseFile("fileName", fbook, true);
         BookImage image = bookInfo.getBookImage();
 
         assertArrayEquals(content, image.getImage());
         assertEquals(IMAGE_TYPE, image.getType());
-
     }
 
     @SuppressWarnings("ConstantConditions")

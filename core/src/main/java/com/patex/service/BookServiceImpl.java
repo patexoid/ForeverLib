@@ -76,7 +76,7 @@ public class BookServiceImpl implements BookService {
     }
 
     public Book uploadBook(String fileName, byte[] bytes,User user) {
-        final BookInfo bookInfo = parserService.getBookInfo(fileName, new ByteArrayInputStream(bytes));
+        final BookInfo bookInfo = parserService.getBookInfo(fileName, new ByteArrayInputStream(bytes), true);
         byte[] checksum = getChecksum(bytes);
         if (bookRepository.existsByTitleAndChecksum(bookInfo.getBook().getTitle(), checksum)) {
             return transactionService.transactionRequired(() ->

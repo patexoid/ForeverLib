@@ -32,8 +32,8 @@ public class ZipFileParser implements FileParser {
     }
 
     @Override
-    public synchronized BookInfo parseFile(String fileName, InputStream is) throws LibException {
-        return goDeep(is, zis -> parserService.getBookInfo(fileName.substring(0, fileName.lastIndexOf('.')), zis));
+    public synchronized BookInfo parseFile(String fileName, InputStream is, boolean parseBody) throws LibException {
+        return goDeep(is, zis -> parserService.getBookInfo(fileName.substring(0, fileName.lastIndexOf('.')), zis, parseBody));
     }
 
     private <T> T goDeep(InputStream is, Function<InputStream, T> f) throws LibException {

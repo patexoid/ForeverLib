@@ -26,8 +26,8 @@ public class ZipFileParserTest {
         ZipOutputStream zos = new ZipOutputStream(baos);
         zos.putNextEntry(new ZipEntry("blah"));
         zos.write(data);
-        parser.parseFile(FILENAME + ".zip", new ByteArrayInputStream(data));
-        verify(parserService).getBookInfo(eq(FILENAME), any());
+        parser.parseFile(FILENAME + ".zip", new ByteArrayInputStream(data), true);
+        verify(parserService).getBookInfo(eq(FILENAME), any(), eq(true));
     }
 
     @Test

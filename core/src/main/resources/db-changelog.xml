@@ -80,4 +80,23 @@
 
         </sql>
     </changeSet>
+    <changeSet id="7" author="patex">
+        <addColumn tableName="BOOK">
+            <column name="LANG" type="VARCHAR(50)"/>
+            <column name="SRC_LANG" type="VARCHAR(50)"/>
+        </addColumn>
+        <createTable tableName="AUTHOR_LANG">
+            <column autoIncrement="true" name="ID" type="BIGINT">
+                <constraints primaryKey="true" primaryKeyName="CONSTRAINT_AUTHOR_LANG_ID"/>
+            </column>
+            <column name="AUTHOR_ID" type="BIGINT">
+                <constraints foreignKeyName="AUTHOR_BOOK_AUTHOR_ID" references="AUTHOR(ID)"/>
+            </column>
+            <column name="LANG" type="VARCHAR(50)"/>
+        </createTable>
+        <createIndex tableName="AUTHOR_LANG" indexName="AUTHOR_LANG_LANG_AUTHOR" unique="true">
+            <column name="LANG"/>
+            <column name="AUTHOR_ID"/>
+        </createIndex>
+    </changeSet>
 </databaseChangeLog>

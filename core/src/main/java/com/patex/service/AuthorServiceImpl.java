@@ -25,21 +25,28 @@ public class AuthorServiceImpl implements AuthorService {
     public static final int MIN_AGGR_RESULT = 3;
     private final AuthorRepository authorRepository;
     private final AuthorMapper mapper;
+    private final UpdateAuthorLanguagesService updateAuthorLanguagesService;
 
     @Override
     public Author getAuthor(long id) {
         return authorRepository.findById(id).map(mapper::toDto).orElse(null);
     }
 
+
+
+    public List<String> getLanguages() {
+        return authorRepository.getLanguages();
+    }
+
     @Override
-    public List<AggrResult> getAuthorsCount(String start) {
+    public List<AggrResult> getAuthorsCount(String start, String lang) {
         int length = 0;
         List<String> oldPrefixes;
         List<String> newPrefixes = new ArrayList<>();
         List<AggrResult> authorsCount;
         do {
             oldPrefixes = newPrefixes;
-            authorsCount = authorRepository.getAuthorsCount(start.length() + ++length, start);
+            authorsCount = authorRepository.getAuthorsCount(start.length() + ++length, start, lang);
             newPrefixes = authorsCount.stream().map(AggrResult::getPrefix).collect(Collectors.toList());
         } while (authorsCount.size() < MIN_AGGR_RESULT && !newPrefixes.equals(oldPrefixes));
         return authorsCount;

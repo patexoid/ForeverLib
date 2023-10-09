@@ -106,7 +106,7 @@ public class BooksServiceTest {
         book.setSequences(Collections.singletonList(new BookSequenceEntity(1, new SequenceEntity(FIRST_SEQUENCE))));
         bookInfo.setBook(book);
 
-        lenient().when(parserService.getBookInfo(eq(FILE_NAME), any())).thenReturn(bookInfo);
+        lenient().when(parserService.getBookInfo(eq(FILE_NAME), any(), eq(true))).thenReturn(bookInfo);
         when(bookRepo.findFirstByTitleAndChecksum(any(), any())).thenReturn(Optional.empty());
         lenient().when(genreRepository.findByName(any())).thenReturn(Optional.empty());
         lenient().when(bookRepo.save(any(BookEntity.class))).thenAnswer(i -> i.getArguments()[0]);
@@ -225,7 +225,7 @@ public class BooksServiceTest {
         BookEntity uploadedBook = new BookEntity();
         uploadedBook.setTitle(uploadedTitle);
         uploadedBookInfo.setBook(uploadedBook);
-        when(parserService.getBookInfo(eq(fileName), any(InputStream.class))).thenReturn(uploadedBookInfo);
+        when(parserService.getBookInfo(eq(fileName), any(InputStream.class), eq(true))).thenReturn(uploadedBookInfo);
         BookEntity savedBook = new BookEntity();
         savedBook.setTitle(existedTitle);
         when(bookRepo.findFirstByTitleAndChecksum(eq(uploadedTitle), any())).thenReturn(Optional.of(savedBook));
@@ -253,7 +253,7 @@ public class BooksServiceTest {
         ByteArrayInputStream bais = new ByteArrayInputStream(new byte[0]);
         BookInfo bookInfo = new BookInfo();
         bookInfo.setBook(book);
-        when(parserService.getBookInfo(eq(fileName), any())).thenReturn(bookInfo);
+        when(parserService.getBookInfo(eq(fileName), any(), eq(true))).thenReturn(bookInfo);
         AuthorEntity savedAuthor = new AuthorEntity();
         savedAuthor.setName(existedAuthorName);
         when(authorRepo.findFirstByNameIgnoreCase(existedAuthorName)).thenReturn(Optional.of(savedAuthor));
@@ -285,7 +285,7 @@ public class BooksServiceTest {
         ByteArrayInputStream bais = new ByteArrayInputStream(new byte[0]);
         BookInfo bookInfo = new BookInfo();
         bookInfo.setBook(book);
-        when(parserService.getBookInfo(eq(fileName), any())).thenReturn(bookInfo);
+        when(parserService.getBookInfo(eq(fileName), any(), eq(true))).thenReturn(bookInfo);
         AuthorEntity savedAuthor = new AuthorEntity();
         savedAuthor.setName(existedAuthorName);
         BookEntity savedBook = new BookEntity();
