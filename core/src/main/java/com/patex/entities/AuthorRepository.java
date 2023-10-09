@@ -44,7 +44,7 @@ public interface AuthorRepository extends CrudRepository<AuthorEntity, Long> {
             from author_book ab
                      inner join book b on b.id = ab.book_id
             where ab.author_id in :ids
-
+            on conflict do nothing 
             """)
     void updateLang(@Param("ids") Collection<Long> ids);
 
