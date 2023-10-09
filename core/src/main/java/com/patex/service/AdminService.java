@@ -105,11 +105,16 @@ public class AdminService {
     }
 
     public void updateLangAndSrcLang() {
-        Page<Long> page = bookRepository.findAllByLangIsNull(Pageable.ofSize(5000));
-        while (page.hasNext()) {
+        Pageable pageable = Pageable.ofSize(5000);
+        do {
+            Page<Long> page = bookRepository.findAllByLangIsNull(pageable);
             transactionService.transactionRequired(() -> updateLangAndSrcLang(page.getContent()));
-        }
-        transactionService.transactionRequired(() -> updateLangAndSrcLang(page.getContent()));
+            if (page.hasNext()) {
+                pageable = page.nextPageable();
+            } else {
+                pageable = null;
+            }
+        } while (pageable != null);
     }
 
     private void updateLangAndSrcLang(List<Long> books) {
