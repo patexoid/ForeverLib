@@ -24,7 +24,9 @@ import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 @Service
@@ -108,7 +110,8 @@ public class AdminService {
         Pageable pageable = Pageable.ofSize(5000);
         do {
             Page<Long> page = bookRepository.findAllByLangIsNull(pageable);
-            transactionService.transactionRequired(() -> updateLangAndSrcLang(page.getContent()));
+            Set<Long> authors = transactionService.transactionRequired(() -> updateLangAndSrcLang(page.getContent()));
+            updateAuthorLanguagesService.updateLanguages(authors);
             if (page.hasNext()) {
                 pageable = page.nextPageable();
             } else {
@@ -117,16 +120,17 @@ public class AdminService {
         } while (pageable != null);
     }
 
-    private void updateLangAndSrcLang(List<Long> books) {
+    private Set<Long>  updateLangAndSrcLang(List<Long> books) {
+        Set<Long> authors=new HashSet<>();
         bookRepository.findByIdIn(books).forEach(book -> {
             InputStream bookIs = bookService.getBookInputStream(bookMapper.toDto(book));
             String fileName = book.getFileName();
             BookInfo bookInfo = parserService.getBookInfo(fileName, bookIs, false);
             book.setLang(bookInfo.getBook().getLang());
             book.setSrcLang(bookInfo.getBook().getSrcLang());
-            updateAuthorLanguagesService.updateLanguages(book.getAuthorBooks().stream().
-                    map(AuthorBookEntity::getAuthor).
-                    map(AuthorEntity::getId).toList());
+            book.getAuthorBooks().stream().
+                    map(AuthorBookEntity::getAuthor).map(AuthorEntity::getId).forEach(authors::add);
         });
+        return authors;
     }
 }
