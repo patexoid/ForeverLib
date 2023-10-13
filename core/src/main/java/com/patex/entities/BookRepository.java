@@ -21,7 +21,7 @@ public interface BookRepository extends org.springframework.data.repository.Repo
     Page<BookEntity> findAll(Pageable pageable);
 
     @Query("""
-            select b.id from BookEntity b where b.lang is null 
+            select b.id from BookEntity b where b.lang is null
                         """)
     Page<Long> findAllByLangIsNull(Pageable pageable);
 

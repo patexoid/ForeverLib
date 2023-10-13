@@ -3,6 +3,7 @@ package com.patex.entities;
 import com.patex.zombie.model.AggrResult;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
@@ -40,14 +41,29 @@ public interface AuthorRepository extends CrudRepository<AuthorEntity, Long> {
 
     @Query(nativeQuery = true,
     value = """
-            insert into author_lang(author_id, lang) select distinct ab.author_id, COALESCE(b.lang, 'Unknown')
+            delete from author_lang where author_id in :ids;
+            insert into author_lang(author_id, lang) select distinct ab.author_id, b.lang
             from author_book ab
                      inner join book b on b.id = ab.book_id
-            where ab.author_id in :ids
-            on conflict do nothing 
+            where ab.author_id in :ids and
+            b.lang is not null
             """)
+    @Modifying
     void updateLang(@Param("ids") Collection<Long> ids);
 
+
+    @SuppressWarnings("SqlWithoutWhere")
+    @Query(nativeQuery = true,
+            value = """
+                    delete from author_lang;
+                    insert into author_lang(author_id, lang) select distinct ab.author_id, b.lang
+                    from author_book ab
+                             inner join book b on b.id = ab.book_id
+                             where b.lang is not null
+                    on conflict do nothing 
+                    """)
+    @Modifying
+    void updateLang();
 
     @Query(nativeQuery = true,value= """
             select distinct lang from author_lang order by lang

@@ -70,7 +70,7 @@ public class Fb2FileParser implements FileParser {
         } catch (XMLStreamException e) {
             log.error("Can't parse title for:" + fileName + " errorMessage:" + e.getMessage());
         }
-        if(parseBody){
+        if (parseBody) {
             try {
                 parseBodyAndBinary(reader, bookInfo);
             } catch (Exception e) {
@@ -118,6 +118,7 @@ public class Fb2FileParser implements FileParser {
 
     private void parseTitleInfo(XMLEventReader reader, BookInfo bookInfo) throws XMLStreamException {
         BookEntity book = bookInfo.getBook();
+        book.setLang("unknown");
         while (reader.hasNext()) {
             XMLEvent event = reader.nextEvent();
             if (event.isEndElement() && "title-info".equals(event.asEndElement().getName().getLocalPart())) {
@@ -137,10 +138,14 @@ public class Fb2FileParser implements FileParser {
                     book.setTitle(reader.getElementText());
                 } else if ("lang".equals(localPart)) {
                     String value = reader.getElementText();
-                    book.setLang(value == null ? null : value.toLowerCase(Locale.ROOT));
+                    if (value != null) {
+                        book.setLang(value.toLowerCase(Locale.ROOT));
+                    }
                 } else if ("src-lang".equals(localPart)) {
                     String value = reader.getElementText();
-                    book.setSrcLang(value == null ? null : value.toLowerCase(Locale.ROOT));
+                    if (value != null) {
+                        book.setSrcLang(value.toLowerCase(Locale.ROOT));
+                    }
                 } else if ("annotation".equals(localPart)) {
                     book.setDescr(getText(reader, "annotation"));
                 } else if ("genre".equals(localPart)) {
@@ -152,12 +157,12 @@ public class Fb2FileParser implements FileParser {
                 } else if ("sequence".equals(localPart)) {
                     String sequenceName = element.getAttributeByName(new QName("", "name")).getValue();
                     int order;
+                    Attribute numberAttr = element.getAttributeByName(new QName("", "number"));
                     try {
-                        Attribute numberAttr = element.getAttributeByName(new QName("", "number"));
                         order = numberAttr == null ? 0 : Integer.parseInt(numberAttr.getValue());
                     } catch (NumberFormatException e) {
                         order = 0;
-                        log.warn("sequence {} without order, book: {}", sequenceName, book.getTitle());
+                        log.warn("sequence {} with wrong order, book: {}, order {}", sequenceName, book.getTitle(), numberAttr);
                     }
                     book.getSequences().add(new BookSequenceEntity(order, new SequenceEntity(sequenceName)));
                 }
