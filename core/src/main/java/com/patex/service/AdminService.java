@@ -18,16 +18,14 @@ import com.patex.zombie.service.BookService;
 import com.patex.zombie.service.StorageService;
 import com.patex.zombie.service.TransactionService;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +34,7 @@ public class AdminService {
     private final BookService bookService;
 
     private final BookRepository bookRepository;
+    private final AuthorRepository authorRepository;
 
     private final BookMapper bookMapper;
     private final AuthorRepository authorService;
@@ -45,6 +44,7 @@ public class AdminService {
     private final RabbitService rabbitService;
 
     private final UpdateAuthorLanguagesService updateAuthorLanguagesService;
+    private final StorageService storageService;
 
     public void updateCovers() {
         bookRepository.findAll().
@@ -83,8 +83,6 @@ public class AdminService {
                 forEach(rabbitService::checkDuplicate);
     }
 
-    private final StorageService storageService;
-
     public void updateBookLocation() {
         List<Long> ids = bookRepository.booksForDuplicateCheck();
         List<List<Long>> partitions = Lists.partition(ids, 1000);
@@ -106,31 +104,25 @@ public class AdminService {
         });
     }
 
+    @SneakyThrows
     public void updateLangAndSrcLang() {
-        Pageable pageable = Pageable.ofSize(5000);
+        Page<Long> page;
         do {
-            Page<Long> page = bookRepository.findAllByLangIsNull(pageable);
-            Set<Long> authors = transactionService.transactionRequired(() -> updateLangAndSrcLang(page.getContent()));
-            updateAuthorLanguagesService.updateLanguages(authors);
-            if (page.hasNext()) {
-                pageable = page.nextPageable();
-            } else {
-                pageable = null;
-            }
-        } while (pageable != null);
+            page = bookRepository.findAllByLangIsNull(Pageable.ofSize(10)); // always take first page because lang was updated to non null
+            List<Long> content = page.getContent();
+            transactionService.transactionRequired(() -> updateLangAndSrcLang(content));
+        } while (page.hasNext());
+        transactionService.transactionRequired(() -> authorRepository.updateLang());
+
     }
 
-    private Set<Long>  updateLangAndSrcLang(List<Long> books) {
-        Set<Long> authors=new HashSet<>();
+    private void updateLangAndSrcLang(List<Long> books) {
         bookRepository.findByIdIn(books).forEach(book -> {
             InputStream bookIs = bookService.getBookInputStream(bookMapper.toDto(book));
             String fileName = book.getFileName();
             BookInfo bookInfo = parserService.getBookInfo(fileName, bookIs, false);
             book.setLang(bookInfo.getBook().getLang());
             book.setSrcLang(bookInfo.getBook().getSrcLang());
-            book.getAuthorBooks().stream().
-                    map(AuthorBookEntity::getAuthor).map(AuthorEntity::getId).forEach(authors::add);
         });
-        return authors;
     }
 }
