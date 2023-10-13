@@ -108,7 +108,7 @@ public class AdminService {
     public void updateLangAndSrcLang() {
         Page<Long> page;
         do {
-            page = bookRepository.findAllByLangIsNull(Pageable.ofSize(10)); // always take first page because lang was updated to non null
+            page = bookRepository.findAllByLangIsNull(Pageable.ofSize(5000)); // always take first page because lang was updated to non null
             List<Long> content = page.getContent();
             transactionService.transactionRequired(() -> updateLangAndSrcLang(content));
         } while (page.hasNext());
