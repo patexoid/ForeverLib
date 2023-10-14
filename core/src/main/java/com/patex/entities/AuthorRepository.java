@@ -41,10 +41,10 @@ public interface AuthorRepository extends CrudRepository<AuthorEntity, Long> {
 
     @Query(nativeQuery = true,
     value = """
-            delete from author_lang where author_id in :ids;
+            delete from author_lang where author_id in :ids ;
             insert into author_lang(author_id, lang) select distinct ab.author_id, b.lang
             from author_book ab
-                     inner join book b on b.id = ab.book_id
+                     inner join book b on b.id = ab.book_id 
             where ab.author_id in :ids and
             b.lang is not null
             """)

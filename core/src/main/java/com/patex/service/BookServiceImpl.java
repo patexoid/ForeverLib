@@ -15,14 +15,15 @@ import com.patex.entities.SequenceRepository;
 import com.patex.mapper.BookMapper;
 import com.patex.parser.BookInfo;
 import com.patex.parser.ParserService;
-import com.patex.zombie.model.SimpleBook;
-import com.patex.zombie.service.StorageService;
 import com.patex.zombie.LibException;
 import com.patex.zombie.StreamU;
 import com.patex.zombie.model.Book;
+import com.patex.zombie.model.SimpleBook;
 import com.patex.zombie.model.User;
 import com.patex.zombie.service.BookService;
+import com.patex.zombie.service.StorageService;
 import com.patex.zombie.service.TransactionService;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -42,6 +42,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -68,14 +69,37 @@ public class BookServiceImpl implements BookService {
     private final ApplicationEventPublisher publisher;
     private final BookMapper bookMapper;
     private final EntityManager entityManager;
+    private final LanguageService languagesService;
 
-
-    @Override
-    public  Book uploadBook(String fileName, InputStream is, User user) throws LibException {//TODO fix transactions
-        return uploadBook(fileName, loadFromStream(is),user);
+    static String[] getFilePath(BookEntity book, String fileName) {
+        String[] path = new String[3];
+        Transliterator transliterator = Transliterator.getInstance("Any-Latin");
+        path[0] = book.getAuthorBooks().stream()
+                .map(AuthorBookEntity::getAuthor)
+                .map(AuthorEntity::getName)
+                .filter(not(String::isBlank))
+                .findFirst()
+                .map(transliterator::transliterate)
+                .map(s -> s.length() > 100 ? s.substring(0, 100) : s)
+                .orElse("No Author");
+        path[1] = book.getSequences().stream()
+                .map(BookSequenceEntity::getSequence)
+                .map(SequenceEntity::getName)
+                .filter(not(String::isBlank))
+                .findFirst()
+                .map(transliterator::transliterate)
+                .map(s -> s.length() > 100 ? s.substring(0, 100) : s)
+                .orElse("No Sequence");
+        path[2] = fileName;
+        return path;
     }
 
-    public Book uploadBook(String fileName, byte[] bytes,User user) {
+    @Override
+    public Book uploadBook(String fileName, InputStream is, User user) throws LibException {//TODO fix transactions
+        return uploadBook(fileName, loadFromStream(is), user);
+    }
+
+    public Book uploadBook(String fileName, byte[] bytes, User user) {
         final BookInfo bookInfo = parserService.getBookInfo(fileName, new ByteArrayInputStream(bytes), true);
         byte[] checksum = getChecksum(bytes);
         if (bookRepository.existsByTitleAndChecksum(bookInfo.getBook().getTitle(), checksum)) {
@@ -92,7 +116,7 @@ public class BookServiceImpl implements BookService {
 
     private synchronized Book saveBook(String fileName, User user, byte[] checksum, BookInfo bookInfo, String fileId, int bookSize) {
         Book result = transactionService.transactionRequired(() -> {
-            BookEntity book=bookInfo.getBook();
+            BookEntity book = bookInfo.getBook();
             Optional<BookEntity> sameBook = bookRepository.findFirstByTitleAndChecksum(book.getTitle(), checksum);
             if (sameBook.isPresent()) {
                 return bookMapper.toDto(sameBook.get());
@@ -116,7 +140,7 @@ public class BookServiceImpl implements BookService {
                     collect(Collectors.toMap(Map.Entry::getKey, e -> mergeSequences(e.getValue())));
 
 
-            book.getGenres().forEach(bg->{
+            book.getGenres().forEach(bg -> {
                 Optional<GenreEntity> dbGenre = genreRepository.findByName(bg.getGenre().getName());
                 dbGenre.ifPresent(bg::setGenre);
             });
@@ -132,6 +156,7 @@ public class BookServiceImpl implements BookService {
             book.setFileName(fileName);
             book.setChecksum(checksum);
             book.setCreated(Instant.now());
+            getBookLanguage(book).ifPresent(book::setLang);
             BookEntity save = bookRepository.save(book);
             someMagic(book);
             return bookMapper.toDto(save);
@@ -140,27 +165,18 @@ public class BookServiceImpl implements BookService {
         return result;
     }
 
-    static String[] getFilePath(BookEntity book, String fileName) {
-        String[] path = new String[3];
-        Transliterator transliterator = Transliterator.getInstance("Any-Latin");
-        path[0] = book.getAuthorBooks().stream()
-                .map(AuthorBookEntity::getAuthor)
-                .map(AuthorEntity::getName)
-                .filter(not(String::isBlank))
-                .findFirst()
-                .map(transliterator::transliterate)
-                .map(s -> s.length() > 100 ? s.substring(0, 100) : s)
-                .orElse("No Author");
-        path[1] = book.getSequences().stream()
-                .map(BookSequenceEntity::getSequence)
-                .map(SequenceEntity::getName)
-                .filter(not(String::isBlank))
-                .findFirst()
-                .map(transliterator::transliterate)
-                .map(s -> s.length() > 100 ? s.substring(0, 100) : s)
-                .orElse("No Sequence");
-        path[2] = fileName;
-        return path;
+    private Optional<String> getBookLanguage(BookEntity book) {
+        return languagesService.detectLang(book::getDescr, () -> getPartialBookContent(book.getFileName(), book.getFileResource().getFilePath()));
+    }
+
+    public String getPartialBookContent(String fileName, String filePath) {
+        Iterator<String> contentIterator = parserService.getContentIterator(fileName,
+                fileStorage.load(filePath));
+        StringBuilder content = new StringBuilder();
+        while (contentIterator.hasNext() && content.length() < 10000) {
+            content.append(contentIterator.next()).append("\n");
+        }
+        return content.toString();
     }
 
     private SequenceEntity mergeSequences(List<SequenceEntity> sequences) {

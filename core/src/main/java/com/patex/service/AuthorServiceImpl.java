@@ -25,7 +25,6 @@ public class AuthorServiceImpl implements AuthorService {
     public static final int MIN_AGGR_RESULT = 3;
     private final AuthorRepository authorRepository;
     private final AuthorMapper mapper;
-    private final UpdateAuthorLanguagesService updateAuthorLanguagesService;
 
     @Override
     public Author getAuthor(long id) {

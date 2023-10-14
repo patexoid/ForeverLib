@@ -40,6 +40,7 @@ dependencies {
     api("com.ibm.icu:icu4j:72.1")
     api("com.ibm.icu:icu4j-charset:72.1")
     implementation("jakarta.xml.bind:jakarta.xml.bind-api:4.0.1")
+    implementation("com.optimaize.languagedetector:language-detector:0.6")
 
     implementation("org.mapstruct:mapstruct:1.4.2.Final")
     annotationProcessor("org.mapstruct:mapstruct-processor:1.4.2.Final")

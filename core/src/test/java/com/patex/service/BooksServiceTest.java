@@ -82,6 +82,8 @@ public class BooksServiceTest {
     private GenreRepository genreRepository;
 
     @Mock
+    LanguageService languageService;
+    @Mock
     private ApplicationEventPublisher eventPublisher;
 
     @Mock
@@ -98,7 +100,6 @@ public class BooksServiceTest {
 
     @BeforeEach
     public void setUp() {
-
         user = new User();
         bookInfo = new BookInfo();
         book = new BookEntity();
@@ -106,6 +107,7 @@ public class BooksServiceTest {
         book.setSequences(Collections.singletonList(new BookSequenceEntity(1, new SequenceEntity(FIRST_SEQUENCE))));
         bookInfo.setBook(book);
 
+        lenient().when(languageService.detectLang(any())).thenReturn(Optional.empty());
         lenient().when(parserService.getBookInfo(eq(FILE_NAME), any(), eq(true))).thenReturn(bookInfo);
         when(bookRepo.findFirstByTitleAndChecksum(any(), any())).thenReturn(Optional.empty());
         lenient().when(genreRepository.findByName(any())).thenReturn(Optional.empty());
@@ -121,7 +123,7 @@ public class BooksServiceTest {
         lenient().when(authorRepo.findFirstByNameIgnoreCase(any())).thenReturn(Optional.empty());
 
         bookService = new BookServiceImpl(bookRepo, genreRepository, mock(SequenceRepository.class), authorRepo, parserService,
-                fileStorage, transactionService, eventPublisher, bookMapper, mock(EntityManager.class));
+                fileStorage, transactionService, eventPublisher, bookMapper, mock(EntityManager.class), languageService);
     }
 
     @Test

@@ -14,6 +14,7 @@ public class SimpleBook {
     private Instant created;
     private byte[] checksum;
     private String descr;
+    private String lang;
 
     public Boolean isPrimary() {
         return !duplicate;
