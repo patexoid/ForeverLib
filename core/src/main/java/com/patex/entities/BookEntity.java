@@ -5,10 +5,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.patex.utils.BooleanJson;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PostUpdate;
+import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.Type;
-
-import jakarta.persistence.*;
 
 import java.sql.Types;
 import java.time.Instant;
@@ -83,11 +92,10 @@ public class BookEntity {
 
     @Column
     private String lang;
-
-
     @Column
     private String srcLang;
-
+    @Column()
+    private String langFb2;
 
     public BookEntity() {
     }
@@ -95,6 +103,14 @@ public class BookEntity {
     public BookEntity(AuthorEntity author, String name) {
         this.authorBooks.add(new AuthorBookEntity(author, this));
         this.title = name;
+    }
+
+    public String getLangFb2() {
+        return langFb2;
+    }
+
+    public void setLangFb2(String langFb2) {
+        this.langFb2 = langFb2;
     }
 
     public Long getId() {

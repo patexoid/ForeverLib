@@ -140,6 +140,7 @@ public class Fb2FileParser implements FileParser {
                     String value = reader.getElementText();
                     if (value != null) {
                         book.setLang(value.toLowerCase(Locale.ROOT));
+                        book.setLangFb2(value);
                     }
                 } else if ("src-lang".equals(localPart)) {
                     String value = reader.getElementText();
