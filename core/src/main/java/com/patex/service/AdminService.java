@@ -19,16 +19,19 @@ import com.patex.zombie.service.StorageService;
 import com.patex.zombie.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AdminService {
 
     private final BookService bookService;
@@ -43,7 +46,7 @@ public class AdminService {
 
     private final RabbitService rabbitService;
 
-    private final UpdateAuthorLanguagesService updateAuthorLanguagesService;
+    private final LanguageService languagesService;
     private final StorageService storageService;
 
     public void updateCovers() {
@@ -118,11 +121,19 @@ public class AdminService {
 
     private void updateLangAndSrcLang(List<Long> books) {
         bookRepository.findByIdIn(books).forEach(book -> {
-            InputStream bookIs = bookService.getBookInputStream(bookMapper.toDto(book));
-            String fileName = book.getFileName();
-            BookInfo bookInfo = parserService.getBookInfo(fileName, bookIs, false);
-            book.setLang(bookInfo.getBook().getLang());
-            book.setSrcLang(bookInfo.getBook().getSrcLang());
+            String fileName;
+            BookInfo bookInfo;
+            try (InputStream bookIs = bookService.getBookInputStream(bookMapper.toDto(book))) {
+                fileName = book.getFileName();
+                bookInfo = parserService.getBookInfo(fileName, bookIs, false);
+                book.setLang(bookInfo.getBook().getLang());
+                book.setSrcLang(bookInfo.getBook().getSrcLang());
+                languagesService.detectLang(book::getDescr,
+                                ()->bookService.getPartialBookContent(fileName, book.getFileResource().getFilePath())).
+                        ifPresent(book::setLang);
+            } catch (IOException e) {
+                log.error(e.getMessage(), e);
+            }
         });
     }
 }

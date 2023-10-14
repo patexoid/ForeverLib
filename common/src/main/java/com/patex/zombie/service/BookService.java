@@ -37,4 +37,6 @@ public interface BookService {
     Page<Book> getNewBooks(PageRequest pageRequest);
 
     List<SimpleBook> getSameAuthorsBook(SimpleBook primaryBook);
+
+    String getPartialBookContent(String fileName, String filePath);
 }
