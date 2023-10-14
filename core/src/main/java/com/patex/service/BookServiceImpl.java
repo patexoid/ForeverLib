@@ -170,11 +170,15 @@ public class BookServiceImpl implements BookService {
     }
 
     public String getPartialBookContent(String fileName, String filePath) {
-        Iterator<String> contentIterator = parserService.getContentIterator(fileName,
-                fileStorage.load(filePath));
         StringBuilder content = new StringBuilder();
-        while (contentIterator.hasNext() && content.length() < 10000) {
-            content.append(contentIterator.next()).append("\n");
+        try {
+            Iterator<String> contentIterator = parserService.getContentIterator(fileName,
+                    fileStorage.load(filePath));
+            while (contentIterator.hasNext() && content.length() < 10000) {
+                content.append(contentIterator.next()).append("\n");
+            }
+        } catch (LibException e) {
+            log.error(e.getMessage(), e);
         }
         return content.toString();
     }
