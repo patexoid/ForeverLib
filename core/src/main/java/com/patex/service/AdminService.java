@@ -127,6 +127,7 @@ public class AdminService {
                 fileName = book.getFileName();
                 bookInfo = parserService.getBookInfo(fileName, bookIs, false);
                 book.setLang(bookInfo.getBook().getLang());
+                book.setLangFb2(bookInfo.getBook().getLangFb2());
                 book.setSrcLang(bookInfo.getBook().getSrcLang());
                 languagesService.detectLang(book::getDescr,
                                 ()->bookService.getPartialBookContent(fileName, book.getFileResource().getFilePath())).

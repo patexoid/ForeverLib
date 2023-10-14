@@ -99,4 +99,9 @@
             <column name="AUTHOR_ID"/>
         </createIndex>
     </changeSet>
+    <changeSet id="8" author="patex">
+        <addColumn tableName="BOOK">
+            <column name="LANG_FB2" type="VARCHAR(50)"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>
