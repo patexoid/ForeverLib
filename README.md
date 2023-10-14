@@ -1,5 +1,4 @@
-[![Build Status](https://travis-ci.org/patexoid/ZombieLib2.svg?branch=master)](https://travis-ci.org/patexoid/ZombieLib2)
-
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/patexoid/ZombieLib2/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/patexoid/ZombieLib2/tree/master)
 # ZombieLib2
 
 Just another awesome opds server
