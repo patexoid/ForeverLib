@@ -42,7 +42,7 @@ jobs:
           name: Build
           command: |
            make build
-      - deploy:
+      - run:
           name: Push application Docker image
           command: |
             if [[ $(expr match "$(git describe --tags --dirty)" '^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$') != 0 ]]
