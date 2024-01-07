@@ -37,8 +37,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |  
-            apk add --no-cache make
-            apk add --no-cache git
+            apk add --no-cache make            apk add --no-cache git
       - run:
           name: Build
           command: |
