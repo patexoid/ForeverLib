@@ -46,6 +46,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.util.function.Predicate.not;
@@ -108,6 +109,10 @@ public class BookServiceImpl implements BookService {
                             .map(bookMapper::toDto).get()
             );
         } else {
+            getBookLanguage(() -> bookInfo.getBook().getDescr(),
+                    () -> getPartialBookContent(fileName, new ByteArrayInputStream(bytes))).
+
+                    ifPresent(lang -> bookInfo.getBook().setLang(lang));
             String[] filePath = getFilePath(bookInfo.getBook(), fileName);
             String fileId = fileStorage.save(bytes, true, filePath);
             return saveBook(fileName, user, checksum, bookInfo, fileId, bytes.length);
@@ -156,7 +161,6 @@ public class BookServiceImpl implements BookService {
             book.setFileName(fileName);
             book.setChecksum(checksum);
             book.setCreated(Instant.now());
-            getBookLanguage(book).ifPresent(book::setLang);
             BookEntity save = bookRepository.save(book);
             someMagic(book);
             return bookMapper.toDto(save);
@@ -165,15 +169,16 @@ public class BookServiceImpl implements BookService {
         return result;
     }
 
-    private Optional<String> getBookLanguage(BookEntity book) {
-        return languagesService.detectLang(book::getDescr, () -> getPartialBookContent(book.getFileName(), book.getFileResource().getFilePath()));
+    @SafeVarargs
+    private Optional<String> getBookLanguage(Supplier<String>... textSupplier) {
+        return languagesService.detectLang(textSupplier);
     }
 
-    public String getPartialBookContent(String fileName, String filePath) {
+    public String getPartialBookContent(String fileName, InputStream bookIS) {
         StringBuilder content = new StringBuilder();
         try {
             Iterator<String> contentIterator = parserService.getContentIterator(fileName,
-                    fileStorage.load(filePath));
+                    bookIS);
             while (contentIterator.hasNext() && content.length() < 10000) {
                 content.append(contentIterator.next()).append("\n");
             }

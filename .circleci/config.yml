@@ -13,7 +13,7 @@ jobs:
     # A list of available CircleCI Docker Convenience Images are available here: https://circleci.com/developer/images/image/cimg/openjdk
     working_directory: /app
     docker:
-      - image: docker:17.05.0-ce-git
+      - image: docker:24.0.7
 
         auth:
           username: patexoid
@@ -27,6 +27,11 @@ jobs:
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     steps:
       # Checkout the code as the first step.
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --no-cache make
+            apk add --no-cache git
       - checkout
       - setup_remote_docker:
           docker_layer_caching: false
@@ -35,14 +40,10 @@ jobs:
           command: |
             docker login --username ${USERNAME} --password ${HUB}
       - run:
-          name: Install dependencies
-          command: |  
-            apk add --no-cache make
-      - run:
           name: Build
           command: |
            make build
-      - deploy:
+      - run:
           name: Push application Docker image
           command: |
             if [[ $(expr match "$(git describe --tags --dirty)" '^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$') != 0 ]]

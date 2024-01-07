@@ -130,7 +130,7 @@ public class AdminService {
                 book.setLangFb2(bookInfo.getBook().getLangFb2());
                 book.setSrcLang(bookInfo.getBook().getSrcLang());
                 languagesService.detectLang(book::getDescr,
-                                ()->bookService.getPartialBookContent(fileName, book.getFileResource().getFilePath())).
+                                () -> bookService.getPartialBookContent(fileName, storageService.load(book.getFileResource().getFilePath()))).
                         ifPresent(book::setLang);
             } catch (IOException e) {
                 log.error(e.getMessage(), e);
