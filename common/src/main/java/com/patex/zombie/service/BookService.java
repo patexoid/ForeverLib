@@ -38,5 +38,5 @@ public interface BookService {
 
     List<SimpleBook> getSameAuthorsBook(SimpleBook primaryBook);
 
-    String getPartialBookContent(String fileName, String filePath);
+    String getPartialBookContent(String fileName, InputStream bookIS);
 }
