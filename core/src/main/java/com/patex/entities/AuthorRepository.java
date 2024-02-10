@@ -25,18 +25,18 @@ public interface AuthorRepository extends CrudRepository<AuthorEntity, Long> {
     Optional<AuthorEntity> findFirstByNameIgnoreCase(String name);
 
     @Query(value = """
-            SELECT substring(a.name, 1, :prefixLength) AS prefix,
+            SELECT lower(substring(a.name, 1, :prefixLength)) AS prefix,
                    count(*)                            AS result
             FROM author a
                      inner join author_lang al on a.id = al.author_id
-            WHERE name LIKE :prefix% and lang=:lang
+            WHERE lower(name) LIKE lower(:prefix%) and lang=:lang
             GROUP BY prefix
             ORDER BY prefix
                         """, nativeQuery = true)
     List<AggrResult> getAuthorsCount(@Param("prefixLength")int length, @Param("prefix") String name, @Param("lang")  String lang);
 
     @Query("SELECT NEW com.patex.entities.AuthorEntity(a.id, a.name)" +
-            " FROM AuthorEntity a where name like :prefix% order by name")
+            " FROM AuthorEntity a where lower(name) like lower(:prefix%) order by name")
     Page<AuthorEntity> getAuthorsByName(Pageable pageable, @Param("prefix") String prefix);
 
     @Query(nativeQuery = true,
@@ -69,4 +69,12 @@ public interface AuthorRepository extends CrudRepository<AuthorEntity, Long> {
             select distinct lang from author_lang order by lang
             """)
     List<String> getLanguages();
+
+    @Modifying
+    @Query(nativeQuery = true,value= """
+            delete from author_lang where author_id=:id
+            """)
+    void deleteAuthorLang(@Param("id") Long id);
+
+    List<AuthorEntity> findByIdIn(Long... ids);
 }

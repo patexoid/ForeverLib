@@ -1,12 +1,14 @@
 package com.patex.controllers;
 
-import com.patex.service.AuthorServiceImpl;
 import com.patex.zombie.model.Author;
+import com.patex.zombie.service.AuthorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,7 +23,7 @@ public class AuthorController {
     private static final Logger log = LoggerFactory.getLogger(AuthorController.class);
 
     @Autowired
-    private AuthorServiceImpl authorService;
+    private AuthorService authorService;
 
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
@@ -39,4 +41,9 @@ public class AuthorController {
         return authorService.getAuthor(pageable, prefix);
     }
 
+    @RequestMapping(value = "/merge", method = RequestMethod.POST)
+    @ResponseBody
+    public Author mergeAuthors(@AuthenticationPrincipal UserDetails user, @RequestParam("id") Long... ids) {
+        return authorService.mergeAuthors(user, ids);
+    }
 }
