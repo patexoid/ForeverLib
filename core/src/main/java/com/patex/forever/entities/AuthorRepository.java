@@ -29,14 +29,14 @@ public interface AuthorRepository extends CrudRepository<AuthorEntity, Long> {
                    count(*)                            AS result
             FROM author a
                      inner join author_lang al on a.id = al.author_id
-            WHERE lower(name) LIKE lower(:prefix%) and lang=:lang
+              WHERE name ILIKE :prefix% and lang=:lang
             GROUP BY prefix
             ORDER BY prefix
                         """, nativeQuery = true)
     List<AggrResult> getAuthorsCount(@Param("prefixLength")int length, @Param("prefix") String name, @Param("lang")  String lang);
 
-    @Query("SELECT NEW com.patex.forever.entities.AuthorEntity(a.id, a.name)" +
-            " FROM AuthorEntity a where lower(name) like lower(:prefix%) order by name")
+    @Query("SELECT NEW com.patex.entities.AuthorEntity(a.id, a.name)" +
+            " FROM AuthorEntity a where name ilike :prefix% order by name")
     Page<AuthorEntity> getAuthorsByName(Pageable pageable, @Param("prefix") String prefix);
 
     @Query(nativeQuery = true,
