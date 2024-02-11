@@ -1,7 +1,7 @@
 package com.patex.forever.service;
 
 
-import com.patex.messaging.MessengerService;
+import com.patex.forever.messaging.MessengerService;
 import com.patex.forever.model.CheckDuplicateMessage;
 import com.patex.forever.parser.ParserService;
 import com.patex.shingle.ShingleCacheStorage;

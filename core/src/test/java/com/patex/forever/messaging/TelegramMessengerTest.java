@@ -1,5 +1,9 @@
-package com.patex.messaging;
+package com.patex.forever.messaging;
 
+import com.patex.forever.messaging.MessengerService;
+import com.patex.forever.messaging.TelegramBot;
+import com.patex.forever.messaging.TelegramMessenger;
+import com.patex.forever.messaging.TextSpliterator;
 import com.patex.forever.model.User;
 import com.patex.forever.model.UserConfig;
 import org.junit.jupiter.api.BeforeEach;

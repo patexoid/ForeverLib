@@ -1,6 +1,6 @@
 package com.patex.forever.opds;
 
-import com.patex.messaging.MessengerService;
+import com.patex.forever.messaging.MessengerService;
 import com.patex.forever.model.User;
 import com.patex.forever.opds.entity.ExtLibraryRepository;
 import com.patex.forever.opds.entity.SavedBookRepository;

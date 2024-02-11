@@ -1,4 +1,4 @@
-package com.patex.messaging;
+package com.patex.forever.messaging;
 
 import com.patex.forever.model.Res;
 import com.patex.forever.model.User;
