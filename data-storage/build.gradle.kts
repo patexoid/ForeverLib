@@ -29,7 +29,7 @@ dependencies {
     testImplementation("org.mockito:mockito-junit-jupiter:4.2.0")
 }
 
-group = "com.patex.zombielib2"
+group = "com.patex.foreverlib2"
 version = "0.39-SNAPSHOT"
 description = "data-storage"
 java.sourceCompatibility = JavaVersion.VERSION_17

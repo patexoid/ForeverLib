@@ -1,7 +1,7 @@
 package com.patex.messaging;
 
-import com.patex.zombie.model.User;
-import com.patex.zombie.model.UserConfig;
+import com.patex.forever.model.User;
+import com.patex.forever.model.UserConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

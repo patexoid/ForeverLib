@@ -29,7 +29,7 @@ dependencies {
 
 }
 
-group = "com.patex.zombielib2"
+group = "com.patex.foreverlib2"
 version = "0.39-SNAPSHOT"
 description = "common"
 java.sourceCompatibility = JavaVersion.VERSION_17

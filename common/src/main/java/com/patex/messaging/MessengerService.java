@@ -1,9 +1,9 @@
 package com.patex.messaging;
 
-import com.patex.zombie.model.Res;
-import com.patex.zombie.model.User;
-import com.patex.zombie.service.Resources;
-import com.patex.zombie.service.UserService;
+import com.patex.forever.model.Res;
+import com.patex.forever.model.User;
+import com.patex.forever.service.Resources;
+import com.patex.forever.service.UserService;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PreDestroy;

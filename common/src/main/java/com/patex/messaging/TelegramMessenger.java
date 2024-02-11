@@ -1,6 +1,6 @@
 package com.patex.messaging;
 
-import com.patex.zombie.model.User;
+import com.patex.forever.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;

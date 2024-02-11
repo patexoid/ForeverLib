@@ -1,18 +1,17 @@
 package com.patex.messaging;
 
-import com.patex.zombie.service.Resources;
-import com.patex.service.ZUserService;
-import com.patex.zombie.model.Res;
-import com.patex.zombie.model.User;
-import com.patex.zombie.model.UserConfig;
-import com.patex.zombie.service.UserService;
+import com.patex.forever.service.Resources;
+import com.patex.forever.service.LibUserService;
+import com.patex.forever.model.Res;
+import com.patex.forever.model.User;
+import com.patex.forever.model.UserConfig;
+import com.patex.forever.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
@@ -33,7 +32,7 @@ public class MessengerServiceTest {
     private Resources res;
 
     @Mock
-    private ZUserService userService;
+    private LibUserService userService;
 
     @Mock
     private Messenger messenger;

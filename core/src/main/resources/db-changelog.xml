@@ -104,4 +104,7 @@
             <column name="LANG_FB2" type="VARCHAR(50)"/>
         </addColumn>
     </changeSet>
+    <changeSet id="9" author="patex">
+        <renameTable oldTableName="ZUSER_CONFIG" newTableName="USER_CONFIG"/>
+    </changeSet>
 </databaseChangeLog>

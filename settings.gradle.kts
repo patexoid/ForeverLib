@@ -1,4 +1,4 @@
-rootProject.name = "ZombieLib"
+rootProject.name = "ForeverLibraryLib"
 include("common")
 include("core")
 include("data-storage")

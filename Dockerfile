@@ -31,7 +31,7 @@ RUN ls .
 RUN ./gradlew build
 
 FROM openjdk:17-slim
-ENV APP_FILE zombieCore.jar
+ENV APP_FILE foreverCore.jar
 ENV APP_HOME /app
 EXPOSE 8100 8100
 
