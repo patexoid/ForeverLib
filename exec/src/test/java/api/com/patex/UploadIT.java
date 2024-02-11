@@ -1,23 +1,20 @@
 package api.com.patex;
 
 
-import com.patex.Application;
-import com.patex.entities.ZUser;
-import com.patex.zombie.model.Book;
-import com.patex.zombie.model.BookAuthor;
-import com.patex.zombie.model.BookUploadInfo;
-import com.patex.zombie.model.Tuple;
+import com.patex.forever.Application;
+import com.patex.forever.entities.LibUser;
+import com.patex.forever.model.Book;
+import com.patex.forever.model.BookAuthor;
+import com.patex.forever.model.BookUploadInfo;
+import com.patex.forever.model.Tuple;
 import fb2Generator.Fb2Creator;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.hamcrest.collection.IsCollectionWithSize;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.boot.SpringApplicationExtensionsKt;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
@@ -27,8 +24,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.Repeat;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.event.annotation.BeforeTestClass;
-import org.springframework.test.context.event.annotation.BeforeTestMethod;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.client.HttpClientErrorException;
 
@@ -63,11 +58,11 @@ public class UploadIT {
         httpClient = new HttpTestClient("http://localhost:" + port);
         httpClient.setCreds("testUser", "simplePassword");
         try {
-            httpClient.get("user/current", ZUser.class);
+            httpClient.get("user/current", LibUser.class);
         } catch (HttpClientErrorException e) {
             httpClient.setCreds(null, null);
             httpClient.post("user/create", "{\"username\":\"testUser\", \"password\":\"simplePassword\"}",
-                    MediaType.APPLICATION_JSON, ZUser.class);
+                    MediaType.APPLICATION_JSON, LibUser.class);
         }
         httpClient.setCreds("testUser", "simplePassword");
     }

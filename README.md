@@ -1,5 +1,5 @@
-[![CircleCI](https://dl.circleci.com/status-badge/img/gh/patexoid/ZombieLib2/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/patexoid/ZombieLib2/tree/master)
-# ZombieLib2
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/patexoid/foreverlib/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/patexoid/foreverlib/tree/master)
+# foreverlib
 
 Just another awesome opds server
 

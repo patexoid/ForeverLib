@@ -1,6 +1,6 @@
 package com.patex.messaging;
 
-import com.patex.zombie.model.User;
+import com.patex.forever.model.User;
 
 /**
  * Created by Alexey on 24.04.2017.

@@ -24,7 +24,7 @@ springBoot{
 }
 tasks.getByName<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
     mainClass.set("com.patex.Application")
-    this.archiveFileName.set("zombieCore.jar")
+    this.archiveFileName.set("foreverCore.jar")
 }
 
 val springBootVersion: String by rootProject.extra
@@ -40,7 +40,7 @@ dependencies {
     testImplementation("com.patex:fb2-java:1.0")
 }
 
-group = "com.patex.zombielib2"
+group = "com.patex.foreverlib"
 version = "0.39-SNAPSHOT"
 description = "exec"
 java.sourceCompatibility = JavaVersion.VERSION_17

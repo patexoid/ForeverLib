@@ -1,5 +1,5 @@
 FROM openjdk:12-alpine
-ENV APP_FILE zombieCore.jar
+ENV APP_FILE foreverLibraryCore.jar
 ENV APP_HOME /app
 EXPOSE 8100 8100
 COPY target/$APP_FILE $APP_HOME/

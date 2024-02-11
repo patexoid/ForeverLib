@@ -40,7 +40,7 @@ dependencies {
     testAnnotationProcessor("org.projectlombok:lombok:1.18.24")
 }
 
-group = "com.patex.zombielib2"
+group = "com.patex.foreverlib"
 version = "0.39-SNAPSHOT"
 description = "opds"
 java.sourceCompatibility = JavaVersion.VERSION_17
