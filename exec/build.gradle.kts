@@ -23,7 +23,7 @@ springBoot{
     //mainClassName="com.patex.Application"
 }
 tasks.getByName<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
-    mainClass.set("com.patex.Application")
+    mainClass.set("com.patex.forever.Application")
     this.archiveFileName.set("foreverCore.jar")
 }
 
