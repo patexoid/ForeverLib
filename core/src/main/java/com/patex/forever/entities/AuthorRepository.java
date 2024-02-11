@@ -35,7 +35,7 @@ public interface AuthorRepository extends CrudRepository<AuthorEntity, Long> {
                         """, nativeQuery = true)
     List<AggrResult> getAuthorsCount(@Param("prefixLength")int length, @Param("prefix") String name, @Param("lang")  String lang);
 
-    @Query("SELECT NEW com.patex.entities.AuthorEntity(a.id, a.name)" +
+    @Query("SELECT NEW com.patex.forever.entities.AuthorEntity(a.id, a.name)" +
             " FROM AuthorEntity a where lower(name) like lower(:prefix%) order by name")
     Page<AuthorEntity> getAuthorsByName(Pageable pageable, @Param("prefix") String prefix);
 
