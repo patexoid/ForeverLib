@@ -1,5 +1,6 @@
-package com.patex.messaging;
+package com.patex.forever.messaging;
 
+import com.patex.forever.messaging.TelegramBot;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -3,7 +3,7 @@ package com.patex.forever.service;
 import com.patex.forever.Application;
 import com.patex.forever.entities.AuthorEntity;
 import com.patex.forever.entities.AuthorRepository;
-import com.patex.messaging.TelegramMessenger;
+import com.patex.forever.messaging.TelegramMessenger;
 import com.patex.forever.model.AggrResult;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;

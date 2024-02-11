@@ -1,5 +1,6 @@
-package com.patex.messaging;
+package com.patex.forever.messaging;
 
+import com.patex.forever.messaging.TextSpliterator;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;

@@ -1,7 +1,7 @@
 package com.patex.forever.opds;
 
 import com.google.common.util.concurrent.MoreExecutors;
-import com.patex.messaging.MessengerService;
+import com.patex.forever.messaging.MessengerService;
 import com.patex.forever.LibException;
 import com.patex.forever.model.Book;
 import com.patex.forever.model.Res;

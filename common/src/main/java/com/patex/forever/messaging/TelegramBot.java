@@ -1,4 +1,4 @@
-package com.patex.messaging;
+package com.patex.forever.messaging;
 
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
@@ -9,7 +9,6 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.meta.generics.BotSession;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 import java.util.Optional;

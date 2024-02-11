@@ -1,4 +1,4 @@
-package com.patex.messaging;
+package com.patex.forever.messaging;
 
 import java.util.ArrayList;
 import java.util.Collections;

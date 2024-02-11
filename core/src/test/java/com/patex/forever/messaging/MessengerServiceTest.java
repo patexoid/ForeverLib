@@ -1,5 +1,7 @@
-package com.patex.messaging;
+package com.patex.forever.messaging;
 
+import com.patex.forever.messaging.Messenger;
+import com.patex.forever.messaging.MessengerService;
 import com.patex.forever.service.Resources;
 import com.patex.forever.service.LibUserService;
 import com.patex.forever.model.Res;
