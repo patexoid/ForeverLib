@@ -15,13 +15,14 @@ repositories {
         url = uri("https://repo.maven.apache.org/maven2/")
     }
 }
+val lombokVersion: String by rootProject.extra
 
 dependencies {
     api(project(":common"))
-    annotationProcessor("org.projectlombok:lombok:1.18.24")
+    annotationProcessor("org.projectlombok:lombok:$lombokVersion")
     implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
-    testCompileOnly("org.projectlombok:lombok:1.18.24")
-    testAnnotationProcessor("org.projectlombok:lombok:1.18.24")
+    testCompileOnly("org.projectlombok:lombok:$lombokVersion")
+    testAnnotationProcessor("org.projectlombok:lombok:$lombokVersion")
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
     testImplementation ("org.junit.jupiter:junit-jupiter-api:5.8.2")
     testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:5.8.2")

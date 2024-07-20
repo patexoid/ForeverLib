@@ -19,6 +19,7 @@ repositories {
 
 
 val springBootVersion: String by rootProject.extra
+val lombokVersion: String by rootProject.extra
 
 dependencies {
     api("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
@@ -53,10 +54,10 @@ dependencies {
     testImplementation("com.sun.xml.bind:jaxb-impl:3.0.1")
     testImplementation("com.sun.xml.bind:jaxb-core:3.0.1")
     testImplementation("com.patex:fb2-java:1.0")
-    compileOnly("org.projectlombok:lombok:1.18.24")
-    annotationProcessor("org.projectlombok:lombok:1.18.24")
-    testCompileOnly("org.projectlombok:lombok:1.18.24")
-    testAnnotationProcessor("org.projectlombok:lombok:1.18.24")
+    compileOnly("org.projectlombok:lombok:$lombokVersion")
+    annotationProcessor("org.projectlombok:lombok:$lombokVersion")
+    testCompileOnly("org.projectlombok:lombok:$lombokVersion")
+    testAnnotationProcessor("org.projectlombok:lombok:$lombokVersion")
 
 }
 

@@ -1,4 +1,4 @@
-FROM openjdk:17-slim as builder
+FROM openjdk:21-slim as builder
 WORKDIR /app/build
 ARG USERNAME
 ARG TOKEN
@@ -30,7 +30,7 @@ COPY ./web /app/build/web
 RUN ls .
 RUN ./gradlew build
 
-FROM openjdk:17-slim
+FROM openjdk:21-slim
 ENV APP_FILE foreverCore.jar
 ENV APP_HOME /app
 EXPOSE 8100 8100
