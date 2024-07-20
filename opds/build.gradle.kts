@@ -18,6 +18,7 @@ repositories {
 }
 val springVersion: String by rootProject.extra
 val springBootVersion: String by rootProject.extra
+val lombokVersion: String by rootProject.extra
 dependencies {
     api(project(":common"))
     api("com.rometools:rome:2.1.0")
@@ -34,10 +35,10 @@ dependencies {
     testImplementation("com.patex:fb2-java:1.0")
     testImplementation("org.apache.commons:commons-lang3:3.12.0")
     testImplementation("org.apache.commons:commons-text:1.10.0")
-    compileOnly("org.projectlombok:lombok:1.18.24")
-    annotationProcessor("org.projectlombok:lombok:1.18.24")
-    testCompileOnly("org.projectlombok:lombok:1.18.24")
-    testAnnotationProcessor("org.projectlombok:lombok:1.18.24")
+    compileOnly("org.projectlombok:lombok:$lombokVersion")
+    annotationProcessor("org.projectlombok:lombok:$lombokVersion")
+    testCompileOnly("org.projectlombok:lombok:$lombokVersion")
+    testAnnotationProcessor("org.projectlombok:lombok:$lombokVersion")
 }
 
 group = "com.patex.foreverlib"

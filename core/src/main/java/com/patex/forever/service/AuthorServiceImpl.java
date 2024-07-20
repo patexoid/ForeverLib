@@ -12,6 +12,7 @@ import com.patex.forever.model.AggrResult;
 import com.patex.forever.model.Author;
 import com.patex.forever.model.SimpleBook;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.annotation.Secured;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthorServiceImpl implements AuthorService {
 
     public static final int MIN_AGGR_RESULT = 3;
@@ -118,6 +120,7 @@ public class AuthorServiceImpl implements AuthorService {
             authorsCount = authorRepository.getAuthorsCount(start.length() + ++length, start, lang);
             newPrefixes = authorsCount.stream().map(AggrResult::getPrefix).collect(Collectors.toList());
         } while (authorsCount.size() < MIN_AGGR_RESULT && !newPrefixes.equals(oldPrefixes));
+        log.info("prefix: {} lang:{} count: {}", start, lang, authorsCount.size());
         return authorsCount;
     }
 

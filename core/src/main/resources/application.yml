@@ -11,8 +11,6 @@ spring:
         prefetch: 10
       simple:
         prefetch: 10
-  jpa:
-    database-platform:  org.hibernate.dialect.PostgreSQL10Dialect
     hibernate:
       ddl-auto: validate
   liquibase:
