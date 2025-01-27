@@ -3,6 +3,7 @@ package com.patex.forever.opds.controller;
 import com.patex.forever.LinkUtils;
 import com.patex.forever.model.AggrResult;
 import com.patex.forever.model.Author;
+import com.patex.forever.model.AuthorDescription;
 import com.patex.forever.model.Book;
 import com.patex.forever.model.Res;
 import com.patex.forever.model.Sequence;
@@ -167,7 +168,7 @@ public class OPDSController {
     @SaveLatest
     @RequestMapping(value = "author/{id}", produces = APPLICATION_ATOM_XML)
     public ModelAndView getAuthor(@PathVariable(value = "id") long id) {
-        Author authors = authorService.getAuthor(id);
+        AuthorDescription authors = authorService.getAuthorDescription(id);
         return createMav(new Res("opds.author.books", authors.getName()), authors, author ->
                 new ExpandedAuthorEntries(author).getEntries()
         );
