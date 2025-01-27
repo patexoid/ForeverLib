@@ -6,6 +6,7 @@ import com.patex.forever.entities.BookSequenceEntity;
 import com.patex.forever.entities.SequenceEntity;
 import com.patex.forever.entities.SequenceRepository;
 import com.patex.forever.mapper.AuthorMapper;
+import com.patex.forever.model.AuthorDescription;
 import com.patex.forever.model.CheckDuplicateMessage;
 import com.patex.forever.LibException;
 import com.patex.forever.model.AggrResult;
@@ -49,6 +50,10 @@ public class AuthorServiceImpl implements AuthorService {
         return authorRepository.findById(id).map(mapper::toDto).orElse(null);
     }
 
+    @Override
+    public AuthorDescription getAuthorDescription(long id) {
+        return authorRepository.getAuthorDescription(id);
+    }
 
     @Secured(UserService.ADMIN_AUTHORITY)
     public Author mergeAuthors(UserDetails user, Long... ids) {

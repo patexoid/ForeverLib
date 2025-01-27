@@ -107,4 +107,14 @@
     <changeSet id="9" author="patex">
         <renameTable oldTableName="ZUSER_CONFIG" newTableName="USER_CONFIG"/>
     </changeSet>
+    <changeSet id="1737992484018-1" author="patexoid">
+        <createIndex tableName="author_book" indexName="idx_author_book_author_id_book_id">
+            <column name="author_id"/>
+            <column name="book_id"/>
+        </createIndex>
+        <createIndex tableName="book_sequence" indexName="idx_book_sequence_book_id_sequence_id">
+            <column name="book_id"/>
+            <column name="sequence_id"/>
+        </createIndex>
+    </changeSet>
 </databaseChangeLog>

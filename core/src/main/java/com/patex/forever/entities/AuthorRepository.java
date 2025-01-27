@@ -1,6 +1,7 @@
 package com.patex.forever.entities;
 
 import com.patex.forever.model.AggrResult;
+import com.patex.forever.model.AuthorDescription;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
@@ -32,7 +33,7 @@ public interface AuthorRepository extends CrudRepository<AuthorEntity, Long> {
               WHERE name ILIKE :prefix% and lang=:lang
             GROUP BY prefix
             ORDER BY prefix
-                        """, nativeQuery = true)
+            """, nativeQuery = true)
     List<AggrResult> getAuthorsCount(@Param("prefixLength")int length, @Param("prefix") String name, @Param("lang")  String lang);
 
     @Query("SELECT NEW com.patex.forever.entities.AuthorEntity(a.id, a.name)" +
@@ -44,7 +45,7 @@ public interface AuthorRepository extends CrudRepository<AuthorEntity, Long> {
             delete from author_lang where author_id in :ids ;
             insert into author_lang(author_id, lang) select distinct ab.author_id, b.lang
             from author_book ab
-                     inner join book b on b.id = ab.book_id 
+                     inner join book b on b.id = ab.book_id
             where ab.author_id in :ids and
             b.lang is not null
             """)
@@ -60,7 +61,7 @@ public interface AuthorRepository extends CrudRepository<AuthorEntity, Long> {
                     from author_book ab
                              inner join book b on b.id = ab.book_id
                              where b.lang is not null
-                    on conflict do nothing 
+                    on conflict do nothing
                     """)
     @Modifying
     void updateLang();
@@ -77,4 +78,27 @@ public interface AuthorRepository extends CrudRepository<AuthorEntity, Long> {
     void deleteAuthorLang(@Param("id") Long id);
 
     List<AuthorEntity> findByIdIn(Long... ids);
+
+
+    @Query(nativeQuery = true, value = """
+            SELECT
+                a.id,
+                a.descr,
+                a.name,
+                a.updated,
+                COUNT(DISTINCT b.id) AS bookCount,
+                COUNT(DISTINCT s.id) AS sequenceCount,
+                COUNT(DISTINCT CASE WHEN s.id IS NOT NULL THEN b.id END) AS sequenceBookCount,
+                MAX(CASE WHEN s.id IS NOT NULL THEN b.created END) AS sequenceUpdated,
+                COUNT(DISTINCT CASE WHEN s.id IS NULL THEN b.id END) AS noSequenceBookCount,
+                MAX(CASE WHEN s.id IS NULL THEN b.created END) AS noSequenceUpdated
+            FROM author a
+                     JOIN author_book ab ON a.id = ab.author_id
+                     JOIN book b ON ab.book_id = b.id
+                     LEFT JOIN book_sequence bs ON b.id = bs.book_id
+                     LEFT JOIN sequence s ON bs.sequence_id = s.id
+            WHERE a.id = :id
+            GROUP BY a.id, a.descr, a.name, a.updated;
+            """)
+    AuthorDescription getAuthorDescription(@Param("id") long id);
 }
