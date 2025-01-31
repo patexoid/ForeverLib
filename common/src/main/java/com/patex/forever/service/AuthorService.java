@@ -15,6 +15,8 @@ public interface AuthorService {
 
     AuthorDescription getAuthorDescription(long id);
 
+    Author getAuthorSimplified(long id);
+
     List<String> getLanguages();
 
     List<AggrResult> getAuthorsCount(String start, String lang);

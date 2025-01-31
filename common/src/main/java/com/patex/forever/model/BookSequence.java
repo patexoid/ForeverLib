@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class BookSequence {
 
-    private Long Id;
+    private Long id;
 
     private int seqOrder;
 

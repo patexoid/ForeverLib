@@ -63,21 +63,8 @@
             CREATE INDEX if not exists "book_genre_genre_id"
                 ON "book_genre" ("genre_id");
 
-            CREATE INDEX if not exists "BOOK_GENRE_BOOK_ID"
-                ON "BOOK_GENRE" ("BOOK_ID");
-        </sql>
-    </changeSet>
-    <changeSet id="6" author="patex" failOnError="false" >
-        <comment>
-            not working on h2 db that used in test //TODO fix it
-        </comment>
-        <sql>
-            create index if not exists UPPER_CASE_AUTHOR_NAME
-                on AUTHOR (upper("NAME"::text));
-
-            CREATE INDEX if not exists "AUTHOR_NAME_PREFIX"
-                ON "AUTHOR" ("NAME" varchar_pattern_ops);
-
+            CREATE INDEX if not exists "book_genre_book_id"
+                ON "book_genre" ("book_id");
         </sql>
     </changeSet>
     <changeSet id="7" author="patex">
@@ -115,6 +102,14 @@
         <createIndex tableName="book_sequence" indexName="idx_book_sequence_book_id_sequence_id">
             <column name="book_id"/>
             <column name="sequence_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="1738065198208-1" author="patexoid">
+        <sql>
+            CREATE INDEX idx_author_name_trgm ON author USING gin (name public.gin_trgm_ops);
+        </sql>
+        <createIndex tableName="author_book" indexName="idx_author_book_book_id" >
+            <column name="book_id"/>
         </createIndex>
     </changeSet>
 </databaseChangeLog>

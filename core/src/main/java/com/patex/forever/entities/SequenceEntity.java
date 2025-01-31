@@ -32,7 +32,7 @@ public class SequenceEntity {
     @Transient
     private Instant updated;
 
-    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, fetch = FetchType.EAGER, mappedBy = "sequence")
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, fetch = FetchType.LAZY, mappedBy = "sequence")
     @JsonProperty(BOOK_SEQUENCES)
     private List<BookSequenceEntity> bookSequences = new ArrayList<>();
 
