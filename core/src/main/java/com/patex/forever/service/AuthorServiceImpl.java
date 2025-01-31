@@ -2,15 +2,22 @@ package com.patex.forever.service;
 
 import com.patex.forever.entities.AuthorEntity;
 import com.patex.forever.entities.AuthorRepository;
+import com.patex.forever.entities.BookRepository;
 import com.patex.forever.entities.BookSequenceEntity;
 import com.patex.forever.entities.SequenceEntity;
 import com.patex.forever.entities.SequenceRepository;
+import com.patex.forever.mapper.AuthorBookDataMapper;
 import com.patex.forever.mapper.AuthorMapper;
+import com.patex.forever.model.AuthorBookData;
 import com.patex.forever.model.AuthorDescription;
+import com.patex.forever.model.Book;
+import com.patex.forever.model.BookSequence;
 import com.patex.forever.model.CheckDuplicateMessage;
 import com.patex.forever.LibException;
 import com.patex.forever.model.AggrResult;
 import com.patex.forever.model.Author;
+import com.patex.forever.model.Sequence;
+import com.patex.forever.model.SequenceBook;
 import com.patex.forever.model.SimpleBook;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,10 +29,14 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by potekhio on 15-Mar-16.
@@ -38,12 +49,13 @@ public class AuthorServiceImpl implements AuthorService {
     public static final int MIN_AGGR_RESULT = 3;
     private final AuthorRepository authorRepository;
     private final AuthorMapper mapper;
-
+    private final AuthorBookDataMapper authorBookDataMapper;
     private final RabbitService rabbitService;
 
     private final TransactionService transactionService;
 
     private final SequenceRepository sequenceRepository;
+    private final BookRepository bookRepository;
 
     @Override
     public Author getAuthor(long id) {
@@ -53,6 +65,54 @@ public class AuthorServiceImpl implements AuthorService {
     @Override
     public AuthorDescription getAuthorDescription(long id) {
         return authorRepository.getAuthorDescription(id);
+    }
+
+    @Override
+    public Author getAuthorSimplified(long id) {
+        return authorRepository.findById(id).map(mapper::toListDto).
+                map(author ->
+                        {
+                            List<AuthorBookData> authorBookData = bookRepository.getAuthorBookData(id);
+                            Map<Long, Book> bookMap = new HashMap<>();
+                            Map<Long, Sequence> sequenceMap = new HashMap<>();
+                            Book currentBook = null;
+                            Long currentSequenceId = null;
+                            Integer currentSeqOrder = null;
+                            for (AuthorBookData datum : authorBookData) {
+                                if (currentBook == null || !currentBook.getId().equals(datum.getBookId())) {
+                                    currentBook = authorBookDataMapper.getBookDto(datum);
+                                    bookMap.put(currentBook.getId(), currentBook);
+                                    currentSequenceId = null;
+                                    currentSeqOrder = null;
+                                }
+                                if (datum.getSequenceId() != null &&
+                                        (!datum.getSequenceId().equals(currentSequenceId) || !datum.getSeqOrder().equals(currentSeqOrder))) {
+                                    currentSequenceId = datum.getSequenceId();
+                                    currentSeqOrder = datum.getSeqOrder();
+                                    currentBook.getSequences().add(authorBookDataMapper.getBookSequenceDto(datum));
+
+                                    Sequence sequence = sequenceMap.computeIfAbsent(datum.getSequenceId(), k -> authorBookDataMapper.getSequenceDto(datum));
+                                    SequenceBook sequenceBook = new SequenceBook();
+                                    sequenceBook.setSeqOrder(datum.getSeqOrder());
+                                    sequenceBook.setBook(currentBook);
+                                    sequence.getBooks().add(sequenceBook);
+                                }
+                                if (datum.getAuthorId() != null && currentBook.getAuthors().stream()
+                                        .noneMatch(a -> a.getId().equals(datum.getAuthorId()))) {
+                                    currentBook.getAuthors().add(authorBookDataMapper.getAuthorDto(datum));
+                                }
+                            }
+                            author.setBooksNoSequence(bookMap.values().stream()
+                                    .filter(b -> b.getSequences().isEmpty()).sorted(Comparator.comparing(SimpleBook::getTitle))
+                                    .toList());
+                            sequenceMap.values().stream().map(Sequence::getBooks).forEach(c -> c.sort(Comparator.comparing(SequenceBook::getSeqOrder)));
+                            author.setSequences(new ArrayList<>(sequenceMap.values()));
+                            author.getSequences().sort(Comparator.comparing(Sequence::getName));
+
+                            return author;
+                        }
+
+                ).orElse(null);
     }
 
     @Secured(UserService.ADMIN_AUTHORITY)

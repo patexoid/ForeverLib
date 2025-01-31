@@ -13,6 +13,7 @@ public interface AuthorMapper {
 
     @Transactional(readOnly = true)
     @Mapping(target = "books", ignore = true)
+    @Mapping(target = "sequences", qualifiedByName = "entity")
     Author toDto(AuthorEntity entity);
 
 

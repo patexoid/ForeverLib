@@ -177,10 +177,11 @@ public class OPDSController {
     @SaveLatest
     @RequestMapping(value = "author/{id}/alphabet", produces = APPLICATION_ATOM_XML)
     public ModelAndView getAuthorBookAlphabet(@PathVariable(value = "id") long id) {
-        Author bookAuthor = authorService.getAuthor(id);
+        Author bookAuthor = authorService.getAuthorSimplified(id);
         return createMav(new Res("opds.author.books.alphabet", bookAuthor.getName()), bookAuthor, author ->
                 author.getBooks().stream().
                         filter(book -> !book.isDuplicate()).
+                        sorted(Comparator.comparing(Book::getTitle)).
                         map(BookEntry::new).
                         collect(Collectors.toList()));
     }
@@ -188,7 +189,7 @@ public class OPDSController {
     @SaveLatest
     @RequestMapping(value = "authorsequenceless/{id}", produces = APPLICATION_ATOM_XML)
     public ModelAndView getAuthorBookNoSequence(@PathVariable(value = "id") long id) {
-        Author bookAuthor = authorService.getAuthor(id);
+        Author bookAuthor = authorService.getAuthorSimplified(id);
         return createMav(new Res("opds.author.books.sequenceless", bookAuthor.getName()), bookAuthor, author ->
                 author.getBooksNoSequence().stream().
                         filter(book -> !book.isDuplicate()).
@@ -199,7 +200,7 @@ public class OPDSController {
     @SaveLatest
     @RequestMapping(value = "sequence/{id}", produces = APPLICATION_ATOM_XML)
     public ModelAndView getBookBySequence(@PathVariable(value = "id") long id) {
-        Sequence sequence = sequenceService.getSequence(id);
+        Sequence sequence = sequenceService.getSequenceSimplified(id);
         return createMav(new Res("opds.author.books.sequence", sequence.getName()), sequence, seq ->
                 seq.getBooks().stream().
                         sorted(Comparator.comparing(SequenceBook::getSeqOrder)).
@@ -213,7 +214,7 @@ public class OPDSController {
     @SaveLatest
     @RequestMapping(value = "authorsequences/{id}", produces = APPLICATION_ATOM_XML)
     public ModelAndView getAuthorSequences(@PathVariable(value = "id") long id) {
-        Author author = authorService.getAuthor(id);
+        Author author = authorService.getAuthorSimplified(id);
         return createMav(new Res("opds.author.sequence", author.getName()), author,
                 a -> a.getSequences().stream().sorted(Comparator.comparing(Sequence::getName)).map(SequenceEntry::new).
                         collect(Collectors.toList()));
