@@ -17,7 +17,7 @@ dependencies {
     api("org.springframework.data:spring-data-commons:$springBootVersion")
     api("com.fasterxml.jackson.core:jackson-annotations:2.20")
     api("org.springframework:spring-context:$springVersion")
-    api("com.patex:plural-resource-bundle:0.0.2")
+    api("com.patex:plural-resource-bundle:0.0.4")
     api("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
     api("org.telegram:telegrambots:6.9.7.1")
     api("org.springframework:spring-tx:$springVersion")
