@@ -22,6 +22,13 @@ public interface SequenceRepository extends CrudRepository<SequenceEntity, Long>
 
     List<SequenceEntity> findAllByIdIn(Collection<Long> ids);
 
+    @Query("""
+            SELECT NEW com.patex.forever.entities.SequenceEntity(s.id, s.name)
+            FROM SequenceEntity s
+            where name ilike :prefix% order by name
+            """)
+    Page<SequenceEntity> getSequencesByName(Pageable pageable, @Param("prefix") String prefix);
+
     @Query(nativeQuery = true,
             value = """
             select b.id         bookId,

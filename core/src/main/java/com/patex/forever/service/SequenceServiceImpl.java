@@ -1,6 +1,8 @@
 package com.patex.forever.service;
 
+import com.patex.forever.LibException;
 import com.patex.forever.entities.BookSequenceEntity;
+import com.patex.forever.entities.BookSequenceRepository;
 import com.patex.forever.entities.SequenceEntity;
 import com.patex.forever.entities.SequenceRepository;
 import com.patex.forever.mapper.AuthorBookDataMapper;
@@ -11,6 +13,8 @@ import com.patex.forever.model.Sequence;
 import com.patex.forever.model.SequenceBook;
 import com.patex.forever.model.SimpleBook;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,9 +36,11 @@ import static org.springframework.transaction.annotation.Propagation.MANDATORY;
 public class SequenceServiceImpl implements SequenceService {
 
     private final SequenceRepository sequenceRepository;
+    private final BookSequenceRepository bookSequenceRepository;
 
     private final SequenceMapper mapper;
     private final AuthorBookDataMapper authorBookDataMapper;
+    private final TransactionService transactionService;
 
 
     @Override
@@ -78,6 +84,40 @@ public class SequenceServiceImpl implements SequenceService {
                     toList());
             return sequence;
         }).orElse(null);
+    }
+
+    @Override
+    public Page<Sequence> getSequences(Pageable pageable, String prefix) {
+        prefix = prefix == null ? "" : prefix;
+        return sequenceRepository.getSequencesByName(pageable, prefix).map(mapper::toListDto);
+    }
+
+    @Override
+    public Sequence renameSequence(long id, String name) {
+        return transactionService.transactionRequired(() -> {
+            SequenceEntity entity = sequenceRepository.findById(id)
+                    .orElseThrow(() -> new LibException("Sequence not found: " + id));
+            entity.setName(name);
+            return mapper.toListDto(entity);
+        });
+    }
+
+    @Override
+    public void deleteSequence(long id) {
+        transactionService.transactionRequired(() -> {
+            SequenceEntity entity = sequenceRepository.findById(id)
+                    .orElseThrow(() -> new LibException("Sequence not found: " + id));
+            sequenceRepository.delete(entity);
+        });
+    }
+
+    @Override
+    public void setBookOrder(long id, long bookId, int seqOrder) {
+        transactionService.transactionRequired(() -> {
+            BookSequenceEntity bookSequence = bookSequenceRepository.findBySequenceIdAndBookId(id, bookId)
+                    .orElseThrow(() -> new LibException("Book " + bookId + " is not in sequence " + id));
+            bookSequence.setSeqOrder(seqOrder);
+        });
     }
 
     @Override
