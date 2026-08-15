@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
@@ -25,13 +25,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Disabled
 public class AuthorServiceImplTest {
 
-    @MockBean
+    @MockitoBean
     StorageService storageService;
-    @MockBean
+    @MockitoBean
     DirWatcherService dirWatcherService;
-    @MockBean
+    @MockitoBean
     TelegramMessenger telegramMessenger;
-    @MockBean
+    @MockitoBean
     RabbitDuplicateHandler rabbitDuplicateHandler;
     @Autowired
     private AuthorServiceImpl authorService;

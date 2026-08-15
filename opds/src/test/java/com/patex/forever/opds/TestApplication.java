@@ -11,10 +11,10 @@ import com.patex.forever.service.Resources;
 import com.patex.forever.service.SequenceService;
 import com.patex.forever.service.UserService;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
+import org.springframework.boot.jdbc.autoconfigure.DataSourceTransactionManagerAutoConfiguration;
+import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
@@ -31,16 +31,16 @@ scanBasePackages = {"com.patex.forever.opds", "com.patex.forever.service"})
 @EnableSpringDataWebSupport
 public class TestApplication {
 
-    @MockBean
+    @MockitoBean
     ExtLibraryRepository extLibraryRepository;
 
-    @MockBean
+    @MockitoBean
     AuthorService authorService;
 
-    @MockBean
+    @MockitoBean
     BookService bookService;
 
-    @MockBean
+    @MockitoBean
     SequenceService sequenceService;
 
 
@@ -62,12 +62,12 @@ public class TestApplication {
 
     };
 
-    @MockBean
+    @MockitoBean
     SavedBookRepository savedBookRepository;
 
-    @MockBean
+    @MockitoBean
     MessengerService messengerService;
 
-    @MockBean
+    @MockitoBean
     SubscriptionRepository subscriptionRepository;
 }

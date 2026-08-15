@@ -23,17 +23,18 @@ dependencies {
     implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
     testCompileOnly("org.projectlombok:lombok:$lombokVersion")
     testAnnotationProcessor("org.projectlombok:lombok:$lombokVersion")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
-    testImplementation ("org.junit.jupiter:junit-jupiter-api:5.8.2")
-    testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:5.8.2")
-    testImplementation("org.mockito:mockito-core:4.2.0")
-    testImplementation("org.mockito:mockito-junit-jupiter:4.2.0")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.0.3")
+    testImplementation ("org.junit.jupiter:junit-jupiter-api:6.0.3")
+    testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:6.0.3")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.0.3")
+    testImplementation("org.mockito:mockito-core:5.23.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.23.0")
 }
 
 group = "com.patex.foreverlib2"
 version = "0.39-SNAPSHOT"
 description = "data-storage"
-java.sourceCompatibility = JavaVersion.VERSION_17
+java.sourceCompatibility = JavaVersion.VERSION_25
 
 publishing {
     publications.create<MavenPublication>("maven") {

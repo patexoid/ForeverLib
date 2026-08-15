@@ -7,7 +7,7 @@
 plugins {
     `java-library`
     `maven-publish`
-    id("org.springframework.boot") version "3.1.4"
+    id("org.springframework.boot") version "4.1.0"
 }
 
 repositories {
@@ -32,10 +32,10 @@ dependencies {
     api(project(":core"))
     api(project(":opds"))
     api(project(":data-storage"))
-    api("org.glassfish.jaxb:jaxb-runtime:3.0.1")
-    api("org.postgresql:postgresql:42.6.0")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+    api("org.glassfish.jaxb:jaxb-runtime:4.0.9")
+    api("org.postgresql:postgresql:42.7.11")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.0.3")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:6.0.3")
     testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
     testImplementation("com.patex:fb2-java:1.0")
 }
@@ -43,7 +43,11 @@ dependencies {
 group = "com.patex.foreverlib"
 version = "0.39-SNAPSHOT"
 description = "exec"
-java.sourceCompatibility = JavaVersion.VERSION_17
+java.sourceCompatibility = JavaVersion.VERSION_25
+
+tasks.withType<Test> {
+    failOnNoDiscoveredTests = false
+}
 
 publishing {
     publications.create<MavenPublication>("maven") {

@@ -1,7 +1,7 @@
-val springBootVersion by extra { "3.3.2" }
-val springVersion by extra { "6.1.11" }
-val springSecurityVersion by extra { "6.3.1" }
-val lombokVersion  by extra { "1.18.34" }
+val springBootVersion by extra { "4.1.0" }
+val springVersion by extra { "7.0.8" }
+val springSecurityVersion by extra { "7.1.0" }
+val lombokVersion  by extra { "1.18.46" }
 subprojects {
 
     repositories {
