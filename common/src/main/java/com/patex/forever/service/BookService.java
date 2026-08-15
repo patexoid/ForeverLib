@@ -37,4 +37,8 @@ public interface BookService {
     List<SimpleBook> getSameAuthorsBook(SimpleBook primaryBook);
 
     String getPartialBookContent(String fileName, InputStream bookIS);
+
+    void addAuthorToBook(long bookId, long authorId);
+
+    void removeAuthorFromBook(long bookId, long authorId);
 }

@@ -2,6 +2,7 @@ package com.patex.forever.service;
 
 import com.ibm.icu.text.Transliterator;
 import com.patex.forever.entities.AuthorBookEntity;
+import com.patex.forever.entities.AuthorBookRepository;
 import com.patex.forever.entities.AuthorEntity;
 import com.patex.forever.entities.AuthorRepository;
 import com.patex.forever.entities.BookEntity;
@@ -61,6 +62,7 @@ public class BookServiceImpl implements BookService {
 
     private final SequenceRepository sequenceRepository;
     private final AuthorRepository authorRepository;
+    private final AuthorBookRepository authorBookRepository;
     private final ParserService parserService;
     private final StorageService fileStorage;
     private final TransactionService transactionService;
@@ -299,5 +301,31 @@ public class BookServiceImpl implements BookService {
                 filter(book -> !book.getId().equals(primaryBook.getId())).
                 map(bookMapper::toSimpleDto).
                 collect(Collectors.toList());
+    }
+
+    @Override
+    public void addAuthorToBook(long bookId, long authorId) {
+        transactionService.transactionRequired(() -> {
+            if (authorBookRepository.findByBookIdAndAuthorId(bookId, authorId).isPresent()) {
+                return;
+            }
+            BookEntity book = bookRepository.findById(bookId)
+                    .orElseThrow(() -> new LibException("Book not found: " + bookId));
+            AuthorEntity author = authorRepository.findById(authorId)
+                    .orElseThrow(() -> new LibException("Author not found: " + authorId));
+            authorBookRepository.save(new AuthorBookEntity(author, book));
+        });
+    }
+
+    @Override
+    public void removeAuthorFromBook(long bookId, long authorId) {
+        transactionService.transactionRequired(() -> {
+            if (authorBookRepository.countByBookId(bookId) <= 1) {
+                throw new LibException("Can't remove the last author from book: " + bookId);
+            }
+            AuthorBookEntity authorBook = authorBookRepository.findByBookIdAndAuthorId(bookId, authorId)
+                    .orElseThrow(() -> new LibException("Author " + authorId + " is not an author of book " + bookId));
+            authorBookRepository.delete(authorBook);
+        });
     }
 }

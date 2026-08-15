@@ -6,6 +6,7 @@ import com.patex.forever.entities.BookEntity;
 import com.patex.forever.model.Author;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.springframework.transaction.annotation.Transactional;
 
 @Mapper(componentModel = "spring", uses = {BookMapper.class, SequenceMapper.class})
@@ -25,4 +26,9 @@ public interface AuthorMapper {
     @Mapping(target = "sequences", ignore = true)
     @Mapping(target = "books", ignore = true)
     Author toListDto(AuthorEntity entity);
+
+    @Mapping(target = "books", ignore = true)
+    @Mapping(target = "sequences", ignore = true)
+    @Mapping(target = "booksNoSequence", ignore = true)
+    AuthorEntity updateEntity(Author author, @MappingTarget AuthorEntity authorEntity);
 }

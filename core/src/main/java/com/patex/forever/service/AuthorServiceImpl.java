@@ -206,4 +206,26 @@ public class AuthorServiceImpl implements AuthorService {
         return authorRepository.getAuthorsByName(pageable, prefix).map(mapper::toListDto);
     }
 
+    @Override
+    public Author updateAuthor(long id, Author patch) {
+        return transactionService.transactionRequired(() -> {
+            AuthorEntity entity = authorRepository.findById(id)
+                    .orElseThrow(() -> new LibException("Author not found: " + id));
+            mapper.updateEntity(patch, entity);
+            return mapper.toListDto(entity);
+        });
+    }
+
+    @Override
+    public void deleteAuthor(long id) {
+        transactionService.transactionRequired(() -> {
+            AuthorEntity entity = authorRepository.findById(id)
+                    .orElseThrow(() -> new LibException("Author not found: " + id));
+            if (!entity.getBooks().isEmpty()) {
+                throw new LibException("Can't delete author with remaining books: " + id);
+            }
+            authorRepository.delete(entity);
+        });
+    }
+
 }

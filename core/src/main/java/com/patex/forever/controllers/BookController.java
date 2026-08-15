@@ -172,4 +172,18 @@ public class BookController {
         adminService.updateLangAndSrcLang();
         return "success";
     }
+
+    @RequestMapping(value = "/{id}/authors", method = RequestMethod.POST)
+    @Secured(ADMIN_AUTHORITY)
+    public @ResponseBody
+    void addAuthorToBook(@PathVariable("id") long bookId, @RequestParam("authorId") long authorId) {
+        bookService.addAuthorToBook(bookId, authorId);
+    }
+
+    @RequestMapping(value = "/{id}/authors/{authorId}", method = RequestMethod.DELETE)
+    @Secured(ADMIN_AUTHORITY)
+    public @ResponseBody
+    void removeAuthorFromBook(@PathVariable("id") long bookId, @PathVariable("authorId") long authorId) {
+        bookService.removeAuthorFromBook(bookId, authorId);
+    }
 }

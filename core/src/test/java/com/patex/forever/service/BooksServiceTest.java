@@ -1,6 +1,8 @@
 package com.patex.forever.service;
 
+import com.patex.forever.LibException;
 import com.patex.forever.entities.AuthorBookEntity;
+import com.patex.forever.entities.AuthorBookRepository;
 import com.patex.forever.entities.AuthorEntity;
 import com.patex.forever.entities.AuthorRepository;
 import com.patex.forever.entities.BookEntity;
@@ -38,6 +40,7 @@ import java.util.Optional;
 import static org.apache.commons.text.CharacterPredicates.DIGITS;
 import static org.apache.commons.text.CharacterPredicates.LETTERS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.AdditionalMatchers.aryEq;
 import static org.mockito.Mockito.any;
@@ -45,6 +48,7 @@ import static org.mockito.Mockito.anyList;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -71,6 +75,9 @@ public class BooksServiceTest {
 
     @Mock
     private AuthorRepository authorRepo;
+
+    @Mock
+    private AuthorBookRepository authorBookRepo;
 
     @Mock
     private ParserService parserService;
@@ -105,7 +112,7 @@ public class BooksServiceTest {
 
         lenient().when(languageService.detectLang(any())).thenReturn(Optional.empty());
         lenient().when(parserService.getBookInfo(eq(FILE_NAME), any(), eq(true))).thenReturn(bookInfo);
-        when(bookRepo.findFirstByTitleAndChecksum(any(), any())).thenReturn(Optional.empty());
+        lenient().when(bookRepo.findFirstByTitleAndChecksum(any(), any())).thenReturn(Optional.empty());
         lenient().when(genreRepository.findByName(any())).thenReturn(Optional.empty());
         lenient().when(bookRepo.save(any(BookEntity.class))).thenAnswer(i -> i.getArguments()[0]);
 //        when(sequenceService.mergeSequences(any())).thenAnswer(i -> {
@@ -118,7 +125,8 @@ public class BooksServiceTest {
 //        });
         lenient().when(authorRepo.findFirstByNameIgnoreCase(any())).thenReturn(Optional.empty());
 
-        bookService = new BookServiceImpl(bookRepo, genreRepository, mock(SequenceRepository.class), authorRepo, parserService,
+        bookService = new BookServiceImpl(bookRepo, genreRepository, mock(SequenceRepository.class), authorRepo,
+                authorBookRepo, parserService,
                 fileStorage, transactionService, eventPublisher, bookMapper, mock(EntityManager.class), languageService);
     }
 
@@ -296,5 +304,13 @@ public class BooksServiceTest {
 
         Book saved = bookService.uploadBook(fileName, bais, new User());
         assertEquals(saved.getSequences().get(0).getId(), savedSequence.getId());
+    }
+
+    @Test
+    public void shouldRejectRemovingLastAuthorFromBook() {
+        when(authorBookRepo.countByBookId(1L)).thenReturn(1L);
+
+        assertThrows(LibException.class, () -> bookService.removeAuthorFromBook(1L, 42L));
+        verify(authorBookRepo, never()).delete(any(AuthorBookEntity.class));
     }
 }
