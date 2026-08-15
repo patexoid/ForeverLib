@@ -15,16 +15,16 @@ val lombokVersion: String by rootProject.extra
 
 dependencies {
     api("org.springframework.data:spring-data-commons:$springBootVersion")
-    api("com.fasterxml.jackson.core:jackson-annotations:2.15.2")
+    api("com.fasterxml.jackson.core:jackson-annotations:2.20")
     api("org.springframework:spring-context:$springVersion")
     api("com.patex:plural-resource-bundle:0.0.2")
     api("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
-    api("org.telegram:telegrambots:6.8.0")
+    api("org.telegram:telegrambots:6.9.7.1")
     api("org.springframework:spring-tx:$springVersion")
     api("org.springframework.security:spring-security-core:$springSecurityVersion")
     compileOnly("org.projectlombok:lombok:$lombokVersion")
-    implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
-    api("com.google.guava:guava:31.0.1-jre")
+    implementation("jakarta.annotation:jakarta.annotation-api:3.0.0")
+    api("com.google.guava:guava:33.6.0-jre")
 
     annotationProcessor("org.projectlombok:lombok:$lombokVersion")
     testCompileOnly("org.projectlombok:lombok:$lombokVersion")
@@ -34,7 +34,7 @@ dependencies {
 group = "com.patex.foreverlib2"
 version = "0.39-SNAPSHOT"
 description = "common"
-java.sourceCompatibility = JavaVersion.VERSION_17
+java.sourceCompatibility = JavaVersion.VERSION_25
 
 publishing {
     publications.create<MavenPublication>("maven") {

@@ -19,40 +19,42 @@ repositories {
 
 
 val springBootVersion: String by rootProject.extra
+val springSecurityVersion: String by rootProject.extra
 val lombokVersion: String by rootProject.extra
 
 dependencies {
     api("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
     api("org.springframework.boot:spring-boot-starter-security:$springBootVersion")
-    api("org.springframework.security:spring-security-aspects:5.6.1")
-    api("org.liquibase:liquibase-core:4.24.0")
+    api("org.springframework.security:spring-security-aspects:$springSecurityVersion")
+    api("org.liquibase:liquibase-core:5.0.3")
+    api("org.springframework.boot:spring-boot-liquibase:$springBootVersion")
     api("org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion")
     api("org.springframework.boot:spring-boot-starter-amqp:$springBootVersion")
-    api("ch.qos.logback:logback-classic:1.2.9")
-    api("org.slf4j:jcl-over-slf4j:1.7.32")
-    api("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.1")
-    implementation("org.apache.httpcomponents.client5:httpclient5:5.2.1")
+    api("ch.qos.logback:logback-classic:1.5.34")
+    api("org.slf4j:jcl-over-slf4j:2.0.18")
+    implementation("org.apache.httpcomponents.client5:httpclient5:5.6.1")
     api("org.apache.httpcomponents:httpmime:4.5.14")
-    api("org.apache.commons:commons-lang3:3.12.0")
-    api("org.apache.commons:commons-text:1.10.0")
-    api("com.google.guava:guava:31.0.1-jre")
+    api("org.apache.commons:commons-lang3:3.20.0")
+    api("org.apache.commons:commons-text:1.15.0")
+    api("com.google.guava:guava:33.6.0-jre")
     api("com.patex:plural-resource-bundle:0.0.2")
     api("com.patex:fuzzysearch:0.3.0")
-    api("com.ibm.icu:icu4j:72.1")
-    api("com.ibm.icu:icu4j-charset:72.1")
-    implementation("jakarta.xml.bind:jakarta.xml.bind-api:4.0.1")
+    api("com.ibm.icu:icu4j:78.3")
+    api("com.ibm.icu:icu4j-charset:78.3")
+    implementation("jakarta.xml.bind:jakarta.xml.bind-api:4.0.5")
     implementation("com.optimaize.languagedetector:language-detector:0.6")
 
-    implementation("org.mapstruct:mapstruct:1.4.2.Final")
-    annotationProcessor("org.mapstruct:mapstruct-processor:1.4.2.Final")
+    implementation("org.mapstruct:mapstruct:1.6.3")
+    annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
     api(project(":common"))
 
-    testImplementation("com.h2database:h2:2.2.224")
-    testImplementation("org.springframework.amqp:spring-rabbit-test:3.0.9")
+    testImplementation("com.h2database:h2:2.4.240")
+    testImplementation("org.springframework.amqp:spring-rabbit-test:4.1.0")
     testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
-    testImplementation("org.mockito:mockito-core:5.3.1")
-    testImplementation("com.sun.xml.bind:jaxb-impl:3.0.1")
-    testImplementation("com.sun.xml.bind:jaxb-core:3.0.1")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.0.3")
+    testImplementation("org.mockito:mockito-core:5.23.0")
+    testImplementation("com.sun.xml.bind:jaxb-impl:4.0.9")
+    testImplementation("com.sun.xml.bind:jaxb-core:4.0.9")
     testImplementation("com.patex:fb2-java:1.0")
     compileOnly("org.projectlombok:lombok:$lombokVersion")
     annotationProcessor("org.projectlombok:lombok:$lombokVersion")
@@ -64,7 +66,7 @@ dependencies {
 group = "com.patex.foreverlib2"
 version = "0.39-SNAPSHOT"
 description = "core"
-java.sourceCompatibility = JavaVersion.VERSION_17
+java.sourceCompatibility = JavaVersion.VERSION_25
 
 publishing {
     publications.create<MavenPublication>("maven") {

@@ -1,13 +1,12 @@
 package com.patex.forever.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.annotation.JsonDeserialize;
 
 import jakarta.persistence.*;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -85,7 +84,7 @@ public class BookSequenceEntity {
         this.sequence = sequence;
     }
 
-    public static class MyDeserializer extends JsonDeserializer<BookEntity> {
+    public static class MyDeserializer extends ValueDeserializer<BookEntity> {
         private final static Map<String, Method> fieldsM = new HashMap<>();
 
         static {
@@ -102,12 +101,12 @@ public class BookSequenceEntity {
         }
 
         @Override
-        public BookEntity deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+        public BookEntity deserialize(JsonParser p, DeserializationContext ctxt) {
             try {
                 BookEntity value = new BookEntity();
                 while (!p.currentToken().isStructEnd()) {
                     p.nextToken();
-                    String field = p.getCurrentName();
+                    String field = p.currentName();
                     if (field != null && fieldsM.containsKey(field)) {
                         p.nextToken();
                         Method method = fieldsM.get(field);
@@ -122,7 +121,7 @@ public class BookSequenceEntity {
                 return value;
 
             } catch (IllegalAccessException | InvocationTargetException e) {
-                throw new IOException(e);
+                throw new RuntimeException(e);
             }
         }
     }

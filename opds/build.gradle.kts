@@ -23,18 +23,18 @@ dependencies {
     api(project(":common"))
     api("com.rometools:rome:2.1.0")
 
-    compileOnly("jakarta.servlet:jakarta.servlet-api:6.0.0")
+    compileOnly("jakarta.servlet:jakarta.servlet-api:6.1.0")
 
     api("org.springframework:spring-aspects:$springVersion")
     api("org.springframework:spring-context:$springVersion")
     api("org.springframework:spring-webmvc:$springVersion")
     api("org.springframework.security:spring-security-core:$springVersion")
-    api("org.springframework.data:spring-data-commons:3.1.4")
+    api("org.springframework.data:spring-data-commons:$springBootVersion")
     api("org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion")
     testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
     testImplementation("com.patex:fb2-java:1.0")
-    testImplementation("org.apache.commons:commons-lang3:3.12.0")
-    testImplementation("org.apache.commons:commons-text:1.10.0")
+    testImplementation("org.apache.commons:commons-lang3:3.20.0")
+    testImplementation("org.apache.commons:commons-text:1.15.0")
     compileOnly("org.projectlombok:lombok:$lombokVersion")
     annotationProcessor("org.projectlombok:lombok:$lombokVersion")
     testCompileOnly("org.projectlombok:lombok:$lombokVersion")
@@ -44,7 +44,11 @@ dependencies {
 group = "com.patex.foreverlib"
 version = "0.39-SNAPSHOT"
 description = "opds"
-java.sourceCompatibility = JavaVersion.VERSION_17
+java.sourceCompatibility = JavaVersion.VERSION_25
+
+tasks.withType<Test> {
+    failOnNoDiscoveredTests = false
+}
 
 publishing {
     publications.create<MavenPublication>("maven") {

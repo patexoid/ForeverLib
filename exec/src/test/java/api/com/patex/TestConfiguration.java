@@ -2,14 +2,14 @@ package api.com.patex;
 
 import com.patex.forever.messaging.TelegramMessenger;
 import com.patex.forever.service.DirWatcherService;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @org.springframework.boot.test.context.TestConfiguration
 public class TestConfiguration {
 
-    @MockBean
+    @MockitoBean
     DirWatcherService  dirWatcherService;
 
-    @MockBean
+    @MockitoBean
     TelegramMessenger telegramMessenger;
 }
