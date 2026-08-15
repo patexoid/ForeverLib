@@ -1,0 +1,42 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+}
+
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 20rem;
+  padding: 2rem;
+  border: 1px solid #8884;
+  border-radius: 0.5rem;
+}
+
+.login-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.login-error {
+  color: #c0392b;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.console-placeholder {
+  padding: 2rem;
+}
