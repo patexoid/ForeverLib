@@ -5,6 +5,7 @@ import com.patex.forever.service.RabbitDuplicateHandler;
 import com.patex.forever.service.LibUserService;
 import com.patex.forever.LibException;
 import com.patex.forever.model.Book;
+import com.patex.forever.model.BookSequenceRequest;
 import com.patex.forever.model.BookUploadInfo;
 import com.patex.forever.service.BookService;
 import lombok.RequiredArgsConstructor;
@@ -185,5 +186,34 @@ public class BookController {
     public @ResponseBody
     void removeAuthorFromBook(@PathVariable("id") long bookId, @PathVariable("authorId") long authorId) {
         bookService.removeAuthorFromBook(bookId, authorId);
+    }
+
+    @RequestMapping(value = "/{id}/sequences", method = RequestMethod.POST)
+    @Secured(ADMIN_AUTHORITY)
+    public @ResponseBody
+    void addBookToSequence(@PathVariable("id") long bookId, @RequestBody BookSequenceRequest request) {
+        bookService.addBookToSequence(bookId, request.sequenceId(), request.seqOrder());
+    }
+
+    @RequestMapping(value = "/{id}/sequences/{sequenceId}", method = RequestMethod.PUT)
+    @Secured(ADMIN_AUTHORITY)
+    public @ResponseBody
+    void updateBookSeqOrder(@PathVariable("id") long bookId, @PathVariable("sequenceId") long sequenceId,
+                             @RequestBody BookSequenceRequest request) {
+        bookService.updateBookSeqOrder(bookId, sequenceId, request.seqOrder());
+    }
+
+    @RequestMapping(value = "/{id}/sequences/{sequenceId}", method = RequestMethod.DELETE)
+    @Secured(ADMIN_AUTHORITY)
+    public @ResponseBody
+    void removeBookFromSequence(@PathVariable("id") long bookId, @PathVariable("sequenceId") long sequenceId) {
+        bookService.removeBookFromSequence(bookId, sequenceId);
+    }
+
+    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
+    @Secured(ADMIN_AUTHORITY)
+    public @ResponseBody
+    void deleteBook(@PathVariable("id") long id) {
+        bookService.deleteBook(id);
     }
 }

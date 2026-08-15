@@ -10,4 +10,6 @@ public interface StorageService {
     InputStream load(String fileId) throws LibException;
 
     String move(String oldPath, String[] newPath, boolean updatePath)  throws LibException;
+
+    void delete(String fileId) throws LibException;
 }

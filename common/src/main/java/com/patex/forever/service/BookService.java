@@ -41,4 +41,12 @@ public interface BookService {
     void addAuthorToBook(long bookId, long authorId);
 
     void removeAuthorFromBook(long bookId, long authorId);
+
+    void addBookToSequence(long bookId, long sequenceId, Integer seqOrder);
+
+    void updateBookSeqOrder(long bookId, long sequenceId, int seqOrder);
+
+    void removeBookFromSequence(long bookId, long sequenceId);
+
+    void deleteBook(long id);
 }

@@ -8,6 +8,8 @@ import com.patex.forever.entities.AuthorRepository;
 import com.patex.forever.entities.BookEntity;
 import com.patex.forever.entities.BookRepository;
 import com.patex.forever.entities.BookSequenceEntity;
+import com.patex.forever.entities.BookSequenceRepository;
+import com.patex.forever.entities.FileResourceEntity;
 import com.patex.forever.entities.GenreRepository;
 import com.patex.forever.entities.SequenceEntity;
 import com.patex.forever.entities.SequenceRepository;
@@ -33,8 +35,10 @@ import org.springframework.context.ApplicationEventPublisher;
 import jakarta.persistence.EntityManager;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.apache.commons.text.CharacterPredicates.DIGITS;
@@ -72,6 +76,12 @@ public class BooksServiceTest {
 
     @Mock
     private SequenceService sequenceService;
+
+    @Mock
+    private SequenceRepository sequenceRepo;
+
+    @Mock
+    private BookSequenceRepository bookSequenceRepo;
 
     @Mock
     private AuthorRepository authorRepo;
@@ -125,7 +135,7 @@ public class BooksServiceTest {
 //        });
         lenient().when(authorRepo.findFirstByNameIgnoreCase(any())).thenReturn(Optional.empty());
 
-        bookService = new BookServiceImpl(bookRepo, genreRepository, mock(SequenceRepository.class), authorRepo,
+        bookService = new BookServiceImpl(bookRepo, genreRepository, sequenceRepo, bookSequenceRepo, authorRepo,
                 authorBookRepo, parserService,
                 fileStorage, transactionService, eventPublisher, bookMapper, mock(EntityManager.class), languageService);
     }
@@ -312,5 +322,83 @@ public class BooksServiceTest {
 
         assertThrows(LibException.class, () -> bookService.removeAuthorFromBook(1L, 42L));
         verify(authorBookRepo, never()).delete(any(AuthorBookEntity.class));
+    }
+
+    @Test
+    void shouldMoveBookBetweenSequencesPreservingSeqOrder() {
+        SequenceEntity oldSequence = new SequenceEntity(10L, "Old");
+        SequenceEntity newSequence = new SequenceEntity(20L, "New");
+        BookEntity movedBook = new BookEntity();
+        movedBook.setId(1L);
+        BookSequenceEntity oldLink = new BookSequenceEntity(3, oldSequence, movedBook);
+        movedBook.setSequences(new ArrayList<>(List.of(oldLink)));
+        when(bookSequenceRepo.findBySequenceIdAndBookId(10L, 1L)).thenReturn(Optional.of(oldLink));
+        when(bookSequenceRepo.findBySequenceIdAndBookId(20L, 1L)).thenReturn(Optional.empty());
+        when(bookRepo.findById(1L)).thenReturn(Optional.of(movedBook));
+        when(sequenceRepo.findById(20L)).thenReturn(Optional.of(newSequence));
+
+        bookService.removeBookFromSequence(1L, 10L);
+        bookService.addBookToSequence(1L, 20L, oldLink.getSeqOrder());
+
+        verify(bookSequenceRepo).delete(oldLink);
+        assertEquals(1, movedBook.getSequences().size());
+        BookSequenceEntity newLink = movedBook.getSequences().get(0);
+        assertEquals(3, newLink.getSeqOrder());
+        assertEquals(newSequence, newLink.getSequence());
+        verify(bookSequenceRepo).save(newLink);
+    }
+
+    @Test
+    void shouldMoveBookIntoBooksNoSequenceWhenRemovedFromLastSequence() {
+        AuthorEntity author = new AuthorEntity(1L, "Author");
+        BookEntity movedBook = new BookEntity();
+        movedBook.setId(5L);
+        SequenceEntity sequence = new SequenceEntity(10L, "Seq");
+        BookSequenceEntity link = new BookSequenceEntity(0, sequence, movedBook);
+        movedBook.setSequences(new ArrayList<>(List.of(link)));
+        author.getBooks().add(new AuthorBookEntity(author, movedBook));
+        assertTrue(author.getBooksNoSequence().isEmpty());
+        when(bookSequenceRepo.findBySequenceIdAndBookId(10L, 5L)).thenReturn(Optional.of(link));
+
+        bookService.removeBookFromSequence(5L, 10L);
+
+        assertEquals(1, author.getBooksNoSequence().size());
+        assertEquals(movedBook, author.getBooksNoSequence().get(0).getBook());
+        assertTrue(author.getSequences().isEmpty());
+    }
+
+    @Test
+    void shouldMoveBookOutOfBooksNoSequenceWhenAddedToSequence() {
+        AuthorEntity author = new AuthorEntity(1L, "Author");
+        BookEntity movedBook = new BookEntity();
+        movedBook.setId(5L);
+        movedBook.setSequences(new ArrayList<>());
+        author.getBooks().add(new AuthorBookEntity(author, movedBook));
+        assertEquals(1, author.getBooksNoSequence().size());
+        SequenceEntity sequence = new SequenceEntity(10L, "Seq");
+        when(bookSequenceRepo.findBySequenceIdAndBookId(10L, 5L)).thenReturn(Optional.empty());
+        when(bookRepo.findById(5L)).thenReturn(Optional.of(movedBook));
+        when(sequenceRepo.findById(10L)).thenReturn(Optional.of(sequence));
+        when(bookSequenceRepo.findMaxSeqOrderBySequenceId(10L)).thenReturn(Optional.empty());
+
+        bookService.addBookToSequence(5L, 10L, null);
+
+        assertTrue(author.getBooksNoSequence().isEmpty());
+        assertEquals(1, author.getSequences().size());
+    }
+
+    @Test
+    void shouldDeleteBookAndAssociatedFiles() {
+        BookEntity bookToDelete = new BookEntity();
+        bookToDelete.setId(7L);
+        bookToDelete.setFileResource(new FileResourceEntity("path/to/file", "application/fb2+zip", 100));
+        bookToDelete.setCover(new FileResourceEntity("path/to/cover", "image/jpeg", 50));
+        when(bookRepo.findById(7L)).thenReturn(Optional.of(bookToDelete));
+
+        bookService.deleteBook(7L);
+
+        verify(bookRepo).delete(bookToDelete);
+        verify(fileStorage).delete("path/to/file");
+        verify(fileStorage).delete("path/to/cover");
     }
 }
