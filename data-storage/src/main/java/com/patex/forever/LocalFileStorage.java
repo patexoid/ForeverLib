@@ -66,6 +66,14 @@ public class LocalFileStorage implements FileStorage {
         }
     }
 
+    @Override
+    public void delete(String fileId) throws LibException {
+        File file = new File(getFilePath(fileId));
+        if (file.exists() && !file.delete()) {
+            throw new LibException("Can't delete file: " + fileId);
+        }
+    }
+
     public String move(String oldPath, String[] newPath) throws LibException {
         try {
             Path oldFilePath = storageFolderPath.resolve(oldPath);

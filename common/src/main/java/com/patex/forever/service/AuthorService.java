@@ -29,4 +29,8 @@ public interface AuthorService {
 
     Author mergeAuthors(UserDetails user, Long... ids);
 
+    Author updateAuthor(long id, Author patch);
+
+    void deleteAuthor(long id);
+
 }

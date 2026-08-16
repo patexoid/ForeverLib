@@ -82,4 +82,9 @@ public class StorageServiceImpl implements StorageService {
         }
         return fileStorage.move(oldPath, updatedNewPath);
     }
+
+    @Override
+    public void delete(String fileId) throws LibException {
+        fileStorage.delete(fileId);
+    }
 }

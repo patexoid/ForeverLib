@@ -39,6 +39,8 @@ public interface BookRepository extends org.springframework.data.repository.Repo
 
     Optional<BookEntity> findById(long id);
 
+    void delete(BookEntity entity);
+
     @Query("""
             SELECT b from
              BookEntity b,

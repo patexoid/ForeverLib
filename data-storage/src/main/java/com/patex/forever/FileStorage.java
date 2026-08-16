@@ -15,4 +15,6 @@ public interface FileStorage {
     boolean exists(String... filePath);
 
     String move(String oldPath, String[] newPath) throws LibException;
+
+    void delete(String fileId) throws LibException;
 }

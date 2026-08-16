@@ -2,11 +2,13 @@ package com.patex.forever.service;
 
 import com.ibm.icu.text.Transliterator;
 import com.patex.forever.entities.AuthorBookEntity;
+import com.patex.forever.entities.AuthorBookRepository;
 import com.patex.forever.entities.AuthorEntity;
 import com.patex.forever.entities.AuthorRepository;
 import com.patex.forever.entities.BookEntity;
 import com.patex.forever.entities.BookRepository;
 import com.patex.forever.entities.BookSequenceEntity;
+import com.patex.forever.entities.BookSequenceRepository;
 import com.patex.forever.entities.FileResourceEntity;
 import com.patex.forever.entities.GenreEntity;
 import com.patex.forever.entities.GenreRepository;
@@ -60,7 +62,9 @@ public class BookServiceImpl implements BookService {
     private final GenreRepository genreRepository;
 
     private final SequenceRepository sequenceRepository;
+    private final BookSequenceRepository bookSequenceRepository;
     private final AuthorRepository authorRepository;
+    private final AuthorBookRepository authorBookRepository;
     private final ParserService parserService;
     private final StorageService fileStorage;
     private final TransactionService transactionService;
@@ -299,5 +303,85 @@ public class BookServiceImpl implements BookService {
                 filter(book -> !book.getId().equals(primaryBook.getId())).
                 map(bookMapper::toSimpleDto).
                 collect(Collectors.toList());
+    }
+
+    @Override
+    public void addAuthorToBook(long bookId, long authorId) {
+        transactionService.transactionRequired(() -> {
+            if (authorBookRepository.findByBookIdAndAuthorId(bookId, authorId).isPresent()) {
+                return;
+            }
+            BookEntity book = bookRepository.findById(bookId)
+                    .orElseThrow(() -> new LibException("Book not found: " + bookId));
+            AuthorEntity author = authorRepository.findById(authorId)
+                    .orElseThrow(() -> new LibException("Author not found: " + authorId));
+            authorBookRepository.save(new AuthorBookEntity(author, book));
+        });
+    }
+
+    @Override
+    public void removeAuthorFromBook(long bookId, long authorId) {
+        transactionService.transactionRequired(() -> {
+            if (authorBookRepository.countByBookId(bookId) <= 1) {
+                throw new LibException("Can't remove the last author from book: " + bookId);
+            }
+            AuthorBookEntity authorBook = authorBookRepository.findByBookIdAndAuthorId(bookId, authorId)
+                    .orElseThrow(() -> new LibException("Author " + authorId + " is not an author of book " + bookId));
+            authorBookRepository.delete(authorBook);
+        });
+    }
+
+    @Override
+    public void addBookToSequence(long bookId, long sequenceId, Integer seqOrder) {
+        transactionService.transactionRequired(() -> {
+            if (bookSequenceRepository.findBySequenceIdAndBookId(sequenceId, bookId).isPresent()) {
+                return;
+            }
+            BookEntity book = bookRepository.findById(bookId)
+                    .orElseThrow(() -> new LibException("Book not found: " + bookId));
+            SequenceEntity sequence = sequenceRepository.findById(sequenceId)
+                    .orElseThrow(() -> new LibException("Sequence not found: " + sequenceId));
+            int order = seqOrder != null ? seqOrder :
+                    bookSequenceRepository.findMaxSeqOrderBySequenceId(sequenceId).map(m -> m + 1).orElse(0);
+            BookSequenceEntity bookSequence = new BookSequenceEntity(order, sequence, book);
+            bookSequenceRepository.save(bookSequence);
+            book.getSequences().add(bookSequence);
+        });
+    }
+
+    @Override
+    public void updateBookSeqOrder(long bookId, long sequenceId, int seqOrder) {
+        transactionService.transactionRequired(() -> {
+            BookSequenceEntity bookSequence = bookSequenceRepository.findBySequenceIdAndBookId(sequenceId, bookId)
+                    .orElseThrow(() -> new LibException("Book " + bookId + " is not in sequence " + sequenceId));
+            bookSequence.setSeqOrder(seqOrder);
+        });
+    }
+
+    @Override
+    public void removeBookFromSequence(long bookId, long sequenceId) {
+        transactionService.transactionRequired(() -> {
+            BookSequenceEntity bookSequence = bookSequenceRepository.findBySequenceIdAndBookId(sequenceId, bookId)
+                    .orElseThrow(() -> new LibException("Book " + bookId + " is not in sequence " + sequenceId));
+            bookSequence.getBook().getSequences().remove(bookSequence);
+            bookSequenceRepository.delete(bookSequence);
+        });
+    }
+
+    @Override
+    public void deleteBook(long id) {
+        transactionService.transactionRequired(() -> {
+            BookEntity book = bookRepository.findById(id)
+                    .orElseThrow(() -> new LibException("Book not found: " + id));
+            FileResourceEntity fileResource = book.getFileResource();
+            FileResourceEntity cover = book.getCover();
+            bookRepository.delete(book);
+            if (fileResource != null) {
+                fileStorage.delete(fileResource.getFilePath());
+            }
+            if (cover != null) {
+                fileStorage.delete(cover.getFilePath());
+            }
+        });
     }
 }
